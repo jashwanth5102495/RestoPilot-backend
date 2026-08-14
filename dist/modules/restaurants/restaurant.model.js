@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Restaurant = exports.RestaurantStatus = void 0;
+exports.Restaurant = exports.SubscriptionStatus = exports.RestaurantStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var RestaurantStatus;
 (function (RestaurantStatus) {
@@ -41,6 +41,12 @@ var RestaurantStatus;
     RestaurantStatus["SUSPENDED"] = "SUSPENDED";
     RestaurantStatus["INACTIVE"] = "INACTIVE";
 })(RestaurantStatus || (exports.RestaurantStatus = RestaurantStatus = {}));
+var SubscriptionStatus;
+(function (SubscriptionStatus) {
+    SubscriptionStatus["ACTIVE"] = "ACTIVE";
+    SubscriptionStatus["EXPIRED"] = "EXPIRED";
+    SubscriptionStatus["PENDING"] = "PENDING";
+})(SubscriptionStatus || (exports.SubscriptionStatus = SubscriptionStatus = {}));
 const RestaurantSchema = new mongoose_1.Schema({
     name: { type: String, required: true },
     ownerId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
@@ -58,5 +64,10 @@ const RestaurantSchema = new mongoose_1.Schema({
     status: { type: String, enum: Object.values(RestaurantStatus), default: RestaurantStatus.ACTIVE },
     currency: { type: String, default: 'INR' },
     timezone: { type: String, default: 'Asia/Kolkata' },
+    isOnlineOrderingEnabled: { type: Boolean, default: false },
+    onlineSlug: { type: String },
+    subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
+    subscriptionExpiresAt: { type: Date },
 }, { timestamps: true });
+RestaurantSchema.index({ onlineSlug: 1 }, { unique: true, sparse: true });
 exports.Restaurant = mongoose_1.default.model('Restaurant', RestaurantSchema);

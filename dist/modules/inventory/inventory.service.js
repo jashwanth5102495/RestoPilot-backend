@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InventoryService = void 0;
-const ingredient_model_1 = require("./ingredient.model");
+const ingredient_model_1 = require("../ingredients/ingredient.model");
 const inventory_transaction_model_1 = require("./inventory-transaction.model");
 const unit_converter_1 = require("../../shared/utils/unit-converter");
 const AppError_1 = require("../../shared/errors/AppError");

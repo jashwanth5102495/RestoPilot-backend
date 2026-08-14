@@ -11,6 +11,13 @@ const env_1 = require("./config/env");
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const error_middleware_1 = require("./middleware/error.middleware");
 const auth_routes_1 = __importDefault(require("./modules/auth/auth.routes"));
+const category_routes_1 = __importDefault(require("./modules/categories/category.routes"));
+const dish_routes_1 = __importDefault(require("./modules/dishes/dish.routes"));
+const ingredient_routes_1 = __importDefault(require("./modules/ingredients/ingredient.routes"));
+const billing_routes_1 = __importDefault(require("./modules/billing/billing.routes"));
+const setup_routes_1 = __importDefault(require("./modules/setup/setup.routes"));
+const admin_routes_1 = __importDefault(require("./modules/admin/admin.routes"));
+const public_routes_1 = __importDefault(require("./modules/public/public.routes"));
 const app = (0, express_1.default)();
 const apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
@@ -41,6 +48,13 @@ app.get('/ready', (req, res) => {
 });
 // Routes
 app.use('/api/v1/auth', apiLimiter, auth_routes_1.default);
+app.use('/api/v1/categories', category_routes_1.default);
+app.use('/api/v1/dishes', dish_routes_1.default);
+app.use('/api/v1/ingredients', ingredient_routes_1.default);
+app.use('/api/v1/billing', billing_routes_1.default);
+app.use('/api/v1/setup', setup_routes_1.default);
+app.use('/api/v1/admin', admin_routes_1.default);
+app.use('/api/v1/public', public_routes_1.default);
 app.use('/api/v1', (req, res) => {
     res.status(404).json({ success: false, message: 'API Route Not Found' });
 });
