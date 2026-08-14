@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Order = exports.PaymentStatus = exports.PaymentMethod = exports.OrderStatus = void 0;
+exports.Order = exports.OrderSource = exports.PaymentStatus = exports.PaymentMethod = exports.OrderStatus = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 var OrderStatus;
 (function (OrderStatus) {
@@ -58,6 +58,11 @@ var PaymentStatus;
     PaymentStatus["PARTIALLY_PAID"] = "PARTIALLY_PAID";
     PaymentStatus["REFUNDED"] = "REFUNDED";
 })(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+var OrderSource;
+(function (OrderSource) {
+    OrderSource["IN_STORE"] = "IN_STORE";
+    OrderSource["ONLINE"] = "ONLINE";
+})(OrderSource || (exports.OrderSource = OrderSource = {}));
 const OrderItemSchema = new mongoose_1.Schema({
     dishId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Dish', required: true },
     dishName: { type: String, required: true },
@@ -78,7 +83,13 @@ const OrderSchema = new mongoose_1.Schema({
     paymentMethod: { type: String, enum: Object.values(PaymentMethod) },
     paymentStatus: { type: String, enum: Object.values(PaymentStatus), default: PaymentStatus.PENDING },
     orderStatus: { type: String, enum: Object.values(OrderStatus), default: OrderStatus.PLACED },
-    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    orderSource: { type: String, enum: Object.values(OrderSource), default: OrderSource.IN_STORE },
+    customerInfo: {
+        name: { type: String },
+        phone: { type: String },
+        address: { type: String }
+    },
+    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 OrderSchema.index({ restaurantId: 1, orderNumber: 1 }, { unique: true });
 OrderSchema.index({ restaurantId: 1, createdAt: -1 });

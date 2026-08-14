@@ -1,10 +1,40 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BillingService = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
+const mongoose_1 = __importStar(require("mongoose"));
 const order_model_1 = require("../orders/order.model");
 const bill_model_1 = require("./bill.model");
 const dish_model_1 = require("../dishes/dish.model");
@@ -71,7 +101,7 @@ class BillingService {
                 await inventory_service_1.InventoryService.adjustStock(restaurantId, reqIng.ingredientId, -reqIng.quantityInBaseUnit, 'BASE_UNIT', 
                 // We passed `quantityInBaseUnit`, so we can pass any base unit, e.g. the ingredient's actual base unit.
                 // We need a slight modification to `adjustStock` to accept base quantities safely.
-                inventory_transaction_model_1.TransactionType.SALE_CONSUMPTION, session, { referenceType: 'ORDER', referenceId: order._id, createdBy: userId }, false // Prevent negative stock
+                inventory_transaction_model_1.TransactionType.SALE_CONSUMPTION, session, { referenceType: 'ORDER', referenceId: order._id, createdBy: new mongoose_1.Types.ObjectId(userId) }, false // Prevent negative stock
                 );
             }
             // 4. Create Bill
@@ -121,7 +151,7 @@ class BillingService {
             // 2. Restore inventory
             const consumedIngredients = await order_consumption_service_1.OrderConsumptionService.calculateOrderConsumption(restaurantId, bill.items);
             for (const reqIng of consumedIngredients) {
-                await inventory_service_1.InventoryService.adjustStock(restaurantId, reqIng.ingredientId, reqIng.quantityInBaseUnit, 'BASE_UNIT', inventory_transaction_model_1.TransactionType.REVERSAL, session, { referenceType: 'BILL_VOID', referenceId: bill._id, createdBy: userId, notes: `Voided bill ${bill.billNumber}` }, true // It's restoring stock, negative stock check isn't strictly necessary
+                await inventory_service_1.InventoryService.adjustStock(restaurantId, reqIng.ingredientId, reqIng.quantityInBaseUnit, 'BASE_UNIT', inventory_transaction_model_1.TransactionType.REVERSAL, session, { referenceType: 'BILL_VOID', referenceId: bill._id, createdBy: new mongoose_1.Types.ObjectId(userId), notes: `Voided bill ${bill.billNumber}` }, true // It's restoring stock, negative stock check isn't strictly necessary
                 );
             }
             await session.commitTransaction();
