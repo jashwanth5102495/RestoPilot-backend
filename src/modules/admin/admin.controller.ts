@@ -3,6 +3,7 @@ import { Restaurant } from '../restaurants/restaurant.model';
 import { Order } from '../orders/order.model';
 import { Ingredient } from '../ingredients/ingredient.model';
 import { DataRequest, DataRequestStatus } from './data-request.model';
+import { Agent } from './agent.model';
 
 export class AdminController {
   static async getRestaurants(req: Request, res: Response, next: NextFunction) {
@@ -98,6 +99,54 @@ export class AdminController {
       await request.save();
       
       res.status(200).json({ success: true, data: request });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAgents(req: Request, res: Response, next: NextFunction) {
+    try {
+      const agents = await Agent.find().sort({ createdAt: -1 });
+      res.status(200).json({ success: true, data: agents });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async createAgent(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { name, code } = req.body;
+      if (!name || !code) {
+        return res.status(400).json({ success: false, message: 'Name and Code are required' });
+      }
+
+      // Check if code already exists
+      const existing = await Agent.findOne({ code: code.toUpperCase().trim() });
+      if (existing) {
+        return res.status(400).json({ success: false, message: 'Agent code already exists' });
+      }
+
+      const agent = new Agent({
+        name,
+        code: code.toUpperCase().trim(),
+        status: 'ACTIVE'
+      });
+      await agent.save();
+
+      res.status(201).json({ success: true, data: agent });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteAgent(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const deleted = await Agent.findByIdAndDelete(id);
+      if (!deleted) {
+        return res.status(404).json({ success: false, message: 'Agent not found' });
+      }
+      res.status(200).json({ success: true, message: 'Agent deleted successfully' });
     } catch (error) {
       next(error);
     }

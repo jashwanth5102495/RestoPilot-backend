@@ -19,4 +19,7 @@ router.get('/backup/export', admin_controller_1.AdminController.exportBackup);
 router.delete('/backup/wipe', admin_controller_1.AdminController.wipeBackup);
 router.get('/data-requests', admin_controller_1.AdminController.getDataRequests);
 router.post('/data-requests/:id/fulfill', admin_controller_1.AdminController.fulfillDataRequest);
+router.get('/agents', admin_controller_1.AdminController.getAgents);
+router.post('/agents', admin_controller_1.AdminController.createAgent);
+router.delete('/agents/:id', admin_controller_1.AdminController.deleteAgent);
 exports.default = router;

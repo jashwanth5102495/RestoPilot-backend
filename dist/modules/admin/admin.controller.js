@@ -5,6 +5,7 @@ const restaurant_model_1 = require("../restaurants/restaurant.model");
 const order_model_1 = require("../orders/order.model");
 const ingredient_model_1 = require("../ingredients/ingredient.model");
 const data_request_model_1 = require("./data-request.model");
+const agent_model_1 = require("./agent.model");
 class AdminController {
     static async getRestaurants(req, res, next) {
         try {
@@ -89,6 +90,51 @@ class AdminController {
             request.dataUrl = dataUrl;
             await request.save();
             res.status(200).json({ success: true, data: request });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getAgents(req, res, next) {
+        try {
+            const agents = await agent_model_1.Agent.find().sort({ createdAt: -1 });
+            res.status(200).json({ success: true, data: agents });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async createAgent(req, res, next) {
+        try {
+            const { name, code } = req.body;
+            if (!name || !code) {
+                return res.status(400).json({ success: false, message: 'Name and Code are required' });
+            }
+            // Check if code already exists
+            const existing = await agent_model_1.Agent.findOne({ code: code.toUpperCase().trim() });
+            if (existing) {
+                return res.status(400).json({ success: false, message: 'Agent code already exists' });
+            }
+            const agent = new agent_model_1.Agent({
+                name,
+                code: code.toUpperCase().trim(),
+                status: 'ACTIVE'
+            });
+            await agent.save();
+            res.status(201).json({ success: true, data: agent });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async deleteAgent(req, res, next) {
+        try {
+            const { id } = req.params;
+            const deleted = await agent_model_1.Agent.findByIdAndDelete(id);
+            if (!deleted) {
+                return res.status(404).json({ success: false, message: 'Agent not found' });
+            }
+            res.status(200).json({ success: true, message: 'Agent deleted successfully' });
         }
         catch (error) {
             next(error);
