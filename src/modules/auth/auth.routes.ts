@@ -9,5 +9,6 @@ const router = Router();
 router.post('/login', validate(loginSchema), AuthController.login);
 router.post('/register', validate(registerRestaurantSchema), AuthController.registerRestaurant);
 router.get('/me', authenticate, AuthController.getMe);
+router.post('/switch-branch', authenticate, AuthController.switchBranch);
 
 export default router;
