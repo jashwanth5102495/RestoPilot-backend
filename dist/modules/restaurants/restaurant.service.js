@@ -40,10 +40,15 @@ const ingredient_model_1 = require("../ingredients/ingredient.model");
 const AppError_1 = require("../../shared/errors/AppError");
 class RestaurantService {
     static async getBranches(restaurantId) {
+        const currentRes = await restaurant_model_1.Restaurant.findById(restaurantId);
+        if (!currentRes) {
+            return [];
+        }
+        const rootId = currentRes.parentRestaurantId || currentRes._id;
         const branches = await restaurant_model_1.Restaurant.find({
             $or: [
-                { _id: restaurantId },
-                { parentRestaurantId: restaurantId }
+                { _id: rootId },
+                { parentRestaurantId: rootId }
             ]
         }).select('_id name city address status parentRestaurantId');
         return branches;
