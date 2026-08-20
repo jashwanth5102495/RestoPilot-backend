@@ -33,6 +33,7 @@ export interface IRestaurant extends Document {
   onlineSlug?: string;
   subscriptionStatus: SubscriptionStatus;
   subscriptionExpiresAt?: Date;
+  parentRestaurantId?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,10 +60,12 @@ const RestaurantSchema = new Schema<IRestaurant>(
     onlineSlug: { type: String },
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
+    parentRestaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
   },
   { timestamps: true }
 );
 
 RestaurantSchema.index({ onlineSlug: 1 }, { unique: true, sparse: true });
+RestaurantSchema.index({ parentRestaurantId: 1 });
 
 export const Restaurant = mongoose.model<IRestaurant>('Restaurant', RestaurantSchema);

@@ -18,6 +18,7 @@ const billing_routes_1 = __importDefault(require("./modules/billing/billing.rout
 const setup_routes_1 = __importDefault(require("./modules/setup/setup.routes"));
 const admin_routes_1 = __importDefault(require("./modules/admin/admin.routes"));
 const public_routes_1 = __importDefault(require("./modules/public/public.routes"));
+const restaurant_routes_1 = __importDefault(require("./modules/restaurants/restaurant.routes"));
 const app = (0, express_1.default)();
 const apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
@@ -55,6 +56,7 @@ app.use('/api/v1/billing', billing_routes_1.default);
 app.use('/api/v1/setup', setup_routes_1.default);
 app.use('/api/v1/admin', admin_routes_1.default);
 app.use('/api/v1/public', public_routes_1.default);
+app.use('/api/v1/restaurants', restaurant_routes_1.default);
 app.use('/api/v1', (req, res) => {
     res.status(404).json({ success: false, message: 'API Route Not Found' });
 });

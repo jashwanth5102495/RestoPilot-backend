@@ -7,6 +7,19 @@ import { InventoryTransaction, TransactionType } from '../inventory/inventory-tr
 
 export class SetupService {
   static async completeSetup(restaurantId: string, ingredients: any[], dishes: any[], userId?: string) {
+    // 0. Ensure collections exist before starting transaction (DDL not allowed inside transactions)
+    try {
+      await Promise.all([
+        Ingredient.createCollection(),
+        InventoryTransaction.createCollection(),
+        Category.createCollection(),
+        Dish.createCollection(),
+        Recipe.createCollection()
+      ]);
+    } catch (err) {
+      console.error('Failed to create collections:', err);
+    }
+
     const session = await mongoose.startSession();
     session.startTransaction();
 
@@ -64,11 +77,17 @@ export class SetupService {
         await newDish.save({ session });
 
         if (dish.recipe && dish.recipe.length > 0) {
-          const recipeItems = dish.recipe.map((r: any) => ({
-            ingredientId: new mongoose.Types.ObjectId(ingredientMap.get(r.ingredientId)!),
-            quantity: Number(r.quantity),
-            unit: r.unit || 'g'
-          }));
+          const recipeItems = dish.recipe.map((r: any) => {
+            const mappedIngId = ingredientMap.get(r.ingredientId);
+            if (!mappedIngId) {
+              throw new Error(`Ingredient with temp ID ${r.ingredientId} not found in mapped ingredients.`);
+            }
+            return {
+              ingredientId: new mongoose.Types.ObjectId(mappedIngId),
+              quantity: Number(r.quantity),
+              unit: r.unit || 'g'
+            };
+          });
 
           const newRecipe = new Recipe({
             restaurantId,
@@ -86,6 +105,7 @@ export class SetupService {
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
+      console.error('Setup transaction failed:', error);
       throw error;
     }
   }
