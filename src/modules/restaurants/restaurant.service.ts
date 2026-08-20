@@ -47,4 +47,30 @@ export class RestaurantService {
       recentOrders
     };
   }
+
+  static async createBranch(parentId: string, branchData: any) {
+    const { RestaurantStatus, SubscriptionStatus } = await import('./restaurant.model');
+    const parentRestaurant = await Restaurant.findById(parentId);
+    if (!parentRestaurant) {
+      throw new Error('Parent restaurant not found');
+    }
+
+    const branch = new Restaurant({
+      name: branchData.name,
+      phone: branchData.phone,
+      email: branchData.email,
+      address: branchData.address,
+      city: branchData.city,
+      state: branchData.state,
+      pincode: branchData.pincode,
+      restaurantType: branchData.restaurantType || parentRestaurant.restaurantType,
+      parentRestaurantId: parentRestaurant._id,
+      ownerId: parentRestaurant.ownerId,
+      status: RestaurantStatus.ACTIVE,
+      subscriptionStatus: SubscriptionStatus.ACTIVE, // Active by default for branches during testing
+    });
+
+    await branch.save();
+    return branch;
+  }
 }

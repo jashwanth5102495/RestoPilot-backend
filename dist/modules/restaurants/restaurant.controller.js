@@ -21,5 +21,14 @@ class RestaurantController {
             next(error);
         }
     }
+    static async createBranch(req, res, next) {
+        try {
+            const newBranch = await restaurant_service_1.RestaurantService.createBranch(req.tenantId, req.body);
+            res.status(201).json({ success: true, data: newBranch });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.RestaurantController = RestaurantController;

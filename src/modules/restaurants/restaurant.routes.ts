@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticate, requireTenant);
 
 router.get('/branches', RestaurantController.getBranches);
+router.post('/', RestaurantController.createBranch);
 router.get('/:branchId/dashboard', RestaurantController.getBranchDashboard);
 
 export default router;
