@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const restaurant_controller_1 = require("./restaurant.controller");
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const tenant_middleware_1 = require("../../middleware/tenant.middleware");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate, tenant_middleware_1.requireTenant);
+router.get('/branches', restaurant_controller_1.RestaurantController.getBranches);
+router.get('/:branchId/dashboard', restaurant_controller_1.RestaurantController.getBranchDashboard);
+exports.default = router;

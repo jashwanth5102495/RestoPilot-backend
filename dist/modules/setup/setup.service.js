@@ -12,6 +12,19 @@ const recipe_model_1 = require("../recipes/recipe.model");
 const inventory_transaction_model_1 = require("../inventory/inventory-transaction.model");
 class SetupService {
     static async completeSetup(restaurantId, ingredients, dishes, userId) {
+        // 0. Ensure collections exist before starting transaction (DDL not allowed inside transactions)
+        try {
+            await Promise.all([
+                ingredient_model_1.Ingredient.createCollection(),
+                inventory_transaction_model_1.InventoryTransaction.createCollection(),
+                category_model_1.Category.createCollection(),
+                dish_model_1.Dish.createCollection(),
+                recipe_model_1.Recipe.createCollection()
+            ]);
+        }
+        catch (err) {
+            console.error('Failed to create collections:', err);
+        }
         const session = await mongoose_1.default.startSession();
         session.startTransaction();
         try {
@@ -63,11 +76,17 @@ class SetupService {
                 });
                 await newDish.save({ session });
                 if (dish.recipe && dish.recipe.length > 0) {
-                    const recipeItems = dish.recipe.map((r) => ({
-                        ingredientId: new mongoose_1.default.Types.ObjectId(ingredientMap.get(r.ingredientId)),
-                        quantity: Number(r.quantity),
-                        unit: r.unit || 'g'
-                    }));
+                    const recipeItems = dish.recipe.map((r) => {
+                        const mappedIngId = ingredientMap.get(r.ingredientId);
+                        if (!mappedIngId) {
+                            throw new Error(`Ingredient with temp ID ${r.ingredientId} not found in mapped ingredients.`);
+                        }
+                        return {
+                            ingredientId: new mongoose_1.default.Types.ObjectId(mappedIngId),
+                            quantity: Number(r.quantity),
+                            unit: r.unit || 'g'
+                        };
+                    });
                     const newRecipe = new recipe_model_1.Recipe({
                         restaurantId,
                         dishId: newDish._id,
@@ -83,6 +102,7 @@ class SetupService {
         catch (error) {
             await session.abortTransaction();
             session.endSession();
+            console.error('Setup transaction failed:', error);
             throw error;
         }
     }
