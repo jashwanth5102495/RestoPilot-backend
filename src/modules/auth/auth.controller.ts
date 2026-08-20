@@ -49,4 +49,26 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async switchBranch(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { branchId } = req.body;
+      const userId = (req as any).user?.userId;
+      const currentRestaurantId = (req as any).user?.restaurantId;
+
+      if (!branchId) {
+        return res.status(400).json({ success: false, message: 'Branch ID is required' });
+      }
+
+      const result = await AuthService.switchBranch(userId, currentRestaurantId, branchId);
+
+      res.status(200).json({
+        success: true,
+        message: 'Switched restaurant context successfully',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

@@ -16,24 +16,43 @@ export class RestaurantService {
   }
 
   static async getBranchDashboard(restaurantId: string, branchId: string) {
-    const isAuthorized = branchId === restaurantId || 
-      (await Restaurant.exists({ _id: branchId, parentRestaurantId: restaurantId }));
-      
-    if (!isAuthorized) {
-      throw new ForbiddenError('You are not authorized to access this branch dashboard');
+    const currentRes = await Restaurant.findById(restaurantId);
+    if (!currentRes) {
+      throw new Error('Current restaurant context not found');
+    }
+    const rootId = currentRes.parentRestaurantId || currentRes._id;
+
+    let targetIds: any[] = [];
+
+    if (branchId === 'overall') {
+      const allLinkedBranches = await Restaurant.find({
+        $or: [
+          { _id: rootId },
+          { parentRestaurantId: rootId }
+        ]
+      }).select('_id');
+      targetIds = allLinkedBranches.map(b => b._id);
+    } else {
+      const isAuthorized = branchId === restaurantId || 
+        (await Restaurant.exists({ _id: branchId, parentRestaurantId: rootId }));
+        
+      if (!isAuthorized) {
+        throw new ForbiddenError('You are not authorized to access this branch dashboard');
+      }
+      targetIds = [branchId];
     }
 
     const [totalOrders, salesResult, lowStockItems, recentOrders] = await Promise.all([
-      Order.countDocuments({ restaurantId: branchId }),
+      Order.countDocuments({ restaurantId: { $in: targetIds } }),
       Order.aggregate([
-        { $match: { restaurantId: branchId } },
+        { $match: { restaurantId: { $in: targetIds } } },
         { $group: { _id: null, total: { $sum: '$total' } } }
       ]),
       Ingredient.countDocuments({ 
-        restaurantId: branchId,
+        restaurantId: { $in: targetIds },
         $expr: { $lte: ['$currentStock', '$minimumStock'] }
       }),
-      Order.find({ restaurantId: branchId })
+      Order.find({ restaurantId: { $in: targetIds } })
         .sort({ createdAt: -1 })
         .limit(5)
     ]);

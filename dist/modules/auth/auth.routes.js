@@ -9,4 +9,5 @@ const router = (0, express_1.Router)();
 router.post('/login', (0, validation_middleware_1.validate)(auth_schema_1.loginSchema), auth_controller_1.AuthController.login);
 router.post('/register', (0, validation_middleware_1.validate)(auth_schema_1.registerRestaurantSchema), auth_controller_1.AuthController.registerRestaurant);
 router.get('/me', auth_middleware_1.authenticate, auth_controller_1.AuthController.getMe);
+router.post('/switch-branch', auth_middleware_1.authenticate, auth_controller_1.AuthController.switchBranch);
 exports.default = router;

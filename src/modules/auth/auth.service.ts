@@ -104,4 +104,48 @@ export class AuthService {
       session.endSession();
     }
   }
+
+  static async switchBranch(userId: string, currentRestaurantId: string, targetBranchId: string) {
+    const currentRes = await Restaurant.findById(currentRestaurantId);
+    if (!currentRes) {
+      throw new Error('Current restaurant context not found');
+    }
+
+    const rootId = currentRes.parentRestaurantId || currentRes._id;
+
+    // Check if target is authorized (either the root itself, or a branch of the root)
+    const targetRes = await Restaurant.findById(targetBranchId);
+    if (!targetRes) {
+      throw new Error('Target branch not found');
+    }
+
+    const isAuthorized = targetRes._id.toString() === rootId.toString() || 
+      (targetRes.parentRestaurantId && targetRes.parentRestaurantId.toString() === rootId.toString());
+
+    if (!isAuthorized) {
+      throw new Error('Unauthorized to switch to this branch');
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const payload = {
+      userId: user._id.toString(),
+      restaurantId: targetBranchId,
+      role: user.role,
+    };
+
+    const accessToken = jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn: env.JWT_ACCESS_EXPIRES_IN as any });
+    const refreshToken = jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: env.JWT_REFRESH_EXPIRES_IN as any });
+
+    const { passwordHash, ...userWithoutPassword } = user.toObject();
+
+    return {
+      user: { ...userWithoutPassword, restaurant: targetRes.toObject() },
+      accessToken,
+      refreshToken,
+    };
+  }
 }

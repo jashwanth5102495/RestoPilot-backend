@@ -49,22 +49,40 @@ class RestaurantService {
         return branches;
     }
     static async getBranchDashboard(restaurantId, branchId) {
-        const isAuthorized = branchId === restaurantId ||
-            (await restaurant_model_1.Restaurant.exists({ _id: branchId, parentRestaurantId: restaurantId }));
-        if (!isAuthorized) {
-            throw new AppError_1.ForbiddenError('You are not authorized to access this branch dashboard');
+        const currentRes = await restaurant_model_1.Restaurant.findById(restaurantId);
+        if (!currentRes) {
+            throw new Error('Current restaurant context not found');
+        }
+        const rootId = currentRes.parentRestaurantId || currentRes._id;
+        let targetIds = [];
+        if (branchId === 'overall') {
+            const allLinkedBranches = await restaurant_model_1.Restaurant.find({
+                $or: [
+                    { _id: rootId },
+                    { parentRestaurantId: rootId }
+                ]
+            }).select('_id');
+            targetIds = allLinkedBranches.map(b => b._id);
+        }
+        else {
+            const isAuthorized = branchId === restaurantId ||
+                (await restaurant_model_1.Restaurant.exists({ _id: branchId, parentRestaurantId: rootId }));
+            if (!isAuthorized) {
+                throw new AppError_1.ForbiddenError('You are not authorized to access this branch dashboard');
+            }
+            targetIds = [branchId];
         }
         const [totalOrders, salesResult, lowStockItems, recentOrders] = await Promise.all([
-            order_model_1.Order.countDocuments({ restaurantId: branchId }),
+            order_model_1.Order.countDocuments({ restaurantId: { $in: targetIds } }),
             order_model_1.Order.aggregate([
-                { $match: { restaurantId: branchId } },
+                { $match: { restaurantId: { $in: targetIds } } },
                 { $group: { _id: null, total: { $sum: '$total' } } }
             ]),
             ingredient_model_1.Ingredient.countDocuments({
-                restaurantId: branchId,
+                restaurantId: { $in: targetIds },
                 $expr: { $lte: ['$currentStock', '$minimumStock'] }
             }),
-            order_model_1.Order.find({ restaurantId: branchId })
+            order_model_1.Order.find({ restaurantId: { $in: targetIds } })
                 .sort({ createdAt: -1 })
                 .limit(5)
         ]);
