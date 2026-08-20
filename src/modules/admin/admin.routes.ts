@@ -22,5 +22,8 @@ router.get('/backup/export', AdminController.exportBackup);
 router.delete('/backup/wipe', AdminController.wipeBackup);
 router.get('/data-requests', AdminController.getDataRequests);
 router.post('/data-requests/:id/fulfill', AdminController.fulfillDataRequest);
+router.get('/agents', AdminController.getAgents);
+router.post('/agents', AdminController.createAgent);
+router.delete('/agents/:id', AdminController.deleteAgent);
 
 export default router;
