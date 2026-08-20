@@ -5,10 +5,16 @@ import { ForbiddenError } from '../../shared/errors/AppError';
 
 export class RestaurantService {
   static async getBranches(restaurantId: string) {
+    const currentRes = await Restaurant.findById(restaurantId);
+    if (!currentRes) {
+      return [];
+    }
+    const rootId = currentRes.parentRestaurantId || currentRes._id;
+
     const branches = await Restaurant.find({
       $or: [
-        { _id: restaurantId },
-        { parentRestaurantId: restaurantId }
+        { _id: rootId },
+        { parentRestaurantId: rootId }
       ]
     }).select('_id name city address status parentRestaurantId');
     
