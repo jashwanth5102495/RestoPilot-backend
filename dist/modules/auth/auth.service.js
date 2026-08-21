@@ -42,6 +42,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const user_model_1 = require("../users/user.model");
 const restaurant_model_1 = require("../restaurants/restaurant.model");
+const category_model_1 = require("../categories/category.model");
 const env_1 = require("../../config/env");
 const AppError_1 = require("../../shared/errors/AppError");
 class AuthService {
@@ -113,6 +114,27 @@ class AuthService {
             // Link owner to restaurant
             restaurant.ownerId = owner._id;
             await restaurant.save({ session });
+            // Seed default categories
+            const defaultCategories = [
+                'Starters',
+                'Main Course',
+                'Rice & Biryani',
+                'Breads',
+                'South Indian',
+                'Desserts',
+                'Beverages',
+                'Combos & Thalis'
+            ];
+            for (let i = 0; i < defaultCategories.length; i++) {
+                const cat = new category_model_1.Category({
+                    restaurantId: restaurant._id,
+                    name: defaultCategories[i],
+                    description: `Default category: ${defaultCategories[i]}`,
+                    displayOrder: i + 1,
+                    isActive: true
+                });
+                await cat.save({ session });
+            }
             await session.commitTransaction();
             const payload = {
                 userId: owner._id.toString(),
