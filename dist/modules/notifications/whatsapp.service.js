@@ -25,11 +25,23 @@ class WhatsAppService {
             authStrategy: new whatsapp_web_js_1.LocalAuth(),
             puppeteer: {
                 executablePath: execPath,
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--disable-gpu'
+                ],
             }
         });
+        this.client.on('loading_screen', (percent, message) => {
+            console.log(`WhatsApp loading: ${percent}% - ${message}`);
+        });
         this.client.on('qr', async (qr) => {
-            this.status = 'INITIALIZING';
+            this.status = 'AWAITING_LOGIN';
             try {
                 this.qrCodeUrl = await qrcode_1.default.toDataURL(qr);
                 console.log('WhatsApp QR Code generated.');
@@ -66,12 +78,21 @@ class WhatsAppService {
         return this.status;
     }
     async requestPairingCode(phoneNumber) {
-        if (this.status !== 'INITIALIZING' && this.status !== 'DISCONNECTED') {
-            throw new Error('WhatsApp client is already connected or in an invalid state');
+        if (this.status !== 'AWAITING_LOGIN' && this.status !== 'INITIALIZING') {
+            throw new Error('WhatsApp client is not ready for pairing. Please wait until it initializes completely.');
         }
         try {
             // Clean phone number (remove +, spaces, etc)
             const cleanNumber = phoneNumber.replace(/\D/g, '');
+            // Wait for page to be ready if it's still booting
+            let attempts = 0;
+            while (!this.client.pupPage && attempts < 15) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                attempts++;
+            }
+            if (!this.client.pupPage) {
+                throw new Error('Browser page failed to initialize in time');
+            }
             const code = await this.client.requestPairingCode(cleanNumber);
             return code;
         }
