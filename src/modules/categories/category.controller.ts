@@ -5,7 +5,35 @@ import { NotFoundError } from '../../shared/errors/AppError';
 export class CategoryController {
   static async getCategories(req: Request, res: Response, next: NextFunction) {
     try {
-      const categories = await Category.find({ restaurantId: req.tenantId }).sort({ displayOrder: 1, createdAt: -1 });
+      let categories = await Category.find({ restaurantId: req.tenantId }).sort({ displayOrder: 1, createdAt: -1 });
+      
+      if (categories.length === 0) {
+        const defaultCategories = [
+          'Starters',
+          'Main Course',
+          'Rice & Biryani',
+          'Breads',
+          'South Indian',
+          'Desserts',
+          'Beverages',
+          'Combos & Thalis'
+        ];
+
+        const seededCategories = [];
+        for (let i = 0; i < defaultCategories.length; i++) {
+          const cat = new Category({
+            restaurantId: req.tenantId,
+            name: defaultCategories[i],
+            description: `Default category: ${defaultCategories[i]}`,
+            displayOrder: i + 1,
+            isActive: true
+          });
+          await cat.save();
+          seededCategories.push(cat);
+        }
+        categories = seededCategories;
+      }
+
       res.status(200).json({ success: true, data: categories });
     } catch (error) {
       next(error);

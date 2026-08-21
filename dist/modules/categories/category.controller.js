@@ -6,7 +6,32 @@ const AppError_1 = require("../../shared/errors/AppError");
 class CategoryController {
     static async getCategories(req, res, next) {
         try {
-            const categories = await category_model_1.Category.find({ restaurantId: req.tenantId }).sort({ displayOrder: 1, createdAt: -1 });
+            let categories = await category_model_1.Category.find({ restaurantId: req.tenantId }).sort({ displayOrder: 1, createdAt: -1 });
+            if (categories.length === 0) {
+                const defaultCategories = [
+                    'Starters',
+                    'Main Course',
+                    'Rice & Biryani',
+                    'Breads',
+                    'South Indian',
+                    'Desserts',
+                    'Beverages',
+                    'Combos & Thalis'
+                ];
+                const seededCategories = [];
+                for (let i = 0; i < defaultCategories.length; i++) {
+                    const cat = new category_model_1.Category({
+                        restaurantId: req.tenantId,
+                        name: defaultCategories[i],
+                        description: `Default category: ${defaultCategories[i]}`,
+                        displayOrder: i + 1,
+                        isActive: true
+                    });
+                    await cat.save();
+                    seededCategories.push(cat);
+                }
+                categories = seededCategories;
+            }
             res.status(200).json({ success: true, data: categories });
         }
         catch (error) {
