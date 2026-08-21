@@ -15,7 +15,7 @@ if (fs.existsSync('/usr/bin/chromium')) {
 class WhatsAppService {
   private client: Client;
   private qrCodeUrl: string | null = null;
-  private status: 'DISCONNECTED' | 'INITIALIZING' | 'CONNECTED' = 'DISCONNECTED';
+  private status: 'DISCONNECTED' | 'INITIALIZING' | 'AWAITING_LOGIN' | 'CONNECTED' = 'DISCONNECTED';
 
   constructor() {
     this.client = new Client({
@@ -27,7 +27,7 @@ class WhatsAppService {
     });
 
     this.client.on('qr', async (qr) => {
-      this.status = 'INITIALIZING';
+      this.status = 'AWAITING_LOGIN';
       try {
         this.qrCodeUrl = await qrcode.toDataURL(qr);
         console.log('WhatsApp QR Code generated.');
@@ -68,8 +68,8 @@ class WhatsAppService {
   }
 
   public async requestPairingCode(phoneNumber: string) {
-    if (this.status !== 'INITIALIZING' && this.status !== 'DISCONNECTED') {
-      throw new Error('WhatsApp client is already connected or in an invalid state');
+    if (this.status !== 'AWAITING_LOGIN') {
+      throw new Error('WhatsApp client is not ready for pairing. Please wait until it initializes completely.');
     }
     
     try {
