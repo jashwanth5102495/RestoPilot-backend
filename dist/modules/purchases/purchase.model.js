@@ -46,7 +46,7 @@ const PurchaseItemSchema = new mongoose_1.Schema({
 const PurchaseSchema = new mongoose_1.Schema({
     restaurantId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
     purchaseNumber: { type: String, required: true },
-    supplierId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Supplier', required: true },
+    supplierId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Supplier' },
     items: [PurchaseItemSchema],
     subtotal: { type: Number, required: true, min: 0 },
     tax: { type: Number, default: 0, min: 0 },

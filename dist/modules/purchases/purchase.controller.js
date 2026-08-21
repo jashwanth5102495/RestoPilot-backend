@@ -59,8 +59,8 @@ class PurchaseController {
         try {
             const { supplierId, items, paymentStatus, invoiceNumber, purchaseDate, notes } = req.body;
             const createdBy = req.user?.userId;
-            if (!supplierId || !items || !Array.isArray(items) || items.length === 0) {
-                throw new AppError_1.AppError('Supplier ID and purchase items are required', 400);
+            if (!items || !Array.isArray(items) || items.length === 0) {
+                throw new AppError_1.AppError('Purchase items are required', 400);
             }
             if (!createdBy) {
                 throw new AppError_1.AppError('User session context is missing', 401);
@@ -86,7 +86,7 @@ class PurchaseController {
             const purchase = new purchase_model_1.Purchase({
                 restaurantId: req.tenantId,
                 purchaseNumber,
-                supplierId: new mongoose_1.Types.ObjectId(supplierId),
+                supplierId: supplierId ? new mongoose_1.Types.ObjectId(supplierId) : undefined,
                 items: purchaseItems,
                 subtotal,
                 tax: 0,
