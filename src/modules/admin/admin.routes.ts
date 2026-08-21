@@ -18,6 +18,7 @@ const requireSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
 router.use(authenticate, requireSuperAdmin);
 
 router.get('/restaurants', AdminController.getRestaurants);
+router.delete('/restaurants/:id', AdminController.deleteRestaurant);
 router.get('/backup/export', AdminController.exportBackup);
 router.delete('/backup/wipe', AdminController.wipeBackup);
 router.get('/data-requests', AdminController.getDataRequests);
