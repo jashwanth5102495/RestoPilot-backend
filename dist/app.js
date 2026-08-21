@@ -24,6 +24,7 @@ const recipe_routes_1 = __importDefault(require("./modules/recipes/recipe.routes
 const supplier_routes_1 = __importDefault(require("./modules/suppliers/supplier.routes"));
 const purchase_routes_1 = __importDefault(require("./modules/purchases/purchase.routes"));
 const app = (0, express_1.default)();
+app.set('trust proxy', 1);
 const apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
     max: 100,
