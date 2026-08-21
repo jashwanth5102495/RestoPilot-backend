@@ -5,17 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const whatsapp_web_js_1 = require("whatsapp-web.js");
 const qrcode_1 = __importDefault(require("qrcode"));
-const fs_1 = __importDefault(require("fs"));
-let execPath = undefined;
-if (fs_1.default.existsSync('/usr/bin/chromium')) {
-    execPath = '/usr/bin/chromium';
-}
-else if (fs_1.default.existsSync('/usr/bin/chromium-browser')) {
-    execPath = '/usr/bin/chromium-browser';
-}
-else if (fs_1.default.existsSync('/usr/bin/google-chrome')) {
-    execPath = '/usr/bin/google-chrome';
-}
+const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
 class WhatsAppService {
     client;
     qrCodeUrl = null;

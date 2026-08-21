@@ -1,26 +1,8 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 
-import fs from 'fs';
-import { execSync } from 'child_process';
 
-let execPath: string | undefined = process.env.PUPPETEER_EXECUTABLE_PATH;
-if (!execPath) {
-  try {
-    execPath = execSync('which chromium').toString().trim();
-  } catch (e) {
-    try {
-      execPath = execSync('which chromium-browser').toString().trim();
-    } catch (e) {
-      try {
-        execPath = execSync('which google-chrome').toString().trim();
-      } catch (e) {
-        execPath = undefined;
-      }
-    }
-  }
-}
-console.log('Resolved Chromium Executable Path:', execPath);
+const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
 
 class WhatsAppService {
   private client: Client;
