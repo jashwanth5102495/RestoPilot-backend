@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import { User, UserRole, UserStatus } from '../users/user.model';
 import { Restaurant, RestaurantStatus } from '../restaurants/restaurant.model';
+import { Category } from '../categories/category.model';
 import { env } from '../../config/env';
 import { UnauthorizedError, ValidationError } from '../../shared/errors/AppError';
 
@@ -91,6 +92,29 @@ export class AuthService {
       // Link owner to restaurant
       restaurant.ownerId = owner._id;
       await restaurant.save({ session });
+
+      // Seed default categories
+      const defaultCategories = [
+        'Starters',
+        'Main Course',
+        'Rice & Biryani',
+        'Breads',
+        'South Indian',
+        'Desserts',
+        'Beverages',
+        'Combos & Thalis'
+      ];
+
+      for (let i = 0; i < defaultCategories.length; i++) {
+        const cat = new Category({
+          restaurantId: restaurant._id,
+          name: defaultCategories[i],
+          description: `Default category: ${defaultCategories[i]}`,
+          displayOrder: i + 1,
+          isActive: true
+        });
+        await cat.save({ session });
+      }
 
       await session.commitTransaction();
 

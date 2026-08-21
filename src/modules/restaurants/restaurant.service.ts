@@ -96,6 +96,31 @@ export class RestaurantService {
     });
 
     await branch.save();
+
+    // Seed default categories for branch
+    const defaultCategories = [
+      'Starters',
+      'Main Course',
+      'Rice & Biryani',
+      'Breads',
+      'South Indian',
+      'Desserts',
+      'Beverages',
+      'Combos & Thalis'
+    ];
+
+    const { Category } = await import('../categories/category.model');
+    for (let i = 0; i < defaultCategories.length; i++) {
+      const cat = new Category({
+        restaurantId: branch._id,
+        name: defaultCategories[i],
+        description: `Default category: ${defaultCategories[i]}`,
+        displayOrder: i + 1,
+        isActive: true
+      });
+      await cat.save();
+    }
+
     return branch;
   }
 }
