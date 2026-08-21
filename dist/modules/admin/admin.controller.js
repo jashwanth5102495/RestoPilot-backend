@@ -210,5 +210,22 @@ class AdminController {
             next(error);
         }
     }
+    static async getPairingCode(req, res, next) {
+        try {
+            const { phoneNumber } = req.body;
+            if (!phoneNumber) {
+                return res.status(400).json({ success: false, message: 'Phone number is required' });
+            }
+            const whatsappService = (await Promise.resolve().then(() => __importStar(require('../notifications/whatsapp.service')))).default;
+            const code = await whatsappService.requestPairingCode(phoneNumber);
+            res.status(200).json({
+                success: true,
+                data: { code }
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.AdminController = AdminController;

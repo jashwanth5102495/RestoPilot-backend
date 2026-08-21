@@ -65,6 +65,21 @@ class WhatsAppService {
     getStatus() {
         return this.status;
     }
+    async requestPairingCode(phoneNumber) {
+        if (this.status !== 'INITIALIZING' && this.status !== 'DISCONNECTED') {
+            throw new Error('WhatsApp client is already connected or in an invalid state');
+        }
+        try {
+            // Clean phone number (remove +, spaces, etc)
+            const cleanNumber = phoneNumber.replace(/\D/g, '');
+            const code = await this.client.requestPairingCode(cleanNumber);
+            return code;
+        }
+        catch (error) {
+            console.error('Error requesting pairing code:', error);
+            throw error;
+        }
+    }
     async sendMessage(number, text) {
         if (this.status !== 'CONNECTED') {
             throw new Error('WhatsApp client is not connected');
