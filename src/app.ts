@@ -21,6 +21,7 @@ import supplierRoutes from './modules/suppliers/supplier.routes';
 import purchaseRoutes from './modules/purchases/purchase.routes';
 
 const app = express();
+app.set('trust proxy', 1);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
