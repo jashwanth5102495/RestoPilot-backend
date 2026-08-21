@@ -22,8 +22,21 @@ class WhatsAppService {
       authStrategy: new LocalAuth(),
       puppeteer: {
         executablePath: execPath,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+        headless: true,
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox', 
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu'
+        ],
       }
+    });
+
+    this.client.on('loading_screen', (percent, message) => {
+      console.log(`WhatsApp loading: ${percent}% - ${message}`);
     });
 
     this.client.on('qr', async (qr) => {
@@ -68,13 +81,25 @@ class WhatsAppService {
   }
 
   public async requestPairingCode(phoneNumber: string) {
-    if (this.status !== 'AWAITING_LOGIN') {
+    if (this.status !== 'AWAITING_LOGIN' && this.status !== 'INITIALIZING') {
       throw new Error('WhatsApp client is not ready for pairing. Please wait until it initializes completely.');
     }
     
     try {
       // Clean phone number (remove +, spaces, etc)
       const cleanNumber = phoneNumber.replace(/\D/g, '');
+      
+      // Wait for page to be ready if it's still booting
+      let attempts = 0;
+      while (!(this.client as any).pupPage && attempts < 15) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts++;
+      }
+      
+      if (!(this.client as any).pupPage) {
+        throw new Error('Browser page failed to initialize in time');
+      }
+
       const code = await this.client.requestPairingCode(cleanNumber);
       return code;
     } catch (error) {
