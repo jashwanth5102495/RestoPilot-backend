@@ -92,11 +92,24 @@ export class AuthService {
       restaurant.ownerId = owner._id;
       await restaurant.save({ session });
 
-      // Initialize defaults here (categories, settings) if needed later
-      
       await session.commitTransaction();
-      
-      return { restaurant, ownerId: owner._id };
+
+      const payload = {
+        userId: owner._id.toString(),
+        restaurantId: restaurant._id.toString(),
+        role: owner.role,
+      };
+
+      const accessToken = jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn: env.JWT_ACCESS_EXPIRES_IN as any });
+      const refreshToken = jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: env.JWT_REFRESH_EXPIRES_IN as any });
+
+      const { passwordHash: _, ...ownerWithoutPassword } = owner.toObject();
+
+      return {
+        user: { ...ownerWithoutPassword, restaurant: restaurant.toObject() },
+        accessToken,
+        refreshToken,
+      };
     } catch (error) {
       await session.abortTransaction();
       throw error;
