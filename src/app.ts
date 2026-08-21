@@ -16,6 +16,9 @@ import adminRoutes from './modules/admin/admin.routes';
 import publicRoutes from './modules/public/public.routes';
 import restaurantRoutes from './modules/restaurants/restaurant.routes';
 import orderRoutes from './modules/orders/order.routes';
+import recipeRoutes from './modules/recipes/recipe.routes';
+import supplierRoutes from './modules/suppliers/supplier.routes';
+import purchaseRoutes from './modules/purchases/purchase.routes';
 
 const app = express();
 
@@ -62,6 +65,9 @@ app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/public', publicRoutes);
 app.use('/api/v1/restaurants', restaurantRoutes);
 app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/recipes', recipeRoutes);
+app.use('/api/v1/suppliers', supplierRoutes);
+app.use('/api/v1/purchases', purchaseRoutes);
 
 app.use('/api/v1', (req: Request, res: Response) => {
   res.status(404).json({ success: false, message: 'API Route Not Found' });
