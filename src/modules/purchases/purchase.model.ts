@@ -12,7 +12,7 @@ export interface IPurchaseItem {
 export interface IPurchase extends Document {
   restaurantId: Types.ObjectId;
   purchaseNumber: string;
-  supplierId: Types.ObjectId;
+  supplierId?: Types.ObjectId;
   items: IPurchaseItem[];
   subtotal: number;
   tax: number;
@@ -38,7 +38,7 @@ const PurchaseSchema = new Schema<IPurchase>(
   {
     restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant', required: true },
     purchaseNumber: { type: String, required: true },
-    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier', required: true },
+    supplierId: { type: Schema.Types.ObjectId, ref: 'Supplier' },
     items: [PurchaseItemSchema],
     subtotal: { type: Number, required: true, min: 0 },
     tax: { type: Number, default: 0, min: 0 },

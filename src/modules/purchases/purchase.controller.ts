@@ -28,8 +28,8 @@ export class PurchaseController {
       const { supplierId, items, paymentStatus, invoiceNumber, purchaseDate, notes } = req.body;
       const createdBy = req.user?.userId;
 
-      if (!supplierId || !items || !Array.isArray(items) || items.length === 0) {
-        throw new AppError('Supplier ID and purchase items are required', 400);
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        throw new AppError('Purchase items are required', 400);
       }
 
       if (!createdBy) {
@@ -63,7 +63,7 @@ export class PurchaseController {
       const purchase = new Purchase({
         restaurantId: req.tenantId,
         purchaseNumber,
-        supplierId: new Types.ObjectId(supplierId),
+        supplierId: supplierId ? new Types.ObjectId(supplierId) : undefined,
         items: purchaseItems,
         subtotal,
         tax: 0,
