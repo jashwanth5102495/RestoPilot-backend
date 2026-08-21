@@ -37,6 +37,34 @@ export class AdminController {
     }
   }
 
+  static async deleteRestaurant(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      
+      const { User } = await import('../users/user.model');
+      
+      const deletedRestaurant = await Restaurant.findByIdAndDelete(id);
+      if (!deletedRestaurant) {
+        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+      }
+
+      await User.deleteMany({ restaurantId: id });
+      await Restaurant.deleteMany({ parentRestaurantId: id });
+      await Order.deleteMany({ restaurantId: id });
+      await Ingredient.deleteMany({ restaurantId: id });
+      
+      const { Dish } = await import('../dishes/dish.model');
+      await Dish.deleteMany({ restaurantId: id });
+
+      const { Category } = await import('../categories/category.model');
+      await Category.deleteMany({ restaurantId: id });
+
+      res.status(200).json({ success: true, message: 'Restaurant deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async exportBackup(req: Request, res: Response, next: NextFunction) {
     try {
       const { month, year } = req.query;
