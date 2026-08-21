@@ -69,6 +69,11 @@ const RestaurantSchema = new mongoose_1.Schema({
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Restaurant' },
+    notificationSettings: {
+        whatsappNumber: { type: String },
+        scheduledTime: { type: String },
+        enabled: { type: Boolean, default: false }
+    }
 }, { timestamps: true });
 RestaurantSchema.index({ onlineSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ parentRestaurantId: 1 });

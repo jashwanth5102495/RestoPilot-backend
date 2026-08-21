@@ -26,5 +26,6 @@ router.post('/data-requests/:id/fulfill', AdminController.fulfillDataRequest);
 router.get('/agents', AdminController.getAgents);
 router.post('/agents', AdminController.createAgent);
 router.delete('/agents/:id', AdminController.deleteAgent);
+router.get('/whatsapp/status', AdminController.getWhatsappStatus);
 
 export default router;

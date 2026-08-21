@@ -179,4 +179,19 @@ export class AdminController {
       next(error);
     }
   }
+
+  static async getWhatsappStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const whatsappService = (await import('../notifications/whatsapp.service')).default;
+      res.status(200).json({
+        success: true,
+        data: {
+          status: whatsappService.getStatus(),
+          qrCodeUrl: whatsappService.getQrCode()
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

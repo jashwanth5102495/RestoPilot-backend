@@ -34,6 +34,11 @@ export interface IRestaurant extends Document {
   subscriptionStatus: SubscriptionStatus;
   subscriptionExpiresAt?: Date;
   parentRestaurantId?: Types.ObjectId;
+  notificationSettings?: {
+    whatsappNumber: string;
+    scheduledTime: string;
+    enabled: boolean;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +66,11 @@ const RestaurantSchema = new Schema<IRestaurant>(
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
+    notificationSettings: {
+      whatsappNumber: { type: String },
+      scheduledTime: { type: String },
+      enabled: { type: Boolean, default: false }
+    }
   },
   { timestamps: true }
 );

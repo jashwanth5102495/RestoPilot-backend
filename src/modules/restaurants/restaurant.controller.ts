@@ -57,7 +57,7 @@ export class RestaurantController {
   static async updateRestaurant(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const { name, phone, email, address, city, state, pincode, gstNumber } = req.body;
+      const { name, phone, email, address, city, state, pincode, gstNumber, notificationSettings } = req.body;
       const { Restaurant } = await import('./restaurant.model');
 
       const currentRes = await Restaurant.findById(req.tenantId);
@@ -83,6 +83,13 @@ export class RestaurantController {
       targetRes.state = state || targetRes.state;
       targetRes.pincode = pincode || targetRes.pincode;
       targetRes.gstNumber = gstNumber || targetRes.gstNumber;
+
+      if (notificationSettings) {
+        targetRes.notificationSettings = {
+          ...targetRes.notificationSettings,
+          ...notificationSettings
+        };
+      }
 
       await targetRes.save();
 
