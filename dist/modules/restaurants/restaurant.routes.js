@@ -10,4 +10,5 @@ router.get('/branches', restaurant_controller_1.RestaurantController.getBranches
 router.post('/', restaurant_controller_1.RestaurantController.createBranch);
 router.post('/verify-agent', restaurant_controller_1.RestaurantController.verifyAgent);
 router.get('/:branchId/dashboard', restaurant_controller_1.RestaurantController.getBranchDashboard);
+router.put('/:id', restaurant_controller_1.RestaurantController.updateRestaurant);
 exports.default = router;
