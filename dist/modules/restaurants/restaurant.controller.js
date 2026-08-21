@@ -89,7 +89,7 @@ class RestaurantController {
     static async updateRestaurant(req, res, next) {
         try {
             const { id } = req.params;
-            const { name, phone, email, address, city, state, pincode, gstNumber } = req.body;
+            const { name, phone, email, address, city, state, pincode, gstNumber, notificationSettings } = req.body;
             const { Restaurant } = await Promise.resolve().then(() => __importStar(require('./restaurant.model')));
             const currentRes = await Restaurant.findById(req.tenantId);
             if (!currentRes)
@@ -111,6 +111,12 @@ class RestaurantController {
             targetRes.state = state || targetRes.state;
             targetRes.pincode = pincode || targetRes.pincode;
             targetRes.gstNumber = gstNumber || targetRes.gstNumber;
+            if (notificationSettings) {
+                targetRes.notificationSettings = {
+                    ...targetRes.notificationSettings,
+                    ...notificationSettings
+                };
+            }
             await targetRes.save();
             res.status(200).json({ success: true, data: targetRes });
         }

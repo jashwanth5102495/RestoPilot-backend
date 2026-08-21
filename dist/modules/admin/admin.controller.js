@@ -195,5 +195,20 @@ class AdminController {
             next(error);
         }
     }
+    static async getWhatsappStatus(req, res, next) {
+        try {
+            const whatsappService = (await Promise.resolve().then(() => __importStar(require('../notifications/whatsapp.service')))).default;
+            res.status(200).json({
+                success: true,
+                data: {
+                    status: whatsappService.getStatus(),
+                    qrCodeUrl: whatsappService.getQrCode()
+                }
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.AdminController = AdminController;
