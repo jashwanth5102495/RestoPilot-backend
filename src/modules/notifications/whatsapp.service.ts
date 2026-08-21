@@ -1,6 +1,17 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 
+import fs from 'fs';
+
+let execPath: string | undefined = undefined;
+if (fs.existsSync('/usr/bin/chromium')) {
+  execPath = '/usr/bin/chromium';
+} else if (fs.existsSync('/usr/bin/chromium-browser')) {
+  execPath = '/usr/bin/chromium-browser';
+} else if (fs.existsSync('/usr/bin/google-chrome')) {
+  execPath = '/usr/bin/google-chrome';
+}
+
 class WhatsAppService {
   private client: Client;
   private qrCodeUrl: string | null = null;
@@ -10,7 +21,7 @@ class WhatsAppService {
     this.client = new Client({
       authStrategy: new LocalAuth(),
       puppeteer: {
-        executablePath: process.env.NODE_ENV === 'production' ? '/usr/bin/chromium' : undefined,
+        executablePath: execPath,
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       }
     });
