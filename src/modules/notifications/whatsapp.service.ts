@@ -10,7 +10,8 @@ class WhatsAppService {
     this.client = new Client({
       authStrategy: new LocalAuth(),
       puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: process.env.NODE_ENV === 'production' ? '/usr/bin/chromium' : undefined,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
       }
     });
 
