@@ -1,8 +1,25 @@
 import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
-
+import fs from 'fs';
+import { execSync } from 'child_process';
 
 const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+
+console.log('--- PUPPETEER DIAGNOSTICS ---');
+console.log('PUPPETEER_EXECUTABLE_PATH env var:', process.env.PUPPETEER_EXECUTABLE_PATH);
+console.log('Resolved execPath:', execPath);
+if (execPath) {
+  try {
+    const resolved = execSync(`which ${execPath}`).toString().trim();
+    console.log(`Executable found in PATH at: ${resolved}`);
+    console.log('Does file exist on disk?:', fs.existsSync(resolved));
+  } catch (e) {
+    console.log('Command not found in PATH or does not exist:', execPath);
+  }
+} else {
+  console.log('No executable path provided, relying on local bundled chromium.');
+}
+console.log('-------------------------------');
 
 class WhatsAppService {
   private client: Client;

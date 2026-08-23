@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 import { env } from './env';
 import { logger } from '../shared/utils/logger';
+import * as Sentry from '@sentry/node';
 
 export const connectDatabase = async (): Promise<void> => {
   try {
     await mongoose.connect(env.MONGODB_URI);
-    logger.info(`✅ Successfully connected to MongoDB at ${env.MONGODB_URI}`);
+    logger.info('✅ Successfully connected to MongoDB');
 
     // Ensure Super Admin exists
     const { User, UserRole, UserStatus } = await import('../modules/users/user.model');
@@ -23,15 +24,18 @@ export const connectDatabase = async (): Promise<void> => {
       logger.info('👤 Default Super Admin user created (admin@restopilot.com / admin123)');
     }
   } catch (error) {
-    logger.error('❌ MongoDB connection error:', error);
+    logger.error(error, '❌ MongoDB connection error');
+    Sentry.captureException(error);
     process.exit(1);
   }
 };
 
 mongoose.connection.on('disconnected', () => {
   logger.warn('⚠️ MongoDB disconnected');
+  Sentry.captureMessage('MongoDB disconnected unexpectedly', 'warning');
 });
 
 mongoose.connection.on('error', (err) => {
-  logger.error('❌ MongoDB error:', err);
+  logger.error(err, '❌ MongoDB error');
+  Sentry.captureException(err);
 });

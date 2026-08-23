@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("./shared/utils/sentry"); // Must be first
 const app_1 = __importDefault(require("./app"));
 const database_1 = require("./config/database");
 const env_1 = require("./config/env");
@@ -14,7 +15,7 @@ const startServer = async () => {
         await (0, database_1.connectDatabase)();
         // Start background services (non-blocking)
         whatsapp_service_1.default.initialize().catch(err => {
-            logger_1.logger.error('WhatsApp service failed to initialize', err);
+            logger_1.logger.error(err, 'WhatsApp service failed to initialize');
         });
         cron_service_1.default.start();
         app_1.default.listen(env_1.env.PORT, () => {
@@ -22,7 +23,7 @@ const startServer = async () => {
         });
     }
     catch (error) {
-        logger_1.logger.error('Failed to start server:', error);
+        logger_1.logger.error(error, 'Failed to start server:');
         process.exit(1);
     }
 };

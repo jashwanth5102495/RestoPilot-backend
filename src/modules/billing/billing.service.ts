@@ -120,6 +120,32 @@ export class BillingService {
       return { order, bill };
     } catch (error) {
       await session.abortTransaction();
+
+      // Differentiate expected vs unexpected errors
+      if (error instanceof AppError) {
+        // Expected validation or business logic error (e.g. INSUFFICIENT_STOCK)
+        throw error;
+      }
+      
+      const { logger } = require('../../shared/utils/logger');
+      const Sentry = require('@sentry/node');
+      
+      // Unexpected catastrophic billing/inventory crash
+      logger.error({
+        msg: 'CRITICAL: BILL_CREATION_FAILED',
+        error,
+        restaurantId,
+        userId,
+      });
+
+      Sentry.withScope((scope: any) => {
+        scope.setTag('error_type', 'BILL_CREATION_FAILED');
+        scope.setTag('restaurantId', restaurantId.toString());
+        scope.setUser({ id: userId.toString() });
+        scope.setExtra('items', items);
+        Sentry.captureException(error);
+      });
+
       throw error;
     } finally {
       session.endSession();
@@ -169,6 +195,27 @@ export class BillingService {
       return bill;
     } catch (error) {
       await session.abortTransaction();
+      
+      if (!(error instanceof AppError)) {
+        const { logger } = require('../../shared/utils/logger');
+        const Sentry = require('@sentry/node');
+        
+        logger.error({
+          msg: 'CRITICAL: INVENTORY_REVERSAL_FAILED',
+          error,
+          restaurantId,
+          billId,
+          userId,
+        });
+
+        Sentry.withScope((scope: any) => {
+          scope.setTag('error_type', 'INVENTORY_REVERSAL_FAILED');
+          scope.setTag('restaurantId', restaurantId.toString());
+          scope.setExtra('billId', billId.toString());
+          Sentry.captureException(error);
+        });
+      }
+
       throw error;
     } finally {
       session.endSession();
