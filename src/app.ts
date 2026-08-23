@@ -98,36 +98,6 @@ app.get('/ready', (req: Request, res: Response) => {
   });
 });
 
-app.get('/api/monitoring/sentry-test', (req: Request, res: Response, next: NextFunction) => {
-  if (process.env.SENTRY_TEST_ENABLED !== 'true') {
-    return res.status(403).json({
-      success: false,
-      message: 'Sentry test endpoint is disabled. Set SENTRY_TEST_ENABLED=true to enable.',
-    });
-  }
-
-  try {
-    Sentry.withScope((scope) => {
-      scope.setTag('environment', process.env.NODE_ENV || 'production');
-      scope.setTag('test', 'sentry-verification');
-      scope.setTag('service', 'restopilot-api');
-      
-      const testError = new Error('Safe Sentry Verification Test Exception');
-      testError.name = 'SentryVerificationError';
-      
-      Sentry.captureException(testError);
-    });
-
-    res.status(200).json({
-      success: true,
-      message: 'Sentry test event successfully captured and dispatched.',
-      note: 'Check your Sentry dashboard for the event.',
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
 // Routes
 app.use('/api/v1/auth', apiLimiter, authRoutes);
 app.use('/api/v1/categories', categoryRoutes);
@@ -154,3 +124,4 @@ Sentry.setupExpressErrorHandler(app);
 app.use(errorHandler);
 
 export default app;
+
