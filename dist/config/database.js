@@ -40,10 +40,11 @@ exports.connectDatabase = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const env_1 = require("./env");
 const logger_1 = require("../shared/utils/logger");
+const Sentry = __importStar(require("@sentry/node"));
 const connectDatabase = async () => {
     try {
         await mongoose_1.default.connect(env_1.env.MONGODB_URI);
-        logger_1.logger.info(`✅ Successfully connected to MongoDB at ${env_1.env.MONGODB_URI}`);
+        logger_1.logger.info('✅ Successfully connected to MongoDB');
         // Ensure Super Admin exists
         const { User, UserRole, UserStatus } = await Promise.resolve().then(() => __importStar(require('../modules/users/user.model')));
         const adminExists = await User.exists({ role: UserRole.SUPER_ADMIN });
@@ -61,14 +62,17 @@ const connectDatabase = async () => {
         }
     }
     catch (error) {
-        logger_1.logger.error('❌ MongoDB connection error:', error);
+        logger_1.logger.error(error, '❌ MongoDB connection error');
+        Sentry.captureException(error);
         process.exit(1);
     }
 };
 exports.connectDatabase = connectDatabase;
 mongoose_1.default.connection.on('disconnected', () => {
     logger_1.logger.warn('⚠️ MongoDB disconnected');
+    Sentry.captureMessage('MongoDB disconnected unexpectedly', 'warning');
 });
 mongoose_1.default.connection.on('error', (err) => {
-    logger_1.logger.error('❌ MongoDB error:', err);
+    logger_1.logger.error(err, '❌ MongoDB error');
+    Sentry.captureException(err);
 });

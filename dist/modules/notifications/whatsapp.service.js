@@ -5,7 +5,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const whatsapp_web_js_1 = require("whatsapp-web.js");
 const qrcode_1 = __importDefault(require("qrcode"));
+const fs_1 = __importDefault(require("fs"));
+const child_process_1 = require("child_process");
 const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+console.log('--- PUPPETEER DIAGNOSTICS ---');
+console.log('PUPPETEER_EXECUTABLE_PATH env var:', process.env.PUPPETEER_EXECUTABLE_PATH);
+console.log('Resolved execPath:', execPath);
+if (execPath) {
+    try {
+        const resolved = (0, child_process_1.execSync)(`which ${execPath}`).toString().trim();
+        console.log(`Executable found in PATH at: ${resolved}`);
+        console.log('Does file exist on disk?:', fs_1.default.existsSync(resolved));
+    }
+    catch (e) {
+        console.log('Command not found in PATH or does not exist:', execPath);
+    }
+}
+else {
+    console.log('No executable path provided, relying on local bundled chromium.');
+}
+console.log('-------------------------------');
 class WhatsAppService {
     client;
     qrCodeUrl = null;

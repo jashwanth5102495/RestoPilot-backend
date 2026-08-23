@@ -1,3 +1,4 @@
+import './shared/utils/sentry'; // Must be first
 import app from './app';
 import { connectDatabase } from './config/database';
 import { env } from './config/env';
@@ -12,7 +13,7 @@ const startServer = async () => {
     
     // Start background services (non-blocking)
     whatsappService.initialize().catch(err => {
-      logger.error('WhatsApp service failed to initialize', err);
+      logger.error(err, 'WhatsApp service failed to initialize');
     });
     cronService.start();
 
@@ -20,7 +21,7 @@ const startServer = async () => {
       logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${env.PORT}`);
     });
   } catch (error) {
-    logger.error('Failed to start server:', error);
+    logger.error(error, 'Failed to start server:');
     process.exit(1);
   }
 };

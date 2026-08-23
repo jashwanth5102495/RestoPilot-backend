@@ -1,18 +1,18 @@
-import winston from 'winston';
+import pino from 'pino';
 import { env } from '../../config/env';
 
-export const logger = winston.createLogger({
-  level: env.LOG_LEVEL,
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    }),
-  ],
+export const logger = pino({
+  level: env.LOG_LEVEL || 'info',
+  transport: env.NODE_ENV === 'development' ? {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'SYS:standard',
+      ignore: 'pid,hostname',
+    }
+  } : undefined,
+  base: {
+    service: 'restopilot-api',
+    environment: env.NODE_ENV,
+  },
 });
