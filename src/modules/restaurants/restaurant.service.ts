@@ -1,5 +1,5 @@
 import { Restaurant } from './restaurant.model';
-import { Order } from '../orders/order.model';
+import { Order, OrderSource } from '../orders/order.model';
 import { Ingredient } from '../ingredients/ingredient.model';
 import { ForbiddenError } from '../../shared/errors/AppError';
 
@@ -87,7 +87,7 @@ export class RestaurantService {
 
     const totalOnlineOrders = await Order.countDocuments({ 
       restaurantId: { $in: targetIds }, 
-      orderSource: 'ONLINE' 
+      orderSource: OrderSource.ONLINE 
     });
 
     return {
