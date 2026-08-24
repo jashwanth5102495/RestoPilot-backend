@@ -70,6 +70,13 @@ const OrderItemSchema = new mongoose_1.Schema({
     unitPrice: { type: Number, required: true, min: 0 },
     taxRate: { type: Number, required: true, min: 0 },
     lineTotal: { type: Number, required: true, min: 0 },
+    addedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
+}, { _id: false });
+const OrderActivitySchema = new mongoose_1.Schema({
+    action: { type: String, required: true },
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    timestamp: { type: Date, default: Date.now },
+    details: { type: String }
 }, { _id: false });
 const OrderSchema = new mongoose_1.Schema({
     restaurantId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
@@ -89,7 +96,10 @@ const OrderSchema = new mongoose_1.Schema({
         phone: { type: String },
         address: { type: String }
     },
+    tableId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Table' },
+    startedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
+    orderActivity: [OrderActivitySchema],
 }, { timestamps: true });
 OrderSchema.index({ restaurantId: 1, orderNumber: 1 }, { unique: true });
 OrderSchema.index({ restaurantId: 1, createdAt: -1 });

@@ -76,6 +76,42 @@ class AuthService {
             refreshToken,
         };
     }
+    static async waiterLogin(restaurantSlugOrCode, loginId, pin) {
+        const { Restaurant } = await Promise.resolve().then(() => __importStar(require('../restaurants/restaurant.model')));
+        // Find restaurant by onlineSlug or maybe id
+        let restaurant = await Restaurant.findOne({ onlineSlug: restaurantSlugOrCode });
+        if (!restaurant) {
+            if (mongoose_1.default.Types.ObjectId.isValid(restaurantSlugOrCode)) {
+                restaurant = await Restaurant.findById(restaurantSlugOrCode);
+            }
+        }
+        if (!restaurant) {
+            throw new AppError_1.UnauthorizedError('Restaurant not found');
+        }
+        const user = await user_model_1.User.findOne({ restaurantId: restaurant._id, loginId });
+        if (!user || user.status !== user_model_1.UserStatus.ACTIVE) {
+            throw new AppError_1.UnauthorizedError('Invalid credentials or inactive account');
+        }
+        const isMatch = await bcryptjs_1.default.compare(pin, user.passwordHash);
+        if (!isMatch) {
+            throw new AppError_1.UnauthorizedError('Invalid credentials');
+        }
+        const payload = {
+            userId: user._id.toString(),
+            restaurantId: user.restaurantId?.toString(),
+            role: user.role,
+        };
+        const accessToken = jsonwebtoken_1.default.sign(payload, env_1.env.JWT_ACCESS_SECRET, { expiresIn: env_1.env.JWT_ACCESS_EXPIRES_IN });
+        const refreshToken = jsonwebtoken_1.default.sign(payload, env_1.env.JWT_REFRESH_SECRET, { expiresIn: env_1.env.JWT_REFRESH_EXPIRES_IN });
+        user.lastLoginAt = new Date();
+        await user.save();
+        const { passwordHash, ...userWithoutPassword } = user.toObject();
+        return {
+            user: { ...userWithoutPassword, restaurant: restaurant.toObject() },
+            accessToken,
+            refreshToken,
+        };
+    }
     static async registerRestaurant(data) {
         // Transaction to ensure both restaurant and owner are created together
         const session = await mongoose_1.default.startSession();
@@ -134,6 +170,23 @@ class AuthService {
                     isActive: true
                 });
                 await cat.save({ session });
+            }
+            // Generate Tables if tableCount is provided
+            const tableCount = parseInt(data.tableCount) || 0;
+            if (tableCount > 0) {
+                restaurant.tableCount = tableCount;
+                await restaurant.save({ session });
+                const { Table } = await Promise.resolve().then(() => __importStar(require('../tables/table.model')));
+                const tablesToCreate = [];
+                for (let i = 1; i <= tableCount; i++) {
+                    tablesToCreate.push({
+                        restaurantId: restaurant._id,
+                        tableNumber: i,
+                        name: `Table ${i}`,
+                        isActive: true
+                    });
+                }
+                await Table.insertMany(tablesToCreate, { session });
             }
             await session.commitTransaction();
             const payload = {

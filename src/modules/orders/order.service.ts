@@ -3,7 +3,7 @@ import { Table, TableStatus } from '../tables/table.model';
 import { Dish } from '../dishes/dish.model';
 import mongoose from 'mongoose';
 import { ValidationError } from '../../shared/errors/AppError';
-import { generateOrderNumber } from '../../shared/utils/generateOrderNumber';
+import { SequenceService } from '../shared/sequence.service';
 import { emitToTenant } from '../../shared/utils/socket';
 
 export class OrderService {
@@ -25,7 +25,7 @@ export class OrderService {
         throw new ValidationError('Table already has an active order');
       }
 
-      const orderNumber = await generateOrderNumber(restaurantId, session);
+      const orderNumber = await SequenceService.getNextOrderNumber(restaurantId, session);
 
       const newOrder = new Order({
         restaurantId,

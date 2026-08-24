@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { StaffService } from './staff.service';
-import { getTenantId } from '../../shared/utils/tenant';
 
 export class StaffController {
   static async createStaff(req: Request, res: Response, next: NextFunction) {
     try {
-      const restaurantId = getTenantId(req);
+      const restaurantId = req.tenantId as string;
       const staff = await StaffService.createStaff(restaurantId, req.body);
       res.status(201).json({ success: true, data: staff });
     } catch (error) {
@@ -15,7 +14,7 @@ export class StaffController {
 
   static async getStaff(req: Request, res: Response, next: NextFunction) {
     try {
-      const restaurantId = getTenantId(req);
+      const restaurantId = req.tenantId as string;
       const staff = await StaffService.getStaff(restaurantId);
       res.json({ success: true, data: staff });
     } catch (error) {
@@ -25,9 +24,9 @@ export class StaffController {
 
   static async updateStaff(req: Request, res: Response, next: NextFunction) {
     try {
-      const restaurantId = getTenantId(req);
+      const restaurantId = req.tenantId as string;
       const { id } = req.params;
-      const staff = await StaffService.updateStaff(restaurantId, id, req.body);
+      const staff = await StaffService.updateStaff(restaurantId, id as string, req.body);
       res.json({ success: true, data: staff });
     } catch (error) {
       next(error);
@@ -36,10 +35,10 @@ export class StaffController {
 
   static async resetPin(req: Request, res: Response, next: NextFunction) {
     try {
-      const restaurantId = getTenantId(req);
+      const restaurantId = req.tenantId as string;
       const { id } = req.params;
       const { pin } = req.body;
-      const result = await StaffService.resetPin(restaurantId, id, pin);
+      const result = await StaffService.resetPin(restaurantId, id as string, pin);
       res.json(result);
     } catch (error) {
       next(error);

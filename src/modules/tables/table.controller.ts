@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { TableService } from './table.service';
-import { getTenantId } from '../../shared/utils/tenant';
 
 export class TableController {
   static async getTables(req: Request, res: Response, next: NextFunction) {
     try {
-      const restaurantId = getTenantId(req);
+      const restaurantId = req.tenantId as string;
       const tables = await TableService.getTables(restaurantId);
       res.json({ success: true, data: tables });
     } catch (error) {
@@ -15,9 +14,9 @@ export class TableController {
 
   static async updateTableCount(req: Request, res: Response, next: NextFunction) {
     try {
-      const restaurantId = getTenantId(req);
+      const restaurantId = req.tenantId as string;
       const { count } = req.body;
-      const result = await TableService.updateTableCount(restaurantId, parseInt(count, 10));
+      const result = await TableService.updateTableCount(restaurantId, count);
       res.json(result);
     } catch (error) {
       next(error);

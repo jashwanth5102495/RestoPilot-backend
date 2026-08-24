@@ -75,7 +75,8 @@ const RestaurantSchema = new mongoose_1.Schema({
         whatsappNumber: { type: String },
         scheduledTime: { type: String },
         enabled: { type: Boolean, default: false }
-    }
+    },
+    tableCount: { type: Number, default: 0, min: 0 }
 }, { timestamps: true });
 RestaurantSchema.index({ onlineSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ parentRestaurantId: 1 });
