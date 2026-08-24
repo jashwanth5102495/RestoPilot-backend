@@ -266,7 +266,7 @@ const menuData = [
 ];
 async function runMysterySeedIfMissing() {
     try {
-        const existing = await restaurant_model_1.Restaurant.findOne({ email: 'mystery01' });
+        const existing = await restaurant_model_1.Restaurant.findOne({ email: 'mystery01@gmail.com' });
         let restaurant;
         if (existing) {
             existing.address = 'Foot Hills of SKANDAGIRI, kalavara, Chickballapur-562101';
@@ -280,7 +280,7 @@ async function runMysterySeedIfMissing() {
             // 1. Create Restaurant
             restaurant = new restaurant_model_1.Restaurant({
                 name: 'Mystery Roaster Cafe',
-                email: 'mystery01',
+                email: 'mystery01@gmail.com',
                 phone: '8260217213, 9035910552',
                 address: 'Foot Hills of SKANDAGIRI, kalavara, Chickballapur-562101',
                 city: 'Chickballapur',
@@ -295,7 +295,7 @@ async function runMysterySeedIfMissing() {
             const owner = new user_model_1.User({
                 restaurantId: restaurant._id,
                 name: 'Mystery Owner',
-                email: 'mystery01',
+                email: 'mystery01@gmail.com',
                 phone: '8260217213',
                 passwordHash,
                 role: user_model_1.UserRole.OWNER,
