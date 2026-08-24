@@ -35,6 +35,7 @@ export interface IOrderItem {
   unitPrice: number; // Snapshot
   taxRate: number; // Snapshot
   lineTotal: number; // Snapshot
+  addedBy?: Types.ObjectId; // User who added this item
 }
 
 export interface IOrder extends Document {
@@ -55,7 +56,15 @@ export interface IOrder extends Document {
     phone: string;
     address: string;
   };
+  tableId?: Types.ObjectId;
+  startedBy?: Types.ObjectId; // The user who opened the order initially
   createdBy?: Types.ObjectId;
+  orderActivity: {
+    action: string;
+    userId: Types.ObjectId;
+    timestamp: Date;
+    details?: string;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,6 +76,14 @@ const OrderItemSchema = new Schema<IOrderItem>({
   unitPrice: { type: Number, required: true, min: 0 },
   taxRate: { type: Number, required: true, min: 0 },
   lineTotal: { type: Number, required: true, min: 0 },
+  addedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+}, { _id: false });
+
+const OrderActivitySchema = new Schema({
+  action: { type: String, required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  timestamp: { type: Date, default: Date.now },
+  details: { type: String }
 }, { _id: false });
 
 const OrderSchema = new Schema<IOrder>(
@@ -88,7 +105,10 @@ const OrderSchema = new Schema<IOrder>(
       phone: { type: String },
       address: { type: String }
     },
+    tableId: { type: Schema.Types.ObjectId, ref: 'Table' },
+    startedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    orderActivity: [OrderActivitySchema],
   },
   { timestamps: true }
 );

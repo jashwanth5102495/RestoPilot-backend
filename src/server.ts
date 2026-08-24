@@ -20,7 +20,13 @@ const startServer = async () => {
     });
     cronService.start();
 
-    app.listen(env.PORT, () => {
+    const { createServer } = await import('http');
+    const { initSocket } = await import('./shared/utils/socket');
+    
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+
+    httpServer.listen(env.PORT, () => {
       logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${env.PORT}`);
     });
   } catch (error) {

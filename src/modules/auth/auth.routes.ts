@@ -7,6 +7,7 @@ import { authenticate } from '../../middleware/auth.middleware';
 const router = Router();
 
 router.post('/login', validate(loginSchema), AuthController.login);
+router.post('/waiter-login', AuthController.waiterLogin);
 router.post('/register', validate(registerRestaurantSchema), AuthController.registerRestaurant);
 router.get('/me', authenticate, AuthController.getMe);
 router.post('/switch-branch', authenticate, AuthController.switchBranch);
