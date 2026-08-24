@@ -15,10 +15,33 @@ class IngredientController {
     }
     static async createIngredient(req, res, next) {
         try {
-            const ingredient = await ingredient_model_1.Ingredient.create({
-                ...req.body,
+            let { name, currentStock, unit, minimumStock, averageCost } = req.body;
+            if (name)
+                name = name.trim();
+            // Look for an existing active ingredient with the exact same name (case-insensitive if needed, but exact is fine for the index)
+            let ingredient = await ingredient_model_1.Ingredient.findOne({
                 restaurantId: req.tenantId,
+                name: { $regex: new RegExp(`^${name}$`, 'i') },
+                isDeleted: false
             });
+            if (ingredient) {
+                // Add to existing stock instead of crashing
+                ingredient.currentStock += (Number(currentStock) || 0);
+                if (unit)
+                    ingredient.unit = unit;
+                if (minimumStock !== undefined)
+                    ingredient.minimumStock = minimumStock;
+                if (averageCost !== undefined)
+                    ingredient.averageCost = averageCost;
+                await ingredient.save();
+            }
+            else {
+                ingredient = await ingredient_model_1.Ingredient.create({
+                    ...req.body,
+                    name,
+                    restaurantId: req.tenantId,
+                });
+            }
             res.status(201).json({ success: true, data: ingredient });
         }
         catch (error) {
