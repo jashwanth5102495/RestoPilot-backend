@@ -1,2 +1,3 @@
-2026/08/24-18:21:28.812 9534 Creating DB C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\Session Storage since it was missing.
-2026/08/24-18:21:28.843 9534 Reusing MANIFEST C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
+2026/08/24-18:33:41.053 33dc Reusing MANIFEST C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\Session Storage/MANIFEST-000001
+2026/08/24-18:33:41.054 33dc Recovering log #3
+2026/08/24-18:33:41.056 33dc Reusing old log C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\Session Storage/000003.log 

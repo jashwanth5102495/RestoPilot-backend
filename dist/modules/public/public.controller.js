@@ -86,8 +86,12 @@ class PublicController {
     }
     static async toggleOnlineOrdering(req, res, next) {
         try {
-            const restaurantId = req.user?.restaurantId;
+            const reqAny = req;
+            const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
             const { enabled } = req.body;
+            if (!restaurantId) {
+                return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+            }
             const restaurant = await restaurant_model_1.Restaurant.findById(restaurantId);
             if (!restaurant) {
                 return res.status(404).json({ success: false, message: 'Restaurant not found' });

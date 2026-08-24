@@ -14,6 +14,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types", "./src/types"],
     "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["src/*"]

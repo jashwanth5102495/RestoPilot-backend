@@ -3,18 +3,37 @@ import qrcode from 'qrcode';
 import fs from 'fs';
 import { execSync } from 'child_process';
 
-// Railway/Nixpacks typically installs chromium to /usr/bin/chromium
 const getExecutablePath = () => {
   if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
   
-  if (process.platform === 'win32') {
-    if (fs.existsSync('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe')) return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-    if (fs.existsSync('C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe')) return 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
-  } else {
-    if (fs.existsSync('/usr/bin/chromium')) return '/usr/bin/chromium';
-    if (fs.existsSync('/usr/bin/chromium-browser')) return '/usr/bin/chromium-browser';
-    if (fs.existsSync('/usr/bin/google-chrome')) return '/usr/bin/google-chrome';
+  try {
+    if (process.platform === 'win32') {
+      const paths = [
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+      ];
+      for (const p of paths) {
+        if (fs.existsSync(p)) return p;
+      }
+    } else {
+      // On Linux/Railway (Nixpacks), chromium might be in /nix/store/... and linked in PATH.
+      // Use 'which' to find the actual path.
+      const binaries = ['chromium', 'chromium-browser', 'google-chrome'];
+      for (const bin of binaries) {
+        try {
+          const resolved = execSync(`which ${bin}`).toString().trim();
+          if (resolved) return resolved;
+        } catch (e) {}
+      }
+    }
+  } catch (e) {
+    // Ignore errors
   }
+  
+  // Fallbacks
+  if (fs.existsSync('/usr/bin/chromium')) return '/usr/bin/chromium';
+  if (fs.existsSync('/usr/bin/chromium-browser')) return '/usr/bin/chromium-browser';
+  if (fs.existsSync('/usr/bin/google-chrome')) return '/usr/bin/google-chrome';
   
   return undefined;
 };
@@ -56,7 +75,8 @@ class WhatsAppService {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu'
+          '--disable-gpu',
+          '--single-process'
         ],
       }
     });

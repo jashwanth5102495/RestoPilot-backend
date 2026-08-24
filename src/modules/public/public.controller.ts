@@ -98,8 +98,13 @@ export class PublicController {
 
   static async toggleOnlineOrdering(req: Request, res: Response, next: NextFunction) {
     try {
-      const restaurantId = req.user?.restaurantId;
+      const reqAny = req as any;
+      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
       const { enabled } = req.body;
+
+      if (!restaurantId) {
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+      }
 
       const restaurant = await Restaurant.findById(restaurantId);
       if (!restaurant) {
