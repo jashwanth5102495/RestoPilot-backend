@@ -4,11 +4,12 @@ import { UserRole } from '../modules/users/user.model';
 
 export const authorize = (...roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    const reqAny = req as any;
+    if (!reqAny.user) {
       return next(new UnauthorizedError('Not authenticated'));
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(reqAny.user.role as UserRole)) {
       return next(new ForbiddenError('You do not have permission to perform this action'));
     }
 

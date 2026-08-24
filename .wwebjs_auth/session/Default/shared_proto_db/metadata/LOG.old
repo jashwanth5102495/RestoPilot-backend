@@ -1,2 +1,3 @@
-2026/08/24-17:46:25.716 8cbc Creating DB C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\shared_proto_db\metadata since it was missing.
-2026/08/24-17:46:25.730 8cbc Reusing MANIFEST C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\shared_proto_db\metadata/MANIFEST-000001
+2026/08/24-18:33:11.067 32c8 Reusing MANIFEST C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\shared_proto_db\metadata/MANIFEST-000001
+2026/08/24-18:33:11.067 32c8 Recovering log #3
+2026/08/24-18:33:11.068 32c8 Reusing old log C:\Users\jashw\Desktop\restropilot\backend\.wwebjs_auth\session\Default\shared_proto_db\metadata/000003.log 

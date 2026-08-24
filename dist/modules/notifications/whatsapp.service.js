@@ -7,24 +7,44 @@ const whatsapp_web_js_1 = require("whatsapp-web.js");
 const qrcode_1 = __importDefault(require("qrcode"));
 const fs_1 = __importDefault(require("fs"));
 const child_process_1 = require("child_process");
-// Railway/Nixpacks typically installs chromium to /usr/bin/chromium
 const getExecutablePath = () => {
     if (process.env.PUPPETEER_EXECUTABLE_PATH)
         return process.env.PUPPETEER_EXECUTABLE_PATH;
-    if (process.platform === 'win32') {
-        if (fs_1.default.existsSync('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'))
-            return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-        if (fs_1.default.existsSync('C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'))
-            return 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+    try {
+        if (process.platform === 'win32') {
+            const paths = [
+                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+            ];
+            for (const p of paths) {
+                if (fs_1.default.existsSync(p))
+                    return p;
+            }
+        }
+        else {
+            // On Linux/Railway (Nixpacks), chromium might be in /nix/store/... and linked in PATH.
+            // Use 'which' to find the actual path.
+            const binaries = ['chromium', 'chromium-browser', 'google-chrome'];
+            for (const bin of binaries) {
+                try {
+                    const resolved = (0, child_process_1.execSync)(`which ${bin}`).toString().trim();
+                    if (resolved)
+                        return resolved;
+                }
+                catch (e) { }
+            }
+        }
     }
-    else {
-        if (fs_1.default.existsSync('/usr/bin/chromium'))
-            return '/usr/bin/chromium';
-        if (fs_1.default.existsSync('/usr/bin/chromium-browser'))
-            return '/usr/bin/chromium-browser';
-        if (fs_1.default.existsSync('/usr/bin/google-chrome'))
-            return '/usr/bin/google-chrome';
+    catch (e) {
+        // Ignore errors
     }
+    // Fallbacks
+    if (fs_1.default.existsSync('/usr/bin/chromium'))
+        return '/usr/bin/chromium';
+    if (fs_1.default.existsSync('/usr/bin/chromium-browser'))
+        return '/usr/bin/chromium-browser';
+    if (fs_1.default.existsSync('/usr/bin/google-chrome'))
+        return '/usr/bin/google-chrome';
     return undefined;
 };
 const execPath = getExecutablePath();
@@ -63,7 +83,8 @@ class WhatsAppService {
                     '--disable-accelerated-2d-canvas',
                     '--no-first-run',
                     '--no-zygote',
-                    '--disable-gpu'
+                    '--disable-gpu',
+                    '--single-process'
                 ],
             }
         });

@@ -1,6 +1,2 @@
-[variables]
-PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = 'true'
-
 [phases.setup]
-nixPkgs = ['...', 'chromium']
-aptPkgs = ['libnss3', 'libatk-bridge2.0-0', 'libgbm1', 'libasound2', 'libxss1', 'libgtk-3-0']
+aptPkgs = ['libnss3', 'libatk-bridge2.0-0', 'libgbm1', 'libasound2', 'libxss1', 'libgtk-3-0', 'libnss3-dev', 'libgdk-pixbuf2.0-0', 'libxss-dev']

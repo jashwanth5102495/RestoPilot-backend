@@ -23,7 +23,7 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
 
   try {
     const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtPayload;
-    req.user = decoded;
+    (req as any).user = decoded;
     
     Sentry.setUser({ id: decoded.userId, role: decoded.role });
     if (decoded.restaurantId) {
