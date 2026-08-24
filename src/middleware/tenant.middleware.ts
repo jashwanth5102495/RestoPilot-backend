@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { ForbiddenError, UnauthorizedError } from '../shared/errors/AppError';
 import { UserRole } from '../modules/users/user.model';
 
+import * as Sentry from '@sentry/node';
+
 export const requireTenant = (req: Request, res: Response, next: NextFunction) => {
   if (!req.user) {
     return next(new UnauthorizedError('Not authenticated'));
@@ -16,6 +18,7 @@ export const requireTenant = (req: Request, res: Response, next: NextFunction) =
 
   if (req.user.restaurantId) {
     req.tenantId = req.user.restaurantId;
+    Sentry.setTag('tenantId', req.tenantId);
   }
 
   next();

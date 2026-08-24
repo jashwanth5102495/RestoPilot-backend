@@ -47,6 +47,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   const reqId = req.headers['x-request-id'] || uuidv4();
   req.id = reqId as string;
   res.setHeader('X-Request-ID', req.id);
+  Sentry.setTag('reqId', req.id);
   next();
 });
 

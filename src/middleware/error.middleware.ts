@@ -1,8 +1,7 @@
-﻿import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AppError, ValidationError } from '../shared/errors/AppError';
 import { logger } from '../shared/utils/logger';
 import { env } from '../config/env';
-import * as Sentry from '@sentry/node';
 
 export const errorHandler = (
   err: Error | AppError,
@@ -40,26 +39,8 @@ export const errorHandler = (
     code = 'TOKEN_EXPIRED';
   }
 
-  // Sentry and Logging logic
+  // Logging logic
   if (statusCode >= 500) {
-    // Only capture unexpected 5xx errors to Sentry
-    Sentry.withScope(scope => {
-      scope.setExtra('reqId', req.id);
-      
-      if (req.user) {
-        scope.setUser({ id: req.user.userId, role: req.user.role });
-        if (req.user.restaurantId) {
-          scope.setTag('restaurantId', req.user.restaurantId);
-        }
-      }
-      
-      if (req.tenantId) {
-        scope.setTag('tenantId', req.tenantId);
-      }
-      
-      Sentry.captureException(err);
-    });
-
     logger.error({
       msg: 'Unhandled Exception',
       err,
