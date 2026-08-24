@@ -1,7 +1,7 @@
 {
   "name": "backend",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "RestoPilot Backend",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --watch src --ext ts,json --exec ts-node --files src/server.ts",
