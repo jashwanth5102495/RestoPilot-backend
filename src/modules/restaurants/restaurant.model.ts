@@ -41,6 +41,7 @@ export interface IRestaurant extends Document {
     scheduledTime: string;
     enabled: boolean;
   };
+  tableCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,7 +75,8 @@ const RestaurantSchema = new Schema<IRestaurant>(
       whatsappNumber: { type: String },
       scheduledTime: { type: String },
       enabled: { type: Boolean, default: false }
-    }
+    },
+    tableCount: { type: Number, default: 0, min: 0 }
   },
   { timestamps: true }
 );

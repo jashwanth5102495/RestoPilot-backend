@@ -47,6 +47,51 @@ export class AuthService {
     };
   }
 
+  static async waiterLogin(restaurantSlugOrCode: string, loginId: string, pin: string) {
+    const { Restaurant } = await import('../restaurants/restaurant.model');
+    // Find restaurant by onlineSlug or maybe id
+    let restaurant = await Restaurant.findOne({ onlineSlug: restaurantSlugOrCode });
+    if (!restaurant) {
+      if (mongoose.Types.ObjectId.isValid(restaurantSlugOrCode)) {
+        restaurant = await Restaurant.findById(restaurantSlugOrCode);
+      }
+    }
+    
+    if (!restaurant) {
+      throw new UnauthorizedError('Restaurant not found');
+    }
+
+    const user = await User.findOne({ restaurantId: restaurant._id, loginId });
+    if (!user || user.status !== UserStatus.ACTIVE) {
+      throw new UnauthorizedError('Invalid credentials or inactive account');
+    }
+
+    const isMatch = await bcrypt.compare(pin, user.passwordHash);
+    if (!isMatch) {
+      throw new UnauthorizedError('Invalid credentials');
+    }
+
+    const payload = {
+      userId: user._id.toString(),
+      restaurantId: user.restaurantId?.toString(),
+      role: user.role,
+    };
+
+    const accessToken = jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn: env.JWT_ACCESS_EXPIRES_IN as any });
+    const refreshToken = jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn: env.JWT_REFRESH_EXPIRES_IN as any });
+
+    user.lastLoginAt = new Date();
+    await user.save();
+
+    const { passwordHash, ...userWithoutPassword } = user.toObject();
+
+    return {
+      user: { ...userWithoutPassword, restaurant: restaurant.toObject() },
+      accessToken,
+      refreshToken,
+    };
+  }
+
   static async registerRestaurant(data: any) {
     // Transaction to ensure both restaurant and owner are created together
     const session = await mongoose.startSession();
@@ -114,6 +159,25 @@ export class AuthService {
           isActive: true
         });
         await cat.save({ session });
+      }
+
+      // Generate Tables if tableCount is provided
+      const tableCount = parseInt(data.tableCount) || 0;
+      if (tableCount > 0) {
+        restaurant.tableCount = tableCount;
+        await restaurant.save({ session });
+
+        const { Table } = await import('../tables/table.model');
+        const tablesToCreate = [];
+        for (let i = 1; i <= tableCount; i++) {
+          tablesToCreate.push({
+            restaurantId: restaurant._id,
+            tableNumber: i,
+            name: `Table ${i}`,
+            isActive: true
+          });
+        }
+        await Table.insertMany(tablesToCreate, { session });
       }
 
       await session.commitTransaction();

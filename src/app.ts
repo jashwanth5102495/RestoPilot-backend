@@ -114,7 +114,13 @@ app.use('/api/v1/restaurants', restaurantRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/recipes', recipeRoutes);
 app.use('/api/v1/suppliers', supplierRoutes);
+import tableRoutes from './modules/tables/table.routes';
+import staffRoutes from './modules/users/staff.routes';
+
+// ...
 app.use('/api/v1/purchases', purchaseRoutes);
+app.use('/api/v1/tables', tableRoutes);
+app.use('/api/v1/staff', staffRoutes);
 
 app.use('/api/v1', (req: Request, res: Response) => {
   res.status(404).json({ success: false, message: 'API Route Not Found' });
