@@ -138,13 +138,10 @@ export class BillingService {
         userId,
       });
 
-      Sentry.withScope((scope: any) => {
-        scope.setTag('error_type', 'BILL_CREATION_FAILED');
-        scope.setTag('restaurantId', restaurantId.toString());
-        scope.setUser({ id: userId.toString() });
-        scope.setExtra('items', items);
-        Sentry.captureException(error);
-      });
+      Sentry.setTag('error_type', 'BILL_CREATION_FAILED');
+      Sentry.setTag('restaurantId', restaurantId.toString());
+      Sentry.setExtra('userId', userId.toString());
+      Sentry.setExtra('items', items);
 
       throw error;
     } finally {
@@ -208,12 +205,9 @@ export class BillingService {
           userId,
         });
 
-        Sentry.withScope((scope: any) => {
-          scope.setTag('error_type', 'INVENTORY_REVERSAL_FAILED');
-          scope.setTag('restaurantId', restaurantId.toString());
-          scope.setExtra('billId', billId.toString());
-          Sentry.captureException(error);
-        });
+        Sentry.setTag('error_type', 'INVENTORY_REVERSAL_FAILED');
+        Sentry.setTag('restaurantId', restaurantId.toString());
+        Sentry.setExtra('billId', billId.toString());
       }
 
       throw error;

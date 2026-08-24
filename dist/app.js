@@ -80,6 +80,7 @@ app.use((req, res, next) => {
     const reqId = req.headers['x-request-id'] || (0, uuid_1.v4)();
     req.id = reqId;
     res.setHeader('X-Request-ID', req.id);
+    Sentry.setTag('reqId', req.id);
     next();
 });
 // Structured Logging with Pino

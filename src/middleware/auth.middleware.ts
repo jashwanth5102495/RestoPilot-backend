@@ -10,6 +10,8 @@ interface JwtPayload {
   role: UserRole;
 }
 
+import * as Sentry from '@sentry/node';
+
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
@@ -22,6 +24,12 @@ export const authenticate = (req: Request, res: Response, next: NextFunction) =>
   try {
     const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtPayload;
     req.user = decoded;
+    
+    Sentry.setUser({ id: decoded.userId, role: decoded.role });
+    if (decoded.restaurantId) {
+      Sentry.setTag('restaurantId', decoded.restaurantId);
+    }
+
     next();
   } catch (error) {
     next(new UnauthorizedError('Invalid or expired token'));
