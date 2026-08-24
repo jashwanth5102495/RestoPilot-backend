@@ -7,6 +7,7 @@
     "dev": "nodemon --watch src --ext ts,json --exec ts-node --files src/server.ts",
     "build": "node ./node_modules/typescript/bin/tsc",
     "start": "node dist/server.js",
+    "postinstall": "npx puppeteer browsers install chrome",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
