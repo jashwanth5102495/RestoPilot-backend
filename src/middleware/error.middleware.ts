@@ -45,9 +45,9 @@ export const errorHandler = (
       msg: 'Unhandled Exception',
       err,
       statusCode,
-      requestId: req.id,
-      userId: req.user?.userId,
-      restaurantId: req.user?.restaurantId || req.tenantId,
+      requestId: (req as any).id,
+      userId: (req as any).user?.userId,
+      restaurantId: (req as any).user?.restaurantId || (req as any).tenantId,
     });
   } else {
     logger.warn({
@@ -55,7 +55,7 @@ export const errorHandler = (
       errorMessage: err.message,
       statusCode,
       code,
-      requestId: req.id,
+      requestId: (req as any).id,
     });
   }
 
@@ -66,7 +66,7 @@ export const errorHandler = (
       code,
       details: details.length > 0 ? details : undefined,
       ...(env.NODE_ENV === 'development' && { stack: err.stack }),
-      requestId: req.id,
+      requestId: (req as any).id,
     },
   });
 };
