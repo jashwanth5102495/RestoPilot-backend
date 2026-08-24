@@ -3,7 +3,16 @@ import qrcode from 'qrcode';
 import fs from 'fs';
 import { execSync } from 'child_process';
 
-const execPath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined;
+// Railway/Nixpacks typically installs chromium to /usr/bin/chromium
+const getExecutablePath = () => {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (fs.existsSync('/usr/bin/chromium')) return '/usr/bin/chromium';
+  if (fs.existsSync('/usr/bin/chromium-browser')) return '/usr/bin/chromium-browser';
+  if (fs.existsSync('/usr/bin/google-chrome')) return '/usr/bin/google-chrome';
+  return undefined;
+};
+
+const execPath = getExecutablePath();
 
 console.log('--- PUPPETEER DIAGNOSTICS ---');
 console.log('PUPPETEER_EXECUTABLE_PATH env var:', process.env.PUPPETEER_EXECUTABLE_PATH);
