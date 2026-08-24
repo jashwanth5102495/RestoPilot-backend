@@ -29,7 +29,7 @@ export class OrderController {
   static async startTableOrder(req: Request, res: Response, next: NextFunction) {
     try {
       const { tableId } = req.body;
-      const order = await OrderService.startTableOrder(req.tenantId!, tableId, (req as any).user.userId);
+      const order = await OrderService.startTableOrder(req.tenantId as string, tableId, (req as any).user.userId);
       res.json({ success: true, data: order });
     } catch (error) {
       next(error);
@@ -40,7 +40,7 @@ export class OrderController {
     try {
       const { orderId } = req.params;
       const { updates } = req.body;
-      const order = await OrderService.updateOrderItems(req.tenantId!, orderId, updates, (req as any).user.userId);
+      const order = await OrderService.updateOrderItems(req.tenantId as string, orderId as string, updates, (req as any).user.userId);
       res.json({ success: true, data: order });
     } catch (error) {
       next(error);
@@ -50,7 +50,7 @@ export class OrderController {
   static async sendOrder(req: Request, res: Response, next: NextFunction) {
     try {
       const { orderId } = req.params;
-      const order = await OrderService.sendOrder(req.tenantId!, orderId, (req as any).user.userId);
+      const order = await OrderService.sendOrder(req.tenantId as string, orderId as string, (req as any).user.userId);
       res.json({ success: true, data: order });
     } catch (error) {
       next(error);
@@ -61,7 +61,7 @@ export class OrderController {
     try {
       const { orderId } = req.params;
       const { status } = req.body;
-      const order = await OrderService.updateOrderStatus(req.tenantId!, orderId, status, (req as any).user.userId);
+      const order = await OrderService.updateOrderStatus(req.tenantId as string, orderId as string, status, (req as any).user.userId);
       res.json({ success: true, data: order });
     } catch (error) {
       next(error);

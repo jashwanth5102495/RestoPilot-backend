@@ -42,6 +42,8 @@ var UserRole;
     UserRole["OWNER"] = "OWNER";
     UserRole["MANAGER"] = "MANAGER";
     UserRole["CASHIER"] = "CASHIER";
+    UserRole["BILLING"] = "BILLING";
+    UserRole["WAITER"] = "WAITER";
     UserRole["KITCHEN"] = "KITCHEN";
 })(UserRole || (exports.UserRole = UserRole = {}));
 var UserStatus;
@@ -53,7 +55,8 @@ var UserStatus;
 const UserSchema = new mongoose_1.Schema({
     restaurantId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Restaurant' },
     name: { type: String, required: true },
-    email: { type: String, required: true, lowercase: true },
+    email: { type: String, lowercase: true, sparse: true },
+    loginId: { type: String },
     phone: { type: String },
     passwordHash: { type: String, required: true },
     role: { type: String, enum: Object.values(UserRole), required: true },
@@ -62,5 +65,6 @@ const UserSchema = new mongoose_1.Schema({
     lastLoginAt: { type: Date },
 }, { timestamps: true });
 // Users are unique per restaurant by email. If restaurantId is null (e.g. Super Admin), email is unique globally.
-UserSchema.index({ restaurantId: 1, email: 1 }, { unique: true });
+UserSchema.index({ restaurantId: 1, email: 1 }, { unique: true, sparse: true });
+UserSchema.index({ restaurantId: 1, loginId: 1 }, { unique: true, sparse: true });
 exports.User = mongoose_1.default.model('User', UserSchema);

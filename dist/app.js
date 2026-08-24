@@ -143,7 +143,12 @@ app.use('/api/v1/restaurants', restaurant_routes_1.default);
 app.use('/api/v1/orders', order_routes_1.default);
 app.use('/api/v1/recipes', recipe_routes_1.default);
 app.use('/api/v1/suppliers', supplier_routes_1.default);
+const table_routes_1 = __importDefault(require("./modules/tables/table.routes"));
+const staff_routes_1 = __importDefault(require("./modules/users/staff.routes"));
+// ...
 app.use('/api/v1/purchases', purchase_routes_1.default);
+app.use('/api/v1/tables', table_routes_1.default);
+app.use('/api/v1/staff', staff_routes_1.default);
 app.use('/api/v1', (req, res) => {
     res.status(404).json({ success: false, message: 'API Route Not Found' });
 });

@@ -50,6 +50,16 @@ class AuthController {
             next(error);
         }
     }
+    static async waiterLogin(req, res, next) {
+        try {
+            const { restaurantCode, loginId, pin } = req.body;
+            const result = await auth_service_1.AuthService.waiterLogin(restaurantCode, loginId, pin);
+            res.json({ success: true, data: result });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     static async registerRestaurant(req, res, next) {
         try {
             const result = await auth_service_1.AuthService.registerRestaurant(req.body);
