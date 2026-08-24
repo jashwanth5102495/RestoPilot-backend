@@ -48,10 +48,13 @@ export class RestaurantService {
       targetIds = [branchId];
     }
 
-    const [totalOrders, salesResult, lowStockItems, recentOrders, popularDishesResult] = await Promise.all([
+    const [totalOrders, salesResult, lowStockItems, recentOrders, popularDishesResult, dailySalesResult] = await Promise.all([
       Order.countDocuments({ restaurantId: { $in: targetIds } }),
       Order.aggregate([
-        { $match: { restaurantId: { $in: targetIds } } },
+        { $match: { 
+          restaurantId: { $in: targetIds },
+          orderStatus: { $nin: ['DRAFT', 'CANCELLED'] }
+        } },
         { $group: { _id: null, total: { $sum: '$total' } } }
       ]),
       Ingredient.countDocuments({ 
@@ -62,7 +65,10 @@ export class RestaurantService {
         .sort({ createdAt: -1 })
         .limit(5),
       Order.aggregate([
-        { $match: { restaurantId: { $in: targetIds } } },
+        { $match: { 
+          restaurantId: { $in: targetIds },
+          orderStatus: { $nin: ['DRAFT', 'CANCELLED'] }
+        } },
         { $unwind: '$items' },
         { $group: { 
           _id: '$items.dishId', 
@@ -72,6 +78,28 @@ export class RestaurantService {
         }},
         { $sort: { orders: -1 } },
         { $limit: 10 }
+      ]),
+      // Daily Sales for the last 7 days
+      Order.aggregate([
+        { 
+          $match: { 
+            restaurantId: { $in: targetIds },
+            orderStatus: { $nin: ['DRAFT', 'CANCELLED'] },
+            createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 6)) } // Last 7 days including today
+          } 
+        },
+        {
+          $group: {
+            _id: {
+              year: { $year: { date: '$createdAt', timezone: '+05:30' } },
+              month: { $month: { date: '$createdAt', timezone: '+05:30' } },
+              day: { $dayOfMonth: { date: '$createdAt', timezone: '+05:30' } },
+              dayOfWeek: { $dayOfWeek: { date: '$createdAt', timezone: '+05:30' } }
+            },
+            total: { $sum: '$total' }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1 } }
       ])
     ]);
 
@@ -90,13 +118,36 @@ export class RestaurantService {
       orderSource: OrderSource.ONLINE 
     });
 
+    // Process daily sales to ensure exactly last 7 days are included
+    const daysMap = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const salesData = [];
+    const today = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dayName = daysMap[d.getDay()];
+      
+      const found = dailySalesResult.find(r => 
+        r._id.year === d.getFullYear() && 
+        r._id.month === d.getMonth() + 1 && 
+        r._id.day === d.getDate()
+      );
+      
+      salesData.push({
+        name: dayName,
+        total: found ? found.total : 0
+      });
+    }
+
     return {
       totalOrders,
       totalSales,
       lowStockItems,
       recentOrders,
       popularDishes,
-      totalOnlineOrders
+      totalOnlineOrders,
+      salesData
     };
   }
 
