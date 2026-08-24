@@ -33,20 +33,21 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Ingredient = void 0;
+exports.PhysicalStockCheck = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const IngredientSchema = new mongoose_1.Schema({
+const PhysicalStockCheckSchema = new mongoose_1.Schema({
     restaurantId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Restaurant', required: true },
-    name: { type: String, required: true },
-    sku: { type: String },
+    ingredientId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Ingredient', required: true },
+    ingredientName: { type: String, required: true },
+    estimatedQuantity: { type: Number, required: true },
+    actualQuantity: { type: Number, required: true },
+    variance: { type: Number, required: true },
+    variancePercentage: { type: Number, required: true },
     unit: { type: String, required: true },
-    minimumStock: { type: Number, default: 0, min: 0 },
-    currentStock: { type: Number, default: 0 },
-    averageCost: { type: Number, default: 0, min: 0 },
-    lastCheckedAt: { type: Date },
-    lastVariance: { type: Number },
-    isActive: { type: Boolean, default: true },
-    isDeleted: { type: Boolean, default: false },
+    reason: { type: String },
+    notes: { type: String },
+    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
-IngredientSchema.index({ restaurantId: 1, name: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } });
-exports.Ingredient = mongoose_1.default.model('Ingredient', IngredientSchema);
+PhysicalStockCheckSchema.index({ restaurantId: 1, createdAt: -1 });
+PhysicalStockCheckSchema.index({ restaurantId: 1, ingredientId: 1, createdAt: -1 });
+exports.PhysicalStockCheck = mongoose_1.default.model('PhysicalStockCheck', PhysicalStockCheckSchema);

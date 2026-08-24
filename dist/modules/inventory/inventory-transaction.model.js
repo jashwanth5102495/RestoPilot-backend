@@ -43,6 +43,7 @@ var TransactionType;
     TransactionType["WASTAGE"] = "WASTAGE";
     TransactionType["ADJUSTMENT_IN"] = "ADJUSTMENT_IN";
     TransactionType["ADJUSTMENT_OUT"] = "ADJUSTMENT_OUT";
+    TransactionType["PHYSICAL_STOCK_ADJUSTMENT"] = "PHYSICAL_STOCK_ADJUSTMENT";
     TransactionType["RETURN"] = "RETURN";
     TransactionType["REVERSAL"] = "REVERSAL";
 })(TransactionType || (exports.TransactionType = TransactionType = {}));

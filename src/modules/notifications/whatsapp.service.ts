@@ -6,9 +6,16 @@ import { execSync } from 'child_process';
 // Railway/Nixpacks typically installs chromium to /usr/bin/chromium
 const getExecutablePath = () => {
   if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
-  if (fs.existsSync('/usr/bin/chromium')) return '/usr/bin/chromium';
-  if (fs.existsSync('/usr/bin/chromium-browser')) return '/usr/bin/chromium-browser';
-  if (fs.existsSync('/usr/bin/google-chrome')) return '/usr/bin/google-chrome';
+  
+  if (process.platform === 'win32') {
+    if (fs.existsSync('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe')) return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+    if (fs.existsSync('C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe')) return 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+  } else {
+    if (fs.existsSync('/usr/bin/chromium')) return '/usr/bin/chromium';
+    if (fs.existsSync('/usr/bin/chromium-browser')) return '/usr/bin/chromium-browser';
+    if (fs.existsSync('/usr/bin/google-chrome')) return '/usr/bin/google-chrome';
+  }
+  
   return undefined;
 };
 
@@ -19,7 +26,8 @@ console.log('PUPPETEER_EXECUTABLE_PATH env var:', process.env.PUPPETEER_EXECUTAB
 console.log('Resolved execPath:', execPath);
 if (execPath) {
   try {
-    const resolved = execSync(`which ${execPath}`).toString().trim();
+    const cmd = process.platform === 'win32' ? 'where' : 'which';
+    const resolved = execSync(`${cmd} "${execPath}"`).toString().trim();
     console.log(`Executable found in PATH at: ${resolved}`);
     console.log('Does file exist on disk?:', fs.existsSync(resolved));
   } catch (e) {
