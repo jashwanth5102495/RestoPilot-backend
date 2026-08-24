@@ -48,7 +48,7 @@ export class RestaurantService {
       targetIds = [branchId];
     }
 
-    const [totalOrders, salesResult, lowStockItems, recentOrders] = await Promise.all([
+    const [totalOrders, salesResult, lowStockItems, recentOrders, popularDishesResult] = await Promise.all([
       Order.countDocuments({ restaurantId: { $in: targetIds } }),
       Order.aggregate([
         { $match: { restaurantId: { $in: targetIds } } },
@@ -60,16 +60,43 @@ export class RestaurantService {
       }),
       Order.find({ restaurantId: { $in: targetIds } })
         .sort({ createdAt: -1 })
-        .limit(5)
+        .limit(5),
+      Order.aggregate([
+        { $match: { restaurantId: { $in: targetIds } } },
+        { $unwind: '$items' },
+        { $group: { 
+          _id: '$items.dishId', 
+          name: { $first: '$items.dishName' },
+          orders: { $sum: '$items.quantity' },
+          revenue: { $sum: '$items.lineTotal' }
+        }},
+        { $sort: { orders: -1 } },
+        { $limit: 10 }
+      ])
     ]);
 
     const totalSales = salesResult.length > 0 ? salesResult[0].total : 0;
+    
+    // Format popular dishes to match frontend expectation
+    const popularDishes = popularDishesResult.map(d => ({
+      id: d._id,
+      name: d.name,
+      orders: d.orders,
+      revenue: d.revenue
+    }));
+
+    const totalOnlineOrders = await Order.countDocuments({ 
+      restaurantId: { $in: targetIds }, 
+      orderSource: 'ONLINE' 
+    });
 
     return {
       totalOrders,
       totalSales,
       lowStockItems,
-      recentOrders
+      recentOrders,
+      popularDishes,
+      totalOnlineOrders
     };
   }
 
