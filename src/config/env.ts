@@ -9,8 +9,8 @@ const envSchema = z.object({
   MONGODB_URI: z.string().default('mongodb://127.0.0.1:27017/restopilot'),
   JWT_ACCESS_SECRET: z.string().default('fallback_access_secret_do_not_use_in_prod'),
   JWT_REFRESH_SECRET: z.string().default('fallback_refresh_secret_do_not_use_in_prod'),
-  JWT_ACCESS_EXPIRES_IN: z.string().default('365d'),
-  JWT_REFRESH_EXPIRES_IN: z.string().default('365d'),
+  JWT_ACCESS_EXPIRES_IN: z.string().default('24h'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   LOG_LEVEL: z.string().default('info'),
 });
