@@ -104,4 +104,89 @@ export class InventoryService {
       { referenceType: 'PURCHASE', referenceId: purchaseId, createdBy }
     );
   }
+
+  /**
+   * Submits a batch of physical stock checks
+   */
+  static async submitPhysicalChecks(
+    restaurantId: string | Types.ObjectId,
+    userId: string | Types.ObjectId,
+    checks: {
+      ingredientId: string;
+      actualQuantity: number; // Given in base unit directly from the frontend
+      reason?: string;
+      notes?: string;
+    }[]
+  ) {
+    const mongoose = require('mongoose');
+    const { PhysicalStockCheck } = require('./physical-stock-check.model');
+    
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const results = [];
+      
+      for (const check of checks) {
+        const ingredient = await Ingredient.findOne({ _id: check.ingredientId, restaurantId, isDeleted: false }).session(session);
+        if (!ingredient) throw new AppError(`Ingredient ${check.ingredientId} not found`, 404);
+
+        const estimatedQuantity = ingredient.currentStock;
+        const actualQuantity = check.actualQuantity;
+        const variance = actualQuantity - estimatedQuantity;
+        
+        let variancePercentage = 0;
+        if (estimatedQuantity > 0) {
+          variancePercentage = (variance / estimatedQuantity) * 100;
+        } else if (estimatedQuantity === 0 && actualQuantity > 0) {
+          variancePercentage = 100; // Arbitrary representation of a positive variance on 0 stock
+        }
+
+        const checkRecord = new PhysicalStockCheck({
+          restaurantId,
+          ingredientId: ingredient._id,
+          ingredientName: ingredient.name,
+          estimatedQuantity,
+          actualQuantity,
+          variance,
+          variancePercentage,
+          unit: ingredient.unit,
+          reason: check.reason,
+          notes: check.notes,
+          createdBy: userId,
+        });
+
+        await checkRecord.save({ session });
+
+        // If variance is non-zero, we must adjust the stock to match actual physical count
+        if (variance !== 0) {
+          await this.adjustStock(
+            restaurantId,
+            ingredient._id,
+            variance,
+            'BASE_UNIT',
+            TransactionType.PHYSICAL_STOCK_ADJUSTMENT,
+            session,
+            { referenceType: 'PHYSICAL_CHECK', referenceId: checkRecord._id, notes: check.notes, createdBy: new Types.ObjectId(userId) },
+            true // Allow negative adjustment if actual < 0 (unlikely but safe)
+          );
+        }
+
+        // Update ingredient's last check info
+        ingredient.lastCheckedAt = new Date();
+        ingredient.lastVariance = variance;
+        await ingredient.save({ session });
+
+        results.push(checkRecord);
+      }
+
+      await session.commitTransaction();
+      return results;
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
+  }
 }

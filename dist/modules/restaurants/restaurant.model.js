@@ -69,6 +69,8 @@ const RestaurantSchema = new mongoose_1.Schema({
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Restaurant' },
+    inventoryCheckFrequency: { type: String, enum: ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'], default: 'WEEKLY' },
+    inventoryCheckSnoozedUntil: { type: Date },
     notificationSettings: {
         whatsappNumber: { type: String },
         scheduledTime: { type: String },

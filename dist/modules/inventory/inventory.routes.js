@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const inventory_check_controller_1 = require("./inventory-check.controller");
+const auth_middleware_1 = require("../../middleware/auth.middleware");
+const tenant_middleware_1 = require("../../middleware/tenant.middleware");
+const router = (0, express_1.Router)();
+router.use(auth_middleware_1.authenticate, tenant_middleware_1.requireTenant);
+router.get('/checks/status', inventory_check_controller_1.InventoryCheckController.getCheckStatus);
+router.post('/checks', inventory_check_controller_1.InventoryCheckController.submitChecks);
+router.get('/checks/history', inventory_check_controller_1.InventoryCheckController.getCheckHistory);
+router.patch('/checks/snooze', inventory_check_controller_1.InventoryCheckController.snoozeReminder);
+exports.default = router;

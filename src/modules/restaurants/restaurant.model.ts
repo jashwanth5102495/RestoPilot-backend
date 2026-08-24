@@ -34,6 +34,8 @@ export interface IRestaurant extends Document {
   subscriptionStatus: SubscriptionStatus;
   subscriptionExpiresAt?: Date;
   parentRestaurantId?: Types.ObjectId;
+  inventoryCheckFrequency: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
+  inventoryCheckSnoozedUntil?: Date;
   notificationSettings?: {
     whatsappNumber: string;
     scheduledTime: string;
@@ -66,6 +68,8 @@ const RestaurantSchema = new Schema<IRestaurant>(
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
+    inventoryCheckFrequency: { type: String, enum: ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'], default: 'WEEKLY' },
+    inventoryCheckSnoozedUntil: { type: Date },
     notificationSettings: {
       whatsappNumber: { type: String },
       scheduledTime: { type: String },

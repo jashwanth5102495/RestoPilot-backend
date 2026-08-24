@@ -8,6 +8,8 @@ export interface IIngredient extends Document {
   minimumStock: number;
   currentStock: number;
   averageCost: number; // Cost per base unit
+  lastCheckedAt?: Date;
+  lastVariance?: number;
   isActive: boolean;
   isDeleted: boolean;
   createdAt: Date;
@@ -23,6 +25,8 @@ const IngredientSchema = new Schema<IIngredient>(
     minimumStock: { type: Number, default: 0, min: 0 },
     currentStock: { type: Number, default: 0 },
     averageCost: { type: Number, default: 0, min: 0 },
+    lastCheckedAt: { type: Date },
+    lastVariance: { type: Number },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
   },

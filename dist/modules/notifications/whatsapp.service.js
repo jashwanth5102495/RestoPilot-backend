@@ -11,12 +11,20 @@ const child_process_1 = require("child_process");
 const getExecutablePath = () => {
     if (process.env.PUPPETEER_EXECUTABLE_PATH)
         return process.env.PUPPETEER_EXECUTABLE_PATH;
-    if (fs_1.default.existsSync('/usr/bin/chromium'))
-        return '/usr/bin/chromium';
-    if (fs_1.default.existsSync('/usr/bin/chromium-browser'))
-        return '/usr/bin/chromium-browser';
-    if (fs_1.default.existsSync('/usr/bin/google-chrome'))
-        return '/usr/bin/google-chrome';
+    if (process.platform === 'win32') {
+        if (fs_1.default.existsSync('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'))
+            return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+        if (fs_1.default.existsSync('C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'))
+            return 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
+    }
+    else {
+        if (fs_1.default.existsSync('/usr/bin/chromium'))
+            return '/usr/bin/chromium';
+        if (fs_1.default.existsSync('/usr/bin/chromium-browser'))
+            return '/usr/bin/chromium-browser';
+        if (fs_1.default.existsSync('/usr/bin/google-chrome'))
+            return '/usr/bin/google-chrome';
+    }
     return undefined;
 };
 const execPath = getExecutablePath();
@@ -25,7 +33,8 @@ console.log('PUPPETEER_EXECUTABLE_PATH env var:', process.env.PUPPETEER_EXECUTAB
 console.log('Resolved execPath:', execPath);
 if (execPath) {
     try {
-        const resolved = (0, child_process_1.execSync)(`which ${execPath}`).toString().trim();
+        const cmd = process.platform === 'win32' ? 'where' : 'which';
+        const resolved = (0, child_process_1.execSync)(`${cmd} "${execPath}"`).toString().trim();
         console.log(`Executable found in PATH at: ${resolved}`);
         console.log('Does file exist on disk?:', fs_1.default.existsSync(resolved));
     }
