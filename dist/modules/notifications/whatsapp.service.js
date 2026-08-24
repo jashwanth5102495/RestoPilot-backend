@@ -21,30 +21,10 @@ const getExecutablePath = () => {
                     return p;
             }
         }
-        else {
-            // On Linux/Railway (Nixpacks), chromium might be in /nix/store/... and linked in PATH.
-            // Use 'which' to find the actual path.
-            const binaries = ['chromium', 'chromium-browser', 'google-chrome'];
-            for (const bin of binaries) {
-                try {
-                    const resolved = (0, child_process_1.execSync)(`which ${bin}`).toString().trim();
-                    if (resolved)
-                        return resolved;
-                }
-                catch (e) { }
-            }
-        }
     }
     catch (e) {
         // Ignore errors
     }
-    // Fallbacks
-    if (fs_1.default.existsSync('/usr/bin/chromium'))
-        return '/usr/bin/chromium';
-    if (fs_1.default.existsSync('/usr/bin/chromium-browser'))
-        return '/usr/bin/chromium-browser';
-    if (fs_1.default.existsSync('/usr/bin/google-chrome'))
-        return '/usr/bin/google-chrome';
     return undefined;
 };
 const execPath = getExecutablePath();
