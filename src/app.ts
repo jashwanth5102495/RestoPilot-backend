@@ -46,16 +46,16 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request ID Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   const reqId = req.headers['x-request-id'] || uuidv4();
-  req.id = reqId as string;
-  res.setHeader('X-Request-ID', req.id);
-  Sentry.setTag('reqId', req.id);
+  (req as any).id = reqId as string;
+  res.setHeader('X-Request-ID', (req as any).id);
+  Sentry.setTag('reqId', (req as any).id);
   next();
 });
 
 // Structured Logging with Pino
 app.use(pinoHttp({
   logger,
-  genReqId: (req) => req.id,
+  genReqId: (req) => (req as any).id,
   customProps: (req, res) => {
     return {
       environment: env.NODE_ENV
@@ -65,7 +65,7 @@ app.use(pinoHttp({
     req: (req) => {
       // Safely serialize request without sensitive data
       return {
-        id: req.id,
+        id: (req as any).id,
         method: req.method,
         url: req.url,
       }
