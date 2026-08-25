@@ -52,7 +52,9 @@ class WhatsAppService {
     status = 'DISCONNECTED';
     constructor() {
         this.client = new whatsapp_web_js_1.Client({
-            authStrategy: new whatsapp_web_js_1.LocalAuth(),
+            authStrategy: new whatsapp_web_js_1.LocalAuth({
+                dataPath: process.env.WHATSAPP_DATA_PATH || './.wwebjs_auth'
+            }),
             puppeteer: {
                 executablePath: execPath,
                 headless: true,
