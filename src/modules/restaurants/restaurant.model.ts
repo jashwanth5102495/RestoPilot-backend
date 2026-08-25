@@ -31,6 +31,8 @@ export interface IRestaurant extends Document {
   timezone: string;
   isOnlineOrderingEnabled: boolean;
   onlineSlug?: string;
+  isWaiterOrderingEnabled: boolean;
+  waiterSlug?: string;
   subscriptionStatus: SubscriptionStatus;
   subscriptionExpiresAt?: Date;
   parentRestaurantId?: Types.ObjectId;
@@ -66,6 +68,8 @@ const RestaurantSchema = new Schema<IRestaurant>(
     timezone: { type: String, default: 'Asia/Kolkata' },
     isOnlineOrderingEnabled: { type: Boolean, default: false },
     onlineSlug: { type: String },
+    isWaiterOrderingEnabled: { type: Boolean, default: false },
+    waiterSlug: { type: String },
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
@@ -82,6 +86,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
 );
 
 RestaurantSchema.index({ onlineSlug: 1 }, { unique: true, sparse: true });
+RestaurantSchema.index({ waiterSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ parentRestaurantId: 1 });
 
 export const Restaurant = mongoose.model<IRestaurant>('Restaurant', RestaurantSchema);
