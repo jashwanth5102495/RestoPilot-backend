@@ -24,5 +24,17 @@ class TableController {
             next(error);
         }
     }
+    static async renameTable(req, res, next) {
+        try {
+            const restaurantId = req.tenantId;
+            const { id } = req.params;
+            const { name } = req.body;
+            const result = await table_service_1.TableService.renameTable(restaurantId, id, name);
+            res.json(result);
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.TableController = TableController;

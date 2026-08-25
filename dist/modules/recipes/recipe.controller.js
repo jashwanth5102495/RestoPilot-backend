@@ -17,11 +17,19 @@ class RecipeController {
             const result = dishes.map((dish) => {
                 const recipe = recipeMap.get(dish._id.toString());
                 let estCost = 0;
+                let populatedItems = [];
                 if (recipe && recipe.items) {
                     for (const item of recipe.items) {
                         const ing = ingredientMap.get(item.ingredientId.toString());
                         if (ing) {
                             estCost += item.quantity * (ing.averageCost || 0);
+                            populatedItems.push({
+                                ...item,
+                                ingredientName: ing.name
+                            });
+                        }
+                        else {
+                            populatedItems.push(item);
                         }
                     }
                 }
@@ -34,7 +42,7 @@ class RecipeController {
                     recipe: recipe ? {
                         _id: recipe._id,
                         itemsCount: recipe.items?.length || 0,
-                        items: recipe.items || [],
+                        items: populatedItems,
                         estCost,
                         margin: Math.max(0, Math.round(margin)),
                         status: 'Configured'

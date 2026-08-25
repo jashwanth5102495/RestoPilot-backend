@@ -95,4 +95,18 @@ export class TableService {
     emitToTenant(restaurantId, 'table_status_updated', { tableId, status });
     return table;
   }
+
+  static async renameTable(restaurantId: string, tableId: string, newName: string) {
+    if (!newName || newName.trim() === '') {
+      throw new ValidationError('Table name cannot be empty');
+    }
+    const table = await Table.findOneAndUpdate(
+      { _id: tableId, restaurantId },
+      { name: newName.trim() },
+      { new: true }
+    );
+    if (!table) throw new ValidationError('Table not found');
+    emitToTenant(restaurantId, 'tables_updated', {}); // Tell clients a table was renamed
+    return { success: true, data: table };
+  }
 }

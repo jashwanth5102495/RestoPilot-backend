@@ -14,5 +14,6 @@ router.get('/', authorize(UserRole.OWNER, UserRole.MANAGER, UserRole.WAITER, Use
 
 // Only Owner and Manager can manage tables
 router.patch('/count', authorize(UserRole.OWNER, UserRole.MANAGER), TableController.updateTableCount);
+router.patch('/:id', authorize(UserRole.OWNER, UserRole.MANAGER), TableController.renameTable);
 
 export default router;
