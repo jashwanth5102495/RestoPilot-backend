@@ -46,11 +46,26 @@ class WhatsAppService {
   private client: Client;
   private qrCodeUrl: string | null = null;
   private status: 'DISCONNECTED' | 'INITIALIZING' | 'AWAITING_LOGIN' | 'CONNECTED' = 'DISCONNECTED';
+  private authPath: string;
 
   constructor() {
+    this.authPath = process.env.WHATSAPP_DATA_PATH || './.wwebjs_auth';
+    
+    console.log(`[WhatsApp] Auth data path: ${this.authPath}`);
+    try {
+      if (!fs.existsSync(this.authPath)) {
+        fs.mkdirSync(this.authPath, { recursive: true });
+      }
+      fs.accessSync(this.authPath, fs.constants.W_OK);
+      console.log(`[WhatsApp] Auth directory writable: true`);
+    } catch (err) {
+      console.log(`[WhatsApp] Auth directory writable: false (${err})`);
+    }
+    console.log(`[WhatsApp] Chromium executable: ${execPath || 'bundled'}`);
+
     this.client = new Client({
       authStrategy: new LocalAuth({
-        dataPath: process.env.WHATSAPP_DATA_PATH || './.wwebjs_auth'
+        dataPath: this.authPath
       }),
       puppeteer: {
         executablePath: execPath,
@@ -84,7 +99,8 @@ class WhatsAppService {
     this.client.on('ready', () => {
       this.status = 'CONNECTED';
       this.qrCodeUrl = null;
-      console.log('WhatsApp Client is ready!');
+      console.log('[WhatsApp] Chromium launch: SUCCESS');
+      console.log('[WhatsApp] WhatsApp client initialization: SUCCESS');
     });
 
     this.client.on('disconnected', (reason) => {

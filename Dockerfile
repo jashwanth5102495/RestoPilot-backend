@@ -24,7 +24,8 @@ RUN apt-get update && apt-get install -y \
 # Tell Puppeteer to use the installed Chromium and not download its own
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    NODE_ENV=production
+    NODE_ENV=production \
+    WHATSAPP_DATA_PATH=/app/data/.wwebjs_auth
 
 WORKDIR /app
 
@@ -35,8 +36,8 @@ RUN npm ci --omit=dev
 # Copy compiled code from the builder stage
 COPY --from=builder /app/dist ./dist
 
-# Create a directory for WhatsApp data to be mounted
-RUN mkdir -p /app/data && chown -R node:node /app/data
+# Create a directory for WhatsApp data to be mounted and make it writable
+RUN mkdir -p /app/data/.wwebjs_auth && chown -R node:node /app/data
 
 # Run as non-root user (important for Puppeteer sandboxing)
 USER node
