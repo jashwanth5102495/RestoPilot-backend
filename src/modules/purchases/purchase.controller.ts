@@ -42,7 +42,7 @@ export class PurchaseController {
       const purchaseItems = [];
 
       for (const item of items) {
-        if (!item.ingredientId || !item.quantity || !item.unitCost) {
+        if (!item.ingredientId || !item.quantity || item.unitCost === undefined || item.unitCost === null) {
           throw new AppError('Each purchase item must have ingredientId, quantity, and unitCost', 400);
         }
 

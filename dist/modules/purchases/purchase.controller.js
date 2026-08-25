@@ -69,7 +69,7 @@ class PurchaseController {
             let subtotal = 0;
             const purchaseItems = [];
             for (const item of items) {
-                if (!item.ingredientId || !item.quantity || !item.unitCost) {
+                if (!item.ingredientId || !item.quantity || item.unitCost === undefined || item.unitCost === null) {
                     throw new AppError_1.AppError('Each purchase item must have ingredientId, quantity, and unitCost', 400);
                 }
                 const lineTotal = item.quantity * item.unitCost;
