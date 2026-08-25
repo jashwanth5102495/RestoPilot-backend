@@ -22,4 +22,16 @@ export class TableController {
       next(error);
     }
   }
+
+  static async renameTable(req: Request, res: Response, next: NextFunction) {
+    try {
+      const restaurantId = req.tenantId as string;
+      const { id } = req.params;
+      const { name } = req.body;
+      const result = await TableService.renameTable(restaurantId, id as string, name as string);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
