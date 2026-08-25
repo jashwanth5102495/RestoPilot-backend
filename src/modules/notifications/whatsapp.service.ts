@@ -49,7 +49,9 @@ class WhatsAppService {
 
   constructor() {
     this.client = new Client({
-      authStrategy: new LocalAuth(),
+      authStrategy: new LocalAuth({
+        dataPath: process.env.WHATSAPP_DATA_PATH || './.wwebjs_auth'
+      }),
       puppeteer: {
         executablePath: execPath,
         headless: true,
