@@ -74,7 +74,7 @@ const OrderItemSchema = new mongoose_1.Schema({
 }, { _id: false });
 const OrderActivitySchema = new mongoose_1.Schema({
     action: { type: String, required: true },
-    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User', required: true },
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     timestamp: { type: Date, default: Date.now },
     details: { type: String }
 }, { _id: false });
