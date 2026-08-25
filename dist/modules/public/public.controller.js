@@ -246,13 +246,9 @@ class PublicController {
             if (!order) {
                 return res.status(404).json({ success: false, message: 'No active order found for this table' });
             }
-            order.orderStatus = order_model_1.OrderStatus.COMPLETED;
-            await order.save();
-            // Clear table status
-            const { TableService } = await Promise.resolve().then(() => __importStar(require('../tables/table.service')));
-            const { TableStatus } = await Promise.resolve().then(() => __importStar(require('../tables/table.model')));
-            await TableService.updateTableStatus(restaurant._id.toString(), tableId, TableStatus.FREE);
-            res.status(200).json({ success: true, data: order });
+            const { OrderService } = await Promise.resolve().then(() => __importStar(require('../orders/order.service')));
+            const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), order_model_1.OrderStatus.COMPLETED, null);
+            res.status(200).json({ success: true, data: updatedOrder });
         }
         catch (error) {
             next(error);

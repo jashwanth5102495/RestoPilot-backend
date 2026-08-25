@@ -190,6 +190,31 @@ export class OrderService {
             emitToTenant(restaurantId, 'table_status_updated', { tableId: order.tableId, status: TableStatus.FREE });
           }
         }
+        
+        // Consume inventory if completed
+        if (status === OrderStatus.COMPLETED) {
+          try {
+            const { OrderConsumptionService } = await import('./order-consumption.service');
+            const { InventoryService } = await import('../inventory/inventory.service');
+            const { TransactionType } = await import('../inventory/inventory-transaction.model');
+            
+            const requirements = await OrderConsumptionService.calculateOrderConsumption(restaurantId, order.items);
+            for (const req of requirements) {
+              await InventoryService.adjustStock(
+                restaurantId,
+                req.ingredientId,
+                req.quantityInBaseUnit,
+                'BASE_UNIT',
+                TransactionType.SALE_CONSUMPTION,
+                session,
+                { referenceType: 'ORDER', referenceId: order._id, createdBy: userId ? new mongoose.Types.ObjectId(userId) : undefined },
+                true // Allow negative stock so order completion isn't blocked
+              );
+            }
+          } catch (err) {
+            console.error(`Failed to consume inventory for order ${order._id}:`, err);
+          }
+        }
       }
 
       await session.commitTransaction();
