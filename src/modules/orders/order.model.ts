@@ -81,7 +81,7 @@ const OrderItemSchema = new Schema<IOrderItem>({
 
 const OrderActivitySchema = new Schema({
   action: { type: String, required: true },
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User' },
   timestamp: { type: Date, default: Date.now },
   details: { type: String }
 }, { _id: false });

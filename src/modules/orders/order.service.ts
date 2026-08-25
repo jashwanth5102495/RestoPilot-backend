@@ -41,7 +41,7 @@ export class OrderService {
         createdBy: userId,
         orderActivity: [{
           action: 'ORDER_STARTED',
-          userId,
+          userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
           timestamp: new Date()
         }]
       });
@@ -90,18 +90,18 @@ export class OrderService {
             order.items.splice(existingItemIndex, 1);
             order.orderActivity.push({
               action: 'ITEM_REMOVED',
-              userId: new mongoose.Types.ObjectId(userId),
+              userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
               timestamp: new Date(),
               details: `Removed ${dish.name}`
-            });
+            } as any);
           } else {
             order.items[existingItemIndex].lineTotal = order.items[existingItemIndex].quantity * order.items[existingItemIndex].unitPrice;
             order.orderActivity.push({
               action: 'ITEM_UPDATED',
-              userId: new mongoose.Types.ObjectId(userId),
+              userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
               timestamp: new Date(),
               details: `Updated ${dish.name} quantity to ${order.items[existingItemIndex].quantity}`
-            });
+            } as any);
           }
         } else if (update.quantityChange > 0) {
           const unitPrice = dish.price;
@@ -119,10 +119,10 @@ export class OrderService {
 
           order.orderActivity.push({
             action: 'ITEM_ADDED',
-            userId: new mongoose.Types.ObjectId(userId),
+            userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
             timestamp: new Date(),
             details: `Added ${dish.name} x${update.quantityChange}`
-          });
+          } as any);
         }
       }
 
@@ -154,9 +154,9 @@ export class OrderService {
     order.orderStatus = OrderStatus.PLACED;
     order.orderActivity.push({
       action: 'ORDER_SENT',
-      userId: new mongoose.Types.ObjectId(userId),
+      userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
       timestamp: new Date()
-    });
+    } as any);
 
     await order.save();
     
@@ -175,9 +175,9 @@ export class OrderService {
       order.orderStatus = status;
       order.orderActivity.push({
         action: `STATUS_CHANGED_TO_${status}`,
-        userId: new mongoose.Types.ObjectId(userId),
+        userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
         timestamp: new Date()
-      });
+      } as any);
 
       await order.save({ session });
 

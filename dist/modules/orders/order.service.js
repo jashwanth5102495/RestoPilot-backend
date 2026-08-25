@@ -43,7 +43,7 @@ class OrderService {
                 createdBy: userId,
                 orderActivity: [{
                         action: 'ORDER_STARTED',
-                        userId,
+                        userId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
                         timestamp: new Date()
                     }]
             });
@@ -86,7 +86,7 @@ class OrderService {
                         order.items.splice(existingItemIndex, 1);
                         order.orderActivity.push({
                             action: 'ITEM_REMOVED',
-                            userId: new mongoose_1.default.Types.ObjectId(userId),
+                            userId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
                             timestamp: new Date(),
                             details: `Removed ${dish.name}`
                         });
@@ -95,7 +95,7 @@ class OrderService {
                         order.items[existingItemIndex].lineTotal = order.items[existingItemIndex].quantity * order.items[existingItemIndex].unitPrice;
                         order.orderActivity.push({
                             action: 'ITEM_UPDATED',
-                            userId: new mongoose_1.default.Types.ObjectId(userId),
+                            userId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
                             timestamp: new Date(),
                             details: `Updated ${dish.name} quantity to ${order.items[existingItemIndex].quantity}`
                         });
@@ -115,7 +115,7 @@ class OrderService {
                     });
                     order.orderActivity.push({
                         action: 'ITEM_ADDED',
-                        userId: new mongoose_1.default.Types.ObjectId(userId),
+                        userId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
                         timestamp: new Date(),
                         details: `Added ${dish.name} x${update.quantityChange}`
                     });
@@ -147,7 +147,7 @@ class OrderService {
         order.orderStatus = order_model_1.OrderStatus.PLACED;
         order.orderActivity.push({
             action: 'ORDER_SENT',
-            userId: new mongoose_1.default.Types.ObjectId(userId),
+            userId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
             timestamp: new Date()
         });
         await order.save();
@@ -164,7 +164,7 @@ class OrderService {
             order.orderStatus = status;
             order.orderActivity.push({
                 action: `STATUS_CHANGED_TO_${status}`,
-                userId: new mongoose_1.default.Types.ObjectId(userId),
+                userId: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined,
                 timestamp: new Date()
             });
             await order.save({ session });
