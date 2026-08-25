@@ -254,15 +254,10 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'No active order found for this table' });
       }
 
-      order.orderStatus = OrderStatus.COMPLETED;
-      await order.save();
+      const { OrderService } = await import('../orders/order.service');
+      const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), OrderStatus.COMPLETED, null as any);
 
-      // Clear table status
-      const { TableService } = await import('../tables/table.service');
-      const { TableStatus } = await import('../tables/table.model');
-      await TableService.updateTableStatus(restaurant._id.toString(), tableId as string, TableStatus.FREE);
-
-      res.status(200).json({ success: true, data: order });
+      res.status(200).json({ success: true, data: updatedOrder });
     } catch (error) {
       next(error);
     }
