@@ -127,4 +127,144 @@ export class PublicController {
       next(error);
     }
   }
+
+  static async toggleWaiterOrdering(req: Request, res: Response, next: NextFunction) {
+    try {
+      const reqAny = req as any;
+      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
+      const { enabled } = req.body;
+
+      if (!restaurantId) {
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+      }
+
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+      }
+
+      restaurant.isWaiterOrderingEnabled = enabled;
+      
+      if (enabled && !restaurant.waiterSlug) {
+        restaurant.waiterSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-waiter-' + Math.floor(Math.random() * 1000);
+      }
+
+      await restaurant.save();
+
+      res.status(200).json({
+        success: true,
+        data: restaurant
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getWaiterTables(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true }).lean();
+      
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
+      }
+
+      const { Table } = await import('../tables/table.model');
+      const tables = await Table.find({ restaurantId: restaurant._id, isActive: true }).sort({ tableNumber: 1 }).lean();
+
+      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name }, tables } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getWaiterMenu(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true }).lean();
+      
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
+      }
+
+      const categories = await Category.find({ restaurantId: restaurant._id, isActive: true }).lean();
+      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: true, isDeleted: false })
+        .populate('categoryId')
+        .lean();
+
+      res.status(200).json({ success: true, data: { categories, dishes } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async placeWaiterTableOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, tableId } = req.params;
+      const { items } = req.body;
+
+      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true });
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
+      }
+
+      const { OrderService } = await import('../orders/order.service');
+
+      // Check if table has active order, if not start one
+      let order = await Order.findOne({ 
+        restaurantId: restaurant._id, 
+        tableId: tableId as string, 
+        orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] } 
+      });
+
+      if (!order) {
+        order = await OrderService.startTableOrder(restaurant._id.toString(), tableId as string, null as any); // no user id since public waiter
+      }
+
+      // Update items
+      if (items && items.length > 0) {
+        order = await OrderService.updateOrderItems(restaurant._id.toString(), order._id.toString(), items, null as any);
+      }
+
+      // Send to kitchen
+      order = await OrderService.sendOrder(restaurant._id.toString(), order._id.toString(), null as any);
+
+      res.status(200).json({ success: true, data: order });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async generateWaiterBill(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, tableId } = req.params;
+      
+      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true });
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
+      }
+
+      const order = await Order.findOne({ 
+        restaurantId: restaurant._id, 
+        tableId: tableId as string, 
+        orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] } 
+      });
+
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'No active order found for this table' });
+      }
+
+      order.orderStatus = OrderStatus.COMPLETED;
+      await order.save();
+
+      // Clear table status
+      const { TableService } = await import('../tables/table.service');
+      const { TableStatus } = await import('../tables/table.model');
+      await TableService.updateTableStatus(restaurant._id.toString(), tableId as string, TableStatus.FREE);
+
+      res.status(200).json({ success: true, data: order });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
