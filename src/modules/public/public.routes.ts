@@ -14,6 +14,7 @@ router.post('/settings/online-ordering', authenticate, requireTenant, PublicCont
 router.post('/settings/waiter-ordering', authenticate, requireTenant, PublicController.toggleWaiterOrdering);
 router.post('/settings/billing-ordering', authenticate, requireTenant, PublicController.toggleBillingOrdering);
 router.post('/settings/kds', authenticate, requireTenant, PublicController.toggleKds);
+router.post('/settings/inventory', authenticate, requireTenant, PublicController.toggleInventory);
 
 // Public routes for waiter portal
 router.get('/waiter/:slug/tables', PublicController.getWaiterTables);
@@ -30,5 +31,9 @@ router.patch('/billing/:slug/dishes/:dishId/availability', PublicController.togg
 // Public routes for KDS portal
 router.get('/kds/:slug/orders', PublicController.getKdsOrders);
 router.patch('/kds/:slug/orders/:orderId/status', PublicController.updateKdsOrderStatus);
+
+// Public routes for Inventory portal
+router.get('/inventory/:slug/ingredients', PublicController.getInventoryMenu);
+router.post('/inventory/:slug/restock', PublicController.processInventoryRestock);
 
 export default router;

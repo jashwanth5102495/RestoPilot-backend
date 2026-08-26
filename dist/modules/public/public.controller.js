@@ -425,5 +425,98 @@ class PublicController {
             next(error);
         }
     }
+    static async toggleInventory(req, res, next) {
+        try {
+            const reqAny = req;
+            const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
+            const { enabled } = req.body;
+            if (!restaurantId) {
+                return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+            }
+            const restaurant = await restaurant_model_1.Restaurant.findById(restaurantId);
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Restaurant not found' });
+            }
+            restaurant.isInventoryEnabled = enabled;
+            if (enabled && !restaurant.inventorySlug) {
+                const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-inventory';
+                restaurant.inventorySlug = await PublicController.generateUniqueSlug(restaurant_model_1.Restaurant, baseSlug, 'inventorySlug');
+            }
+            await restaurant.save();
+            res.status(200).json({
+                success: true,
+                data: restaurant
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getInventoryMenu(req, res, next) {
+        try {
+            const { slug } = req.params;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ inventorySlug: slug, isInventoryEnabled: true }).lean();
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Inventory portal not found or disabled' });
+            }
+            const { Ingredient } = await Promise.resolve().then(() => __importStar(require('../ingredients/ingredient.model')));
+            const ingredients = await Ingredient.find({ restaurantId: restaurant._id }).sort({ name: 1 }).lean();
+            res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, logo: restaurant.logo, currency: restaurant.currency }, ingredients } });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async processInventoryRestock(req, res, next) {
+        try {
+            const { slug } = req.params;
+            const { items } = req.body; // Array of { ingredientId, quantity, unit, unitCost }
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ inventorySlug: slug, isInventoryEnabled: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Inventory portal not found or disabled' });
+            }
+            if (!items || !items.length) {
+                return res.status(400).json({ success: false, message: 'No items provided' });
+            }
+            const { Purchase } = await Promise.resolve().then(() => __importStar(require('../purchases/purchase.model')));
+            const { Ingredient } = await Promise.resolve().then(() => __importStar(require('../ingredients/ingredient.model')));
+            let subtotal = 0;
+            const purchaseItems = items.map((item) => {
+                const cost = Number(item.quantity) * Number(item.unitCost || 0);
+                subtotal += cost;
+                return {
+                    ingredientId: item.ingredientId,
+                    quantity: Number(item.quantity),
+                    unitCost: Number(item.unitCost || 0),
+                    unit: item.unit
+                };
+            });
+            const purchase = new Purchase({
+                restaurantId: restaurant._id,
+                supplierId: null, // Public restock
+                purchaseDate: new Date(),
+                items: purchaseItems,
+                subtotal: subtotal,
+                taxAmount: 0,
+                totalAmount: subtotal,
+                paymentStatus: 'PAID',
+                paymentMethod: 'CASH',
+                notes: 'Inventory quick public adjustment',
+            });
+            await purchase.save();
+            // Update ingredient stocks directly
+            for (const item of purchaseItems) {
+                const ingredient = await Ingredient.findOne({ _id: item.ingredientId, restaurantId: restaurant._id });
+                if (ingredient) {
+                    ingredient.currentStock += item.quantity;
+                    await ingredient.save();
+                }
+            }
+            res.status(201).json({ success: true, data: purchase });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.PublicController = PublicController;
