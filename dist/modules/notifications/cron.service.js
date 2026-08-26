@@ -134,7 +134,7 @@ class CronService {
                         const tempDir = os_1.default.tmpdir();
                         const pdfPath = path_1.default.join(tempDir, `report-${restaurant._id}-${Date.now()}.pdf`);
                         await PdfService.generateDailyReport(reportData, pdfPath);
-                        const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed report attached.`;
+                        const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\n*Quick Summary:*\n💰 Total Sales: Rs. ${totalSales.toFixed(2)}\n💵 Cash: Rs. ${cash.toFixed(2)}\n💳 Card: Rs. ${card.toFixed(2)}\n📱 UPI: Rs. ${upi.toFixed(2)}\n\n📦 Total Inventory Items: ${inventoryData.length}\n\nPlease find your detailed report attached.`;
                         await telegram_service_1.TelegramService.sendMessage(restaurant.notificationSettings.telegramChatId, message, pdfPath);
                         console.log(`Sent daily report PDF to restaurant ${restaurant._id} on Telegram: ${restaurant.notificationSettings.telegramChatId}`);
                         // Clean up PDF
