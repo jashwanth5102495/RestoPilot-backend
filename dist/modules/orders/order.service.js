@@ -194,6 +194,9 @@ class OrderService {
             const order = await order_model_1.Order.findOne({ _id: orderId, restaurantId }).session(session);
             if (!order)
                 throw new AppError_1.ValidationError('Order not found');
+            if (order.orderStatus === order_model_1.OrderStatus.COMPLETED && status === order_model_1.OrderStatus.CANCELLED) {
+                throw new AppError_1.ValidationError('Order has already been completed and inventory consumed. Please void the associated bill to properly reverse inventory and financials.');
+            }
             order.orderStatus = status;
             order.orderActivity.push({
                 action: `STATUS_CHANGED_TO_${status}`,
@@ -210,8 +213,8 @@ class OrderService {
                         (0, socket_1.emitToTenant)(restaurantId, 'table_status_updated', { tableId: order.tableId, status: table_model_1.TableStatus.FREE });
                     }
                 }
-                // Consume inventory if completed
-                if (status === order_model_1.OrderStatus.COMPLETED) {
+                // Consume inventory if completed and not already consumed
+                if (status === order_model_1.OrderStatus.COMPLETED && !order.inventoryConsumed) {
                     try {
                         const { OrderConsumptionService } = await Promise.resolve().then(() => __importStar(require('./order-consumption.service')));
                         const { InventoryService } = await Promise.resolve().then(() => __importStar(require('../inventory/inventory.service')));
@@ -221,9 +224,12 @@ class OrderService {
                             await InventoryService.adjustStock(restaurantId, req.ingredientId, req.quantityInBaseUnit, 'BASE_UNIT', TransactionType.SALE_CONSUMPTION, session, { referenceType: 'ORDER', referenceId: order._id, createdBy: userId ? new mongoose_1.default.Types.ObjectId(userId) : undefined }, true // Allow negative stock so order completion isn't blocked
                             );
                         }
+                        order.inventoryConsumed = true;
+                        await order.save({ session });
                     }
                     catch (err) {
                         console.error(`Failed to consume inventory for order ${order._id}:`, err);
+                        throw err; // Re-throw to abort transaction if inventory deduction fails
                     }
                 }
             }

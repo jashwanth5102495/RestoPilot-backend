@@ -37,21 +37,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -87,21 +72,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -134,21 +104,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -187,21 +142,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -234,21 +174,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -283,21 +208,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -331,21 +241,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -378,21 +273,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Biryani Masala",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -435,21 +315,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -488,21 +353,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -525,26 +375,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -569,26 +399,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -611,26 +421,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -670,21 +460,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -723,21 +498,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -760,26 +520,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -819,21 +559,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -856,31 +581,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Red Chilli Powder",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -912,26 +612,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 20,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -954,26 +634,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1013,21 +673,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1066,21 +711,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1103,26 +733,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1147,26 +757,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1189,31 +779,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Red Chilli Powder",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1253,21 +818,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1306,21 +856,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1343,26 +878,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1387,26 +902,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1429,31 +924,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Red Chilli Powder",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1495,21 +965,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1532,26 +987,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1591,21 +1026,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1633,26 +1053,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1692,21 +1092,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1745,21 +1130,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1788,26 +1158,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1831,26 +1181,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1873,31 +1203,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Red Chilli Powder",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -1927,16 +1232,6 @@ const templates = [
         "name": "Cream",
         "quantity": 20,
         "unit": "ml"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1960,21 +1255,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Jeera",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -1997,21 +1277,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Jeera",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2041,16 +1306,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2073,21 +1328,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Jeera",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2112,21 +1352,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Jeera",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2150,26 +1375,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2192,26 +1397,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2241,21 +1426,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2280,21 +1450,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2324,26 +1479,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2367,21 +1502,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 30,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2404,21 +1524,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2446,26 +1551,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2488,31 +1573,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Red Chilli Powder",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2551,21 +1611,6 @@ const templates = [
       {
         "name": "Cashew",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2610,21 +1655,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2663,21 +1693,6 @@ const templates = [
         "name": "Cashew",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2700,26 +1715,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2749,26 +1744,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -2796,26 +1771,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -2846,21 +1801,6 @@ const templates = [
         "name": "Rice",
         "quantity": 150,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -2873,21 +1813,6 @@ const templates = [
       {
         "name": "Rice",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -2909,21 +1834,6 @@ const templates = [
         "name": "Mixed Vegetables",
         "quantity": 50,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -2942,21 +1852,6 @@ const templates = [
         "name": "Green Peas",
         "quantity": 50,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -2969,21 +1864,6 @@ const templates = [
       {
         "name": "Rice",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -2998,21 +1878,6 @@ const templates = [
         "name": "Rice",
         "quantity": 150,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3025,21 +1890,6 @@ const templates = [
       {
         "name": "Rice",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3059,21 +1909,6 @@ const templates = [
         "name": "Curd",
         "quantity": 100,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3086,21 +1921,6 @@ const templates = [
       {
         "name": "Rice",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3119,21 +1939,6 @@ const templates = [
       {
         "name": "Mushroom",
         "quantity": 50,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 3,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3164,21 +1969,6 @@ const templates = [
       {
         "name": "Spring Onion",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 5,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3213,21 +2003,6 @@ const templates = [
         "name": "Spring Onion",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 5,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3260,21 +2035,6 @@ const templates = [
       {
         "name": "Spring Onion",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 5,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3309,16 +2069,6 @@ const templates = [
         "name": "Schezwan Sauce",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3352,21 +2102,6 @@ const templates = [
         "name": "Spring Onion",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 5,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3394,21 +2129,6 @@ const templates = [
       {
         "name": "Spring Onion",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 5,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3443,21 +2163,6 @@ const templates = [
         "name": "Spring Onion",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 5,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3490,21 +2195,6 @@ const templates = [
       {
         "name": "Spring Onion",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3544,21 +2234,6 @@ const templates = [
         "name": "Spring Onion",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3596,21 +2271,6 @@ const templates = [
       {
         "name": "Spring Onion",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3650,16 +2310,6 @@ const templates = [
         "name": "Schezwan Sauce",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3692,21 +2342,6 @@ const templates = [
       {
         "name": "Spring Onion",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -3746,21 +2381,6 @@ const templates = [
         "name": "Spring Onion",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3799,16 +2419,6 @@ const templates = [
         "name": "Schezwan Sauce",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -3834,33 +2444,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -3887,33 +2472,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -3940,33 +2500,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -3993,33 +2528,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4046,33 +2556,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4099,33 +2584,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4152,33 +2612,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4205,33 +2640,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4258,33 +2668,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4311,33 +2696,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4364,33 +2724,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4417,33 +2752,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4470,33 +2780,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4523,33 +2808,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4569,16 +2829,6 @@ const templates = [
         "name": "Corn Flour",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4596,16 +2846,6 @@ const templates = [
       {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4625,16 +2865,6 @@ const templates = [
         "name": "Corn Flour",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4653,16 +2883,6 @@ const templates = [
         "name": "Corn Flour",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4680,16 +2900,6 @@ const templates = [
       {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4714,16 +2924,6 @@ const templates = [
         "name": "Corn Flour",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4742,16 +2942,6 @@ const templates = [
         "name": "Corn Flour",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4769,16 +2959,6 @@ const templates = [
       {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -4800,29 +2980,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4843,29 +3003,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4889,26 +3029,6 @@ const templates = [
         "name": "Cheese",
         "quantity": 20,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4929,29 +3049,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -4972,29 +3072,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5015,29 +3095,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5061,26 +3121,6 @@ const templates = [
         "name": "Cheese",
         "quantity": 20,
         "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5101,29 +3141,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5144,29 +3164,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5187,29 +3187,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5230,29 +3210,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5273,29 +3233,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5308,16 +3248,6 @@ const templates = [
       {
         "name": "Wheat Flour",
         "quantity": 50,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
         "unit": "g"
       }
     ]
@@ -5337,11 +3267,6 @@ const templates = [
         "name": "Butter",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
-        "unit": "g"
       }
     ]
   },
@@ -5355,16 +3280,6 @@ const templates = [
         "name": "Wheat Flour",
         "quantity": 50,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
-        "unit": "g"
       }
     ]
   },
@@ -5377,16 +3292,6 @@ const templates = [
       {
         "name": "Maida",
         "quantity": 60,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
         "unit": "g"
       }
     ]
@@ -5406,11 +3311,6 @@ const templates = [
         "name": "Butter",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
-        "unit": "g"
       }
     ]
   },
@@ -5428,11 +3328,6 @@ const templates = [
       {
         "name": "Butter",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
         "unit": "g"
       }
     ]
@@ -5457,11 +3352,6 @@ const templates = [
         "name": "Butter",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
-        "unit": "g"
       }
     ]
   },
@@ -5474,16 +3364,6 @@ const templates = [
       {
         "name": "Maida",
         "quantity": 50,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
         "unit": "g"
       }
     ]
@@ -5503,11 +3383,6 @@ const templates = [
         "name": "Butter",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
-        "unit": "g"
       }
     ]
   },
@@ -5525,11 +3400,6 @@ const templates = [
       {
         "name": "Butter",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
         "unit": "g"
       }
     ]
@@ -5554,11 +3424,6 @@ const templates = [
         "name": "Butter",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
-        "unit": "g"
       }
     ]
   },
@@ -5582,11 +3447,6 @@ const templates = [
         "name": "Butter",
         "quantity": 10,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 1,
-        "unit": "g"
       }
     ]
   },
@@ -5599,16 +3459,6 @@ const templates = [
       {
         "name": "Dosa Batter",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -5628,16 +3478,6 @@ const templates = [
         "name": "Potato",
         "quantity": 80,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -5655,11 +3495,6 @@ const templates = [
       {
         "name": "Butter",
         "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -5684,11 +3519,6 @@ const templates = [
         "name": "Butter",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -5706,16 +3536,6 @@ const templates = [
       {
         "name": "Paneer",
         "quantity": 50,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -5735,16 +3555,6 @@ const templates = [
         "name": "Onion",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -5758,11 +3568,6 @@ const templates = [
         "name": "Idli Batter",
         "quantity": 150,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -5775,11 +3580,6 @@ const templates = [
       {
         "name": "Urad Dal Batter",
         "quantity": 100,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -5804,26 +3604,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5847,26 +3627,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -5879,16 +3639,6 @@ const templates = [
       {
         "name": "Dosa Batter",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -5907,16 +3657,6 @@ const templates = [
       {
         "name": "Onion",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -5941,11 +3681,6 @@ const templates = [
         "name": "Butter",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -5958,16 +3693,6 @@ const templates = [
       {
         "name": "Semolina",
         "quantity": 100,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -5987,26 +3712,6 @@ const templates = [
         "name": "Green Chilli",
         "quantity": 5,
         "unit": "g"
-      },
-      {
-        "name": "Curry Leaves",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Mustard Seeds",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6024,26 +3729,6 @@ const templates = [
       {
         "name": "Green Chilli",
         "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Curry Leaves",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Mustard Seeds",
-        "quantity": 2,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6077,21 +3762,6 @@ const templates = [
         "name": "Green Chilli",
         "quantity": 5,
         "unit": "g"
-      },
-      {
-        "name": "Coriander",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6120,21 +3790,6 @@ const templates = [
         "name": "Green Chilli",
         "quantity": 5,
         "unit": "g"
-      },
-      {
-        "name": "Coriander",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6157,11 +3812,6 @@ const templates = [
       {
         "name": "Butter",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6191,21 +3841,6 @@ const templates = [
         "name": "Green Chilli",
         "quantity": 5,
         "unit": "g"
-      },
-      {
-        "name": "Coriander",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6218,16 +3853,6 @@ const templates = [
       {
         "name": "Flattened Rice",
         "quantity": 100,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6247,16 +3872,6 @@ const templates = [
         "name": "Potato",
         "quantity": 100,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6274,16 +3889,6 @@ const templates = [
       {
         "name": "Chickpeas",
         "quantity": 80,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6307,11 +3912,6 @@ const templates = [
       {
         "name": "Butter",
         "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6346,21 +3946,6 @@ const templates = [
         "name": "Green Chilli",
         "quantity": 5,
         "unit": "g"
-      },
-      {
-        "name": "Coriander",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6389,21 +3974,6 @@ const templates = [
         "name": "Green Chilli",
         "quantity": 5,
         "unit": "g"
-      },
-      {
-        "name": "Coriander",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6421,16 +3991,6 @@ const templates = [
       {
         "name": "Potato",
         "quantity": 80,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6450,16 +4010,6 @@ const templates = [
         "name": "Besan",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6477,16 +4027,6 @@ const templates = [
       {
         "name": "Besan",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6506,16 +4046,6 @@ const templates = [
         "name": "Besan",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6534,16 +4064,6 @@ const templates = [
         "name": "Besan",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6556,16 +4076,6 @@ const templates = [
       {
         "name": "Fish",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6580,16 +4090,6 @@ const templates = [
         "name": "Fish",
         "quantity": 150,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6603,16 +4103,6 @@ const templates = [
         "name": "Potato",
         "quantity": 150,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6625,16 +4115,6 @@ const templates = [
       {
         "name": "Potato",
         "quantity": 150,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6661,33 +4141,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -6707,16 +4162,6 @@ const templates = [
         "name": "Mixed Vegetables",
         "quantity": 80,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6735,16 +4180,6 @@ const templates = [
         "name": "Chicken",
         "quantity": 80,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
-        "unit": "g"
       }
     ]
   },
@@ -6762,16 +4197,6 @@ const templates = [
       {
         "name": "Paneer",
         "quantity": 80,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 2,
         "unit": "g"
       }
     ]
@@ -6796,26 +4221,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -6839,26 +4244,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -6879,29 +4264,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -6927,33 +4292,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -6975,29 +4315,9 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Ginger Garlic Paste",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Tandoori Masala",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Lemon",
         "quantity": 0.5,
         "unit": "pcs"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -7021,26 +4341,6 @@ const templates = [
         "name": "Tomato",
         "quantity": 40,
         "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
-        "unit": "g"
       }
     ]
   },
@@ -7063,26 +4363,6 @@ const templates = [
       {
         "name": "Tomato",
         "quantity": 40,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ginger Garlic Paste",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Spices",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -7109,33 +4389,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -7162,33 +4417,8 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Green Chilli",
-        "quantity": 5,
-        "unit": "g"
-      },
-      {
-        "name": "Soy Sauce",
-        "quantity": 10,
-        "unit": "ml"
-      },
-      {
-        "name": "Chilli Sauce",
-        "quantity": 10,
-        "unit": "g"
-      },
-      {
         "name": "Corn Flour",
         "quantity": 10,
-        "unit": "g"
-      },
-      {
-        "name": "Oil",
-        "quantity": 20,
-        "unit": "g"
-      },
-      {
-        "name": "Salt",
-        "quantity": 3,
         "unit": "g"
       }
     ]
@@ -7271,11 +4501,6 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Cardamom",
-        "quantity": 1,
-        "unit": "g"
-      },
-      {
         "name": "Almonds",
         "quantity": 5,
         "unit": "g"
@@ -7303,11 +4528,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Cardamom",
-        "quantity": 1,
         "unit": "g"
       },
       {
@@ -7339,11 +4559,6 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Cardamom",
-        "quantity": 1,
-        "unit": "g"
-      },
-      {
         "name": "Almonds",
         "quantity": 5,
         "unit": "g"
@@ -7364,11 +4579,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Cardamom",
-        "quantity": 1,
         "unit": "g"
       },
       {
@@ -7400,11 +4610,6 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Cardamom",
-        "quantity": 1,
-        "unit": "g"
-      },
-      {
         "name": "Almonds",
         "quantity": 5,
         "unit": "g"
@@ -7433,11 +4638,6 @@ const templates = [
         "unit": "g"
       },
       {
-        "name": "Cardamom",
-        "quantity": 1,
-        "unit": "g"
-      },
-      {
         "name": "Almonds",
         "quantity": 5,
         "unit": "g"
@@ -7458,11 +4658,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Cardamom",
-        "quantity": 1,
         "unit": "g"
       },
       {
@@ -7491,11 +4686,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 30,
-        "unit": "g"
-      },
-      {
-        "name": "Cardamom",
-        "quantity": 1,
         "unit": "g"
       },
       {
@@ -7619,11 +4809,6 @@ const templates = [
         "name": "Sugar",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
-        "unit": "g"
       }
     ]
   },
@@ -7644,11 +4829,6 @@ const templates = [
         "name": "Sugar",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
-        "unit": "g"
       }
     ]
   },
@@ -7666,11 +4846,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
         "unit": "g"
       }
     ]
@@ -7695,11 +4870,6 @@ const templates = [
         "name": "Sugar",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
-        "unit": "g"
       }
     ]
   },
@@ -7717,11 +4887,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
         "unit": "g"
       }
     ]
@@ -7746,11 +4911,6 @@ const templates = [
         "name": "Sugar",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
-        "unit": "g"
       }
     ]
   },
@@ -7768,11 +4928,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
         "unit": "g"
       }
     ]
@@ -7797,11 +4952,6 @@ const templates = [
         "name": "Sugar",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
-        "unit": "g"
       }
     ]
   },
@@ -7824,11 +4974,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
         "unit": "g"
       }
     ]
@@ -7853,11 +4998,6 @@ const templates = [
         "name": "Sugar",
         "quantity": 15,
         "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
-        "unit": "g"
       }
     ]
   },
@@ -7880,11 +5020,6 @@ const templates = [
       {
         "name": "Sugar",
         "quantity": 15,
-        "unit": "g"
-      },
-      {
-        "name": "Ice",
-        "quantity": 50,
         "unit": "g"
       }
     ]
