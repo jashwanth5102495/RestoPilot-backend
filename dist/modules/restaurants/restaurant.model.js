@@ -72,6 +72,8 @@ const RestaurantSchema = new mongoose_1.Schema({
     billingSlug: { type: String, lowercase: true, trim: true },
     isKdsEnabled: { type: Boolean, default: false },
     kdsSlug: { type: String, lowercase: true, trim: true },
+    isInventoryEnabled: { type: Boolean, default: false },
+    inventorySlug: { type: String, lowercase: true, trim: true },
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Restaurant' },
@@ -88,5 +90,6 @@ RestaurantSchema.index({ onlineSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ waiterSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ billingSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ kdsSlug: 1 }, { unique: true, sparse: true });
+RestaurantSchema.index({ inventorySlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ parentRestaurantId: 1 });
 exports.Restaurant = mongoose_1.default.model('Restaurant', RestaurantSchema);
