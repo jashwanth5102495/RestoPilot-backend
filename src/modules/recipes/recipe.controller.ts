@@ -104,7 +104,7 @@ export class RecipeController {
 
       const normalizedName = name.trim().toLowerCase().replace(/\s+/g, ' ');
       
-      const template = await RecipeTemplate.findOne({
+      let template = await RecipeTemplate.findOne({
         isActive: true,
         $or: [
           { normalizedDishName: normalizedName },
@@ -112,11 +112,38 @@ export class RecipeController {
         ]
       }).lean();
 
+      // Fallback to fuzzy search if no exact match
+      if (!template) {
+        const words = normalizedName.split(' ').filter(w => w.length > 2);
+        if (words.length > 0) {
+          const regexPatterns = words.map(w => new RegExp(w, 'i'));
+          template = await RecipeTemplate.findOne({
+            isActive: true,
+            $or: [
+              { normalizedDishName: { $in: regexPatterns } },
+              { aliases: { $in: regexPatterns } }
+            ]
+          }).lean();
+        }
+      }
+
       if (template) {
         return res.status(200).json({ success: true, data: template });
       } else {
         return res.status(404).json({ success: false, message: 'No standard recipe template found' });
       }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllTemplates(req: Request, res: Response, next: NextFunction) {
+    try {
+      const templates = await RecipeTemplate.find({ isActive: true })
+        .select('_id dishName category')
+        .sort({ category: 1, dishName: 1 })
+        .lean();
+      return res.status(200).json({ success: true, data: templates });
     } catch (error) {
       next(error);
     }
