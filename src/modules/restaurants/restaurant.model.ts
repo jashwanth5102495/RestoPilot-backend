@@ -43,7 +43,7 @@ export interface IRestaurant extends Document {
   inventoryCheckFrequency: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
   inventoryCheckSnoozedUntil?: Date;
   notificationSettings?: {
-    whatsappNumber: string;
+    telegramChatId: string;
     scheduledTime: string;
     enabled: boolean;
   };
@@ -84,7 +84,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
     inventoryCheckFrequency: { type: String, enum: ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'], default: 'WEEKLY' },
     inventoryCheckSnoozedUntil: { type: Date },
     notificationSettings: {
-      whatsappNumber: { type: String },
+      telegramChatId: { type: String },
       scheduledTime: { type: String },
       enabled: { type: Boolean, default: false }
     },

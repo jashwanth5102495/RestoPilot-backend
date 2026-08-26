@@ -40,7 +40,10 @@ const node_cron_1 = __importDefault(require("node-cron"));
 const restaurant_model_1 = require("../restaurants/restaurant.model");
 const order_model_1 = require("../orders/order.model");
 const ingredient_model_1 = require("../ingredients/ingredient.model");
-const whatsapp_service_1 = __importDefault(require("./whatsapp.service"));
+const telegram_service_1 = require("./telegram.service");
+const os_1 = __importDefault(require("os"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 class CronService {
     start() {
         // Run every minute
@@ -56,7 +59,7 @@ class CronService {
                     'notificationSettings.scheduledTime': currentTime,
                 });
                 for (const restaurant of restaurants) {
-                    if (!restaurant.notificationSettings?.whatsappNumber)
+                    if (!restaurant.notificationSettings?.telegramChatId)
                         continue;
                     // Calculate today's sales
                     const startOfDay = new Date();
@@ -115,9 +118,6 @@ class CronService {
                     }));
                     try {
                         const { PdfService } = await Promise.resolve().then(() => __importStar(require('./pdf.service')));
-                        const path = await Promise.resolve().then(() => __importStar(require('path')));
-                        const fs = await Promise.resolve().then(() => __importStar(require('fs')));
-                        const { MessageMedia } = await Promise.resolve().then(() => __importStar(require('whatsapp-web.js')));
                         const reportData = {
                             restaurantName: restaurant.name,
                             date: now.toLocaleDateString(),
@@ -131,22 +131,14 @@ class CronService {
                             },
                             inventory: inventoryData
                         };
-                        const tempDir = path.resolve(process.cwd(), 'temp');
-                        if (!fs.existsSync(tempDir)) {
-                            fs.mkdirSync(tempDir);
-                        }
-                        const pdfPath = path.join(tempDir, `report-${restaurant._id}-${Date.now()}.pdf`);
+                        const tempDir = os_1.default.tmpdir();
+                        const pdfPath = path_1.default.join(tempDir, `report-${restaurant._id}-${Date.now()}.pdf`);
                         await PdfService.generateDailyReport(reportData, pdfPath);
-                        const media = MessageMedia.fromFilePath(pdfPath);
                         const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed report attached.`;
-                        // Note: whatsappService.sendMessage might need to support sending media. 
-                        // In whatsapp.service.ts, sendMessage uses client.sendMessage(chatId, text). We can pass media instead of text if it supports it, 
-                        // or we need to update whatsappService.sendMessage to accept media. 
-                        // I will update whatsapp.service.ts next.
-                        await whatsapp_service_1.default.sendMessage(restaurant.notificationSettings.whatsappNumber, message, media);
-                        console.log(`Sent daily report PDF to restaurant ${restaurant._id} on WhatsApp: ${restaurant.notificationSettings.whatsappNumber}`);
+                        await telegram_service_1.TelegramService.sendMessage(restaurant.notificationSettings.telegramChatId, message, pdfPath);
+                        console.log(`Sent daily report PDF to restaurant ${restaurant._id} on Telegram: ${restaurant.notificationSettings.telegramChatId}`);
                         // Clean up PDF
-                        fs.unlinkSync(pdfPath);
+                        fs_1.default.unlinkSync(pdfPath);
                     }
                     catch (err) {
                         console.error(`Failed to generate/send daily report PDF to ${restaurant._id}:`, err);

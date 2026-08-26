@@ -2,8 +2,11 @@ import cron from 'node-cron';
 import { Restaurant } from '../restaurants/restaurant.model';
 import { Order, PaymentStatus, OrderStatus } from '../orders/order.model';
 import { Ingredient } from '../ingredients/ingredient.model';
-import whatsappService from './whatsapp.service';
+import { TelegramService } from './telegram.service';
 import mongoose from 'mongoose';
+import os from 'os';
+import path from 'path';
+import fs from 'fs';
 
 class CronService {
   public start() {
@@ -22,7 +25,7 @@ class CronService {
         });
 
         for (const restaurant of restaurants) {
-          if (!restaurant.notificationSettings?.whatsappNumber) continue;
+          if (!restaurant.notificationSettings?.telegramChatId) continue;
 
           // Calculate today's sales
           const startOfDay = new Date();
@@ -85,9 +88,6 @@ class CronService {
 
           try {
             const { PdfService } = await import('./pdf.service');
-            const path = await import('path');
-            const fs = await import('fs');
-            const { MessageMedia } = await import('whatsapp-web.js');
 
             const reportData = {
               restaurantName: restaurant.name,
@@ -103,24 +103,16 @@ class CronService {
               inventory: inventoryData
             };
 
-            const tempDir = path.resolve(process.cwd(), 'temp');
-            if (!fs.existsSync(tempDir)) {
-              fs.mkdirSync(tempDir);
-            }
+            const tempDir = os.tmpdir();
             const pdfPath = path.join(tempDir, `report-${restaurant._id}-${Date.now()}.pdf`);
             
             await PdfService.generateDailyReport(reportData, pdfPath);
 
-            const media = MessageMedia.fromFilePath(pdfPath);
             const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed report attached.`;
 
-            // Note: whatsappService.sendMessage might need to support sending media. 
-            // In whatsapp.service.ts, sendMessage uses client.sendMessage(chatId, text). We can pass media instead of text if it supports it, 
-            // or we need to update whatsappService.sendMessage to accept media. 
-            // I will update whatsapp.service.ts next.
-            await whatsappService.sendMessage(restaurant.notificationSettings.whatsappNumber, message, media);
+            await TelegramService.sendMessage(restaurant.notificationSettings.telegramChatId, message, pdfPath);
             
-            console.log(`Sent daily report PDF to restaurant ${restaurant._id} on WhatsApp: ${restaurant.notificationSettings.whatsappNumber}`);
+            console.log(`Sent daily report PDF to restaurant ${restaurant._id} on Telegram: ${restaurant.notificationSettings.telegramChatId}`);
             
             // Clean up PDF
             fs.unlinkSync(pdfPath);

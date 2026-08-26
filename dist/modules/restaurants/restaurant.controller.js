@@ -125,22 +125,21 @@ class RestaurantController {
             next(error);
         }
     }
-    static async testWhatsappReport(req, res, next) {
+    static async testTelegramReport(req, res, next) {
         try {
             const { Restaurant } = await Promise.resolve().then(() => __importStar(require('./restaurant.model')));
             const { Order, PaymentStatus, OrderStatus } = await Promise.resolve().then(() => __importStar(require('../orders/order.model')));
             const { Ingredient } = await Promise.resolve().then(() => __importStar(require('../ingredients/ingredient.model')));
-            const whatsappService = (await Promise.resolve().then(() => __importStar(require('../notifications/whatsapp.service')))).default;
+            const { TelegramService } = await Promise.resolve().then(() => __importStar(require('../notifications/telegram.service')));
             const { PdfService } = await Promise.resolve().then(() => __importStar(require('../notifications/pdf.service')));
             const path = await Promise.resolve().then(() => __importStar(require('path')));
             const fs = await Promise.resolve().then(() => __importStar(require('fs')));
-            const { MessageMedia } = await Promise.resolve().then(() => __importStar(require('whatsapp-web.js')));
             const { id } = req.params;
             const currentRes = await Restaurant.findById(id);
             if (!currentRes)
                 return res.status(404).json({ success: false, message: 'Restaurant not found' });
-            if (!currentRes.notificationSettings?.whatsappNumber) {
-                return res.status(400).json({ success: false, message: 'No WhatsApp number configured.' });
+            if (!currentRes.notificationSettings?.telegramChatId) {
+                return res.status(400).json({ success: false, message: 'No Telegram Chat ID configured.' });
             }
             const now = new Date();
             const startOfDay = new Date();
@@ -214,9 +213,8 @@ class RestaurantController {
             const tempDir = os.tmpdir();
             const pdfPath = path.join(tempDir, `test-report-${currentRes._id}-${Date.now()}.pdf`);
             await PdfService.generateDailyReport(reportData, pdfPath);
-            const media = MessageMedia.fromFilePath(pdfPath);
             const message = `*Daily Sales & Inventory Report (TEST)*\nRestaurant: ${currentRes.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed test report attached.`;
-            await whatsappService.sendMessage(currentRes.notificationSettings.whatsappNumber, message, media);
+            await TelegramService.sendMessage(currentRes.notificationSettings.telegramChatId, message, pdfPath);
             fs.unlinkSync(pdfPath);
             res.status(200).json({ success: true, message: 'Test report sent successfully' });
         }

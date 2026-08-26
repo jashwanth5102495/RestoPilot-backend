@@ -26,8 +26,7 @@ router.post('/data-requests/:id/fulfill', AdminController.fulfillDataRequest);
 router.get('/agents', AdminController.getAgents);
 router.post('/agents', AdminController.createAgent);
 router.delete('/agents/:id', AdminController.deleteAgent);
-router.get('/whatsapp/status', AdminController.getWhatsappStatus);
-router.post('/whatsapp/pair', AdminController.getPairingCode);
-router.post('/whatsapp/reset', AdminController.resetWhatsapp);
+router.get('/telegram/status', AdminController.getTelegramStatus);
+router.post('/telegram/token', AdminController.saveTelegramToken);
 
 export default router;
