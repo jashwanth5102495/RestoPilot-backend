@@ -43,7 +43,7 @@ if (execPath) {
 console.log('-------------------------------');
 
 class WhatsAppService {
-  private client: Client;
+  private client!: Client;
   private qrCodeUrl: string | null = null;
   private status: 'DISCONNECTED' | 'INITIALIZING' | 'AWAITING_LOGIN' | 'AUTHENTICATING' | 'CONNECTED' = 'DISCONNECTED';
   private authPath: string;
