@@ -169,6 +169,32 @@ class PublicController {
             next(error);
         }
     }
+    static async toggleBillingOrdering(req, res, next) {
+        try {
+            const reqAny = req;
+            const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
+            const { enabled } = req.body;
+            if (!restaurantId) {
+                return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+            }
+            const restaurant = await restaurant_model_1.Restaurant.findById(restaurantId);
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Restaurant not found' });
+            }
+            restaurant.isBillingEnabled = enabled;
+            if (enabled && !restaurant.billingSlug) {
+                restaurant.billingSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-billing-' + Math.floor(Math.random() * 1000);
+            }
+            await restaurant.save();
+            res.status(200).json({
+                success: true,
+                data: restaurant
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     static async getWaiterTables(req, res, next) {
         try {
             const { slug } = req.params;
@@ -196,6 +222,24 @@ class PublicController {
                 .populate('categoryId')
                 .lean();
             res.status(200).json({ success: true, data: { categories, dishes } });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getWaiterTableOrder(req, res, next) {
+        try {
+            const { slug, tableId } = req.params;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
+            }
+            const order = await order_model_1.Order.findOne({
+                restaurantId: restaurant._id,
+                tableId: tableId,
+                orderStatus: { $nin: [order_model_1.OrderStatus.COMPLETED, order_model_1.OrderStatus.CANCELLED] }
+            });
+            res.status(200).json({ success: true, data: order || null });
         }
         catch (error) {
             next(error);
@@ -249,6 +293,41 @@ class PublicController {
             const { OrderService } = await Promise.resolve().then(() => __importStar(require('../orders/order.service')));
             const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), order_model_1.OrderStatus.COMPLETED, null);
             res.status(200).json({ success: true, data: updatedOrder });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getBillingMenu(req, res, next) {
+        try {
+            const { slug } = req.params;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true }).lean();
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+            }
+            const categories = await category_model_1.Category.find({ restaurantId: restaurant._id, isActive: true }).lean();
+            const dishes = await dish_model_1.Dish.find({ restaurantId: restaurant._id, isAvailable: true, isDeleted: false })
+                .populate('categoryId')
+                .lean();
+            res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, logo: restaurant.logo, currency: restaurant.currency }, categories, dishes } });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async processBillingSale(req, res, next) {
+        try {
+            const { slug } = req.params;
+            const { items, paymentMethod, customerId } = req.body;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+            }
+            const { BillingService } = await Promise.resolve().then(() => __importStar(require('../billing/billing.service')));
+            // Pass restaurant._id and restaurant.ownerId (or string) as userId
+            const userId = restaurant.ownerId || restaurant._id;
+            const result = await BillingService.processSale(restaurant._id, userId, items, paymentMethod, customerId);
+            res.status(201).json({ success: true, data: result });
         }
         catch (error) {
             next(error);

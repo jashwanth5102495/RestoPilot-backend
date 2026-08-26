@@ -48,7 +48,8 @@ class RestaurantController {
     }
     static async getBranchDashboard(req, res, next) {
         try {
-            const dashboard = await restaurant_service_1.RestaurantService.getBranchDashboard(req.tenantId, req.params.branchId);
+            const timeframe = req.query.timeframe || 'today';
+            const dashboard = await restaurant_service_1.RestaurantService.getBranchDashboard(req.tenantId, req.params.branchId, timeframe);
             res.status(200).json({ success: true, data: dashboard });
         }
         catch (error) {
