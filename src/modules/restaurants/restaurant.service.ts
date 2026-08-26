@@ -48,6 +48,14 @@ export class RestaurantService {
       targetIds = [branchId];
     }
 
+    // Calculate 6 days ago start of day in IST (+05:30)
+    const now = new Date();
+    // Adjust to IST
+    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    istTime.setUTCDate(istTime.getUTCDate() - 6);
+    istTime.setUTCHours(0, 0, 0, 0);
+    const startOf7DaysAgo = new Date(istTime.getTime() - (5.5 * 60 * 60 * 1000));
+
     const [totalOrders, salesResult, lowStockItems, recentOrders, popularDishesResult, dailySalesResult] = await Promise.all([
       Order.countDocuments({ restaurantId: { $in: targetIds } }),
       Order.aggregate([
@@ -85,7 +93,7 @@ export class RestaurantService {
           $match: { 
             restaurantId: { $in: targetIds },
             orderStatus: { $nin: ['DRAFT', 'CANCELLED'] },
-            createdAt: { $gte: new Date(new Date().setDate(new Date().getDate() - 6)) } // Last 7 days including today
+            createdAt: { $gte: startOf7DaysAgo } // Last 7 days including today
           } 
         },
         {
@@ -124,14 +132,19 @@ export class RestaurantService {
     const today = new Date();
     
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dayName = daysMap[d.getDay()];
+      // Create date object and shift to IST for extraction
+      const d = new Date(today.getTime() + (5.5 * 60 * 60 * 1000));
+      d.setUTCDate(d.getUTCDate() - i);
+      
+      const year = d.getUTCFullYear();
+      const month = d.getUTCMonth() + 1;
+      const day = d.getUTCDate();
+      const dayName = daysMap[d.getUTCDay()];
       
       const found = dailySalesResult.find(r => 
-        r._id.year === d.getFullYear() && 
-        r._id.month === d.getMonth() + 1 && 
-        r._id.day === d.getDate()
+        r._id.year === year && 
+        r._id.month === month && 
+        r._id.day === day
       );
       
       salesData.push({
