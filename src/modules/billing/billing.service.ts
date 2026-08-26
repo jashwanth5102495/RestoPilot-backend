@@ -92,7 +92,7 @@ export class BillingService {
           TransactionType.SALE_CONSUMPTION,
           session,
           { referenceType: 'ORDER', referenceId: order._id as Types.ObjectId, createdBy: new Types.ObjectId(userId) },
-          false // Prevent negative stock
+          true // Allow negative stock so billing isn't blocked
         );
       }
 
