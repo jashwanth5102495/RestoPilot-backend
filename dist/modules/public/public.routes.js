@@ -11,9 +11,14 @@ router.post('/restaurants/:slug/orders', public_controller_1.PublicController.pl
 // Protected routes for owners
 router.post('/settings/online-ordering', auth_middleware_1.authenticate, tenant_middleware_1.requireTenant, public_controller_1.PublicController.toggleOnlineOrdering);
 router.post('/settings/waiter-ordering', auth_middleware_1.authenticate, tenant_middleware_1.requireTenant, public_controller_1.PublicController.toggleWaiterOrdering);
+router.post('/settings/billing-ordering', auth_middleware_1.authenticate, tenant_middleware_1.requireTenant, public_controller_1.PublicController.toggleBillingOrdering);
 // Public routes for waiter portal
 router.get('/waiter/:slug/tables', public_controller_1.PublicController.getWaiterTables);
 router.get('/waiter/:slug/menu', public_controller_1.PublicController.getWaiterMenu);
+router.get('/waiter/:slug/tables/:tableId/order', public_controller_1.PublicController.getWaiterTableOrder);
 router.post('/waiter/:slug/tables/:tableId/order', public_controller_1.PublicController.placeWaiterTableOrder);
 router.post('/waiter/:slug/tables/:tableId/bill', public_controller_1.PublicController.generateWaiterBill);
+// Public routes for billing portal
+router.get('/billing/:slug/menu', public_controller_1.PublicController.getBillingMenu);
+router.post('/billing/:slug/sale', public_controller_1.PublicController.processBillingSale);
 exports.default = router;

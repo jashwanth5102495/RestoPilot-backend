@@ -55,7 +55,7 @@ const InventoryTransactionSchema = new mongoose_1.Schema({
     unit: { type: String, required: true },
     referenceType: { type: String },
     referenceId: { type: mongoose_1.Schema.Types.ObjectId },
-    balanceAfter: { type: Number, required: true, min: 0 },
+    balanceAfter: { type: Number, required: true },
     notes: { type: String },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
