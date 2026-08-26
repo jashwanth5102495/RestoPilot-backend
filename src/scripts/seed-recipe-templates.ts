@@ -126,6 +126,22 @@ const templates = [
       { name: 'Oil', quantity: 10, unit: 'g' },
       { name: 'Salt', quantity: 2, unit: 'g' }
     ]
+  },
+  // BREAKFAST
+  {
+    dishName: 'Egg Omelette',
+    aliases: ['omelette', 'masala omelette', 'egg omelet'],
+    category: 'Breakfast',
+    cuisine: 'Global',
+    ingredients: [
+      { name: 'Egg', quantity: 2, unit: 'pcs' },
+      { name: 'Onion', quantity: 20, unit: 'g' },
+      { name: 'Tomato', quantity: 15, unit: 'g' },
+      { name: 'Green Chilli', quantity: 5, unit: 'g' },
+      { name: 'Coriander', quantity: 5, unit: 'g' },
+      { name: 'Oil', quantity: 5, unit: 'g' },
+      { name: 'Salt', quantity: 2, unit: 'g' }
+    ]
   }
 ];
 
