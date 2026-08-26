@@ -6,6 +6,7 @@ const auth_middleware_1 = require("../../middleware/auth.middleware");
 const tenant_middleware_1 = require("../../middleware/tenant.middleware");
 const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate, tenant_middleware_1.requireTenant);
+router.get('/templates', recipe_controller_1.RecipeController.getAllTemplates);
 router.get('/templates/match', recipe_controller_1.RecipeController.matchTemplate);
 router.get('/', recipe_controller_1.RecipeController.getRecipes);
 router.post('/', recipe_controller_1.RecipeController.updateRecipe);

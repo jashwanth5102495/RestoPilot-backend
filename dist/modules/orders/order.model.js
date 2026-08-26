@@ -97,6 +97,7 @@ const OrderSchema = new mongoose_1.Schema({
         address: { type: String }
     },
     tableId: { type: mongoose_1.Schema.Types.ObjectId, ref: 'Table' },
+    inventoryConsumed: { type: Boolean, default: false },
     startedBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: 'User' },
     orderActivity: [OrderActivitySchema],

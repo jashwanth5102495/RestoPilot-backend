@@ -91,6 +91,7 @@ class BillingService {
                 paymentMethod,
                 paymentStatus: order_model_1.PaymentStatus.PAID,
                 orderStatus: order_model_1.OrderStatus.COMPLETED,
+                inventoryConsumed: true,
                 createdBy: userId
             });
             await order.save({ session });
