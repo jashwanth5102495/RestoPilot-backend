@@ -4,6 +4,7 @@ exports.RecipeController = void 0;
 const recipe_model_1 = require("./recipe.model");
 const dish_model_1 = require("../dishes/dish.model");
 const ingredient_model_1 = require("../ingredients/ingredient.model");
+const recipe_template_model_1 = require("./recipe-template.model");
 class RecipeController {
     static async getRecipes(req, res, next) {
         try {
@@ -82,6 +83,31 @@ class RecipeController {
                 await recipe.save();
             }
             res.status(200).json({ success: true, data: recipe });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async matchTemplate(req, res, next) {
+        try {
+            const { name } = req.query;
+            if (!name || typeof name !== 'string') {
+                return res.status(400).json({ success: false, message: 'Dish name query parameter is required' });
+            }
+            const normalizedName = name.trim().toLowerCase().replace(/\s+/g, ' ');
+            const template = await recipe_template_model_1.RecipeTemplate.findOne({
+                isActive: true,
+                $or: [
+                    { normalizedDishName: normalizedName },
+                    { aliases: normalizedName }
+                ]
+            }).lean();
+            if (template) {
+                return res.status(200).json({ success: true, data: template });
+            }
+            else {
+                return res.status(404).json({ success: false, message: 'No standard recipe template found' });
+            }
         }
         catch (error) {
             next(error);

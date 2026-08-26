@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Recipe } from './recipe.model';
 import { Dish } from '../dishes/dish.model';
 import { Ingredient } from '../ingredients/ingredient.model';
+import { RecipeTemplate } from './recipe-template.model';
 
 export class RecipeController {
   static async getRecipes(req: Request, res: Response, next: NextFunction) {
@@ -89,6 +90,33 @@ export class RecipeController {
       }
 
       res.status(200).json({ success: true, data: recipe });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async matchTemplate(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { name } = req.query;
+      if (!name || typeof name !== 'string') {
+        return res.status(400).json({ success: false, message: 'Dish name query parameter is required' });
+      }
+
+      const normalizedName = name.trim().toLowerCase().replace(/\s+/g, ' ');
+      
+      const template = await RecipeTemplate.findOne({
+        isActive: true,
+        $or: [
+          { normalizedDishName: normalizedName },
+          { aliases: normalizedName }
+        ]
+      }).lean();
+
+      if (template) {
+        return res.status(200).json({ success: true, data: template });
+      } else {
+        return res.status(404).json({ success: false, message: 'No standard recipe template found' });
+      }
     } catch (error) {
       next(error);
     }
