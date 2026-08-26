@@ -488,20 +488,22 @@ class PublicController {
                     ingredientId: item.ingredientId,
                     quantity: Number(item.quantity),
                     unitCost: Number(item.unitCost || 0),
-                    unit: item.unit
+                    unit: item.unit,
+                    lineTotal: cost
                 };
             });
+            const purchaseNumber = `PO-${Math.floor(100000 + Math.random() * 900000)}`;
             const purchase = new Purchase({
                 restaurantId: restaurant._id,
-                supplierId: null, // Public restock
+                purchaseNumber,
                 purchaseDate: new Date(),
                 items: purchaseItems,
                 subtotal: subtotal,
-                taxAmount: 0,
-                totalAmount: subtotal,
+                tax: 0,
+                total: subtotal,
                 paymentStatus: 'PAID',
-                paymentMethod: 'CASH',
                 notes: 'Inventory quick public adjustment',
+                createdBy: restaurant.ownerId || restaurant._id,
             });
             await purchase.save();
             // Update ingredient stocks directly
