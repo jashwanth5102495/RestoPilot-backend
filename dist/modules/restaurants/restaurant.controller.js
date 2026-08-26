@@ -210,10 +210,8 @@ class RestaurantController {
                 },
                 inventory: inventoryData
             };
-            const tempDir = path.resolve(process.cwd(), 'temp');
-            if (!fs.existsSync(tempDir)) {
-                fs.mkdirSync(tempDir);
-            }
+            const os = await Promise.resolve().then(() => __importStar(require('os')));
+            const tempDir = os.tmpdir();
             const pdfPath = path.join(tempDir, `test-report-${currentRes._id}-${Date.now()}.pdf`);
             await PdfService.generateDailyReport(reportData, pdfPath);
             const media = MessageMedia.fromFilePath(pdfPath);
@@ -223,7 +221,8 @@ class RestaurantController {
             res.status(200).json({ success: true, message: 'Test report sent successfully' });
         }
         catch (error) {
-            next(error);
+            console.error('Test Report Error:', error);
+            res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
         }
     }
 }
