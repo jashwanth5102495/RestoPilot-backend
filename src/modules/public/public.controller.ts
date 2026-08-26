@@ -160,6 +160,38 @@ export class PublicController {
     }
   }
 
+  static async toggleBillingOrdering(req: Request, res: Response, next: NextFunction) {
+    try {
+      const reqAny = req as any;
+      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
+      const { enabled } = req.body;
+
+      if (!restaurantId) {
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+      }
+
+      const restaurant = await Restaurant.findById(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+      }
+
+      restaurant.isBillingEnabled = enabled;
+      
+      if (enabled && !restaurant.billingSlug) {
+        restaurant.billingSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-billing-' + Math.floor(Math.random() * 1000);
+      }
+
+      await restaurant.save();
+
+      res.status(200).json({
+        success: true,
+        data: restaurant
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getWaiterTables(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
@@ -279,6 +311,55 @@ export class PublicController {
       const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), OrderStatus.COMPLETED, null as any);
 
       res.status(200).json({ success: true, data: updatedOrder });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getBillingMenu(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true }).lean();
+      
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const categories = await Category.find({ restaurantId: restaurant._id, isActive: true }).lean();
+      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: true, isDeleted: false })
+        .populate('categoryId')
+        .lean();
+
+      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, logo: restaurant.logo, currency: restaurant.currency }, categories, dishes } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async processBillingSale(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const { items, paymentMethod, customerId } = req.body;
+
+      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { BillingService } = await import('../billing/billing.service');
+      
+      // Pass restaurant._id and restaurant.ownerId (or string) as userId
+      const userId = restaurant.ownerId || restaurant._id;
+
+      const result = await BillingService.processSale(
+        restaurant._id as any,
+        userId as any,
+        items,
+        paymentMethod,
+        customerId
+      );
+
+      res.status(201).json({ success: true, data: result });
     } catch (error) {
       next(error);
     }
