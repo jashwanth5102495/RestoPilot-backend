@@ -156,7 +156,7 @@ class WhatsAppService {
     }
   }
 
-  public async sendMessage(number: string, text: string) {
+  public async sendMessage(number: string, text: string, media?: any) {
     if (this.status !== 'CONNECTED') {
       throw new Error('WhatsApp client is not connected');
     }
@@ -164,7 +164,11 @@ class WhatsAppService {
     try {
       // whatsapp-web.js requires the number in a specific format ending with @c.us
       const chatId = `${number.replace(/\D/g, '')}@c.us`;
-      await this.client.sendMessage(chatId, text);
+      if (media) {
+        await this.client.sendMessage(chatId, media, { caption: text });
+      } else {
+        await this.client.sendMessage(chatId, text);
+      }
       return true;
     } catch (error) {
       console.error('Error sending WhatsApp message:', error);

@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { Restaurant } from '../restaurants/restaurant.model';
 import { Order, PaymentStatus, OrderStatus } from '../orders/order.model';
+import { Ingredient } from '../ingredients/ingredient.model';
 import whatsappService from './whatsapp.service';
 import mongoose from 'mongoose';
 
@@ -60,13 +61,71 @@ class CronService {
             totalSales += methodTotal;
           });
 
-          const message = `*Daily Sales Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\n*Sales Breakdown:*\nCash: ₹${cash}\nCard: ₹${card}\nUPI: ₹${upi}\n\n*Total Sales:* ₹${totalSales}`;
+          let onlineOrdersCount = 0;
+          let posOrdersCount = 0;
+          
+          const rawOrders = await Order.find({
+            restaurantId: restaurant._id,
+            createdAt: { $gte: startOfDay, $lte: endOfDay },
+            paymentStatus: PaymentStatus.PAID,
+            orderStatus: { $ne: OrderStatus.CANCELLED }
+          });
+
+          rawOrders.forEach(order => {
+            if (order.orderSource === 'ONLINE') onlineOrdersCount++;
+            else posOrdersCount++;
+          });
+
+          const ingredients = await Ingredient.find({ restaurantId: restaurant._id });
+          const inventoryData = ingredients.map(ing => ({
+            name: ing.name,
+            quantity: ing.currentStock,
+            unit: ing.unit
+          }));
 
           try {
-            await whatsappService.sendMessage(restaurant.notificationSettings.whatsappNumber, message);
-            console.log(`Sent daily report to restaurant ${restaurant._id} on WhatsApp: ${restaurant.notificationSettings.whatsappNumber}`);
+            const { PdfService } = await import('./pdf.service');
+            const path = await import('path');
+            const fs = await import('fs');
+            const { MessageMedia } = await import('whatsapp-web.js');
+
+            const reportData = {
+              restaurantName: restaurant.name,
+              date: now.toLocaleDateString(),
+              sales: {
+                total: totalSales,
+                cash: cash,
+                card: card,
+                upi: upi,
+                onlineOrders: onlineOrdersCount,
+                posOrders: posOrdersCount
+              },
+              inventory: inventoryData
+            };
+
+            const tempDir = path.resolve(process.cwd(), 'temp');
+            if (!fs.existsSync(tempDir)) {
+              fs.mkdirSync(tempDir);
+            }
+            const pdfPath = path.join(tempDir, `report-${restaurant._id}-${Date.now()}.pdf`);
+            
+            await PdfService.generateDailyReport(reportData, pdfPath);
+
+            const media = MessageMedia.fromFilePath(pdfPath);
+            const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed report attached.`;
+
+            // Note: whatsappService.sendMessage might need to support sending media. 
+            // In whatsapp.service.ts, sendMessage uses client.sendMessage(chatId, text). We can pass media instead of text if it supports it, 
+            // or we need to update whatsappService.sendMessage to accept media. 
+            // I will update whatsapp.service.ts next.
+            await whatsappService.sendMessage(restaurant.notificationSettings.whatsappNumber, message, media);
+            
+            console.log(`Sent daily report PDF to restaurant ${restaurant._id} on WhatsApp: ${restaurant.notificationSettings.whatsappNumber}`);
+            
+            // Clean up PDF
+            fs.unlinkSync(pdfPath);
           } catch (err) {
-            console.error(`Failed to send daily report to ${restaurant._id}:`, err);
+            console.error(`Failed to generate/send daily report PDF to ${restaurant._id}:`, err);
           }
         }
       } catch (error) {

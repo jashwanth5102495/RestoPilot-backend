@@ -125,5 +125,105 @@ class RestaurantController {
             next(error);
         }
     }
+    static async testWhatsappReport(req, res, next) {
+        try {
+            const { Restaurant } = await Promise.resolve().then(() => __importStar(require('./restaurant.model')));
+            const { Order, PaymentStatus, OrderStatus } = await Promise.resolve().then(() => __importStar(require('../orders/order.model')));
+            const { Ingredient } = await Promise.resolve().then(() => __importStar(require('../ingredients/ingredient.model')));
+            const whatsappService = (await Promise.resolve().then(() => __importStar(require('../notifications/whatsapp.service')))).default;
+            const { PdfService } = await Promise.resolve().then(() => __importStar(require('../notifications/pdf.service')));
+            const path = await Promise.resolve().then(() => __importStar(require('path')));
+            const fs = await Promise.resolve().then(() => __importStar(require('fs')));
+            const { MessageMedia } = await Promise.resolve().then(() => __importStar(require('whatsapp-web.js')));
+            const currentRes = await Restaurant.findById(req.tenantId);
+            if (!currentRes)
+                return res.status(404).json({ success: false, message: 'Restaurant not found' });
+            if (!currentRes.notificationSettings?.whatsappNumber) {
+                return res.status(400).json({ success: false, message: 'No WhatsApp number configured.' });
+            }
+            const now = new Date();
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date();
+            endOfDay.setHours(23, 59, 59, 999);
+            const salesAggregate = await Order.aggregate([
+                {
+                    $match: {
+                        restaurantId: currentRes._id,
+                        createdAt: { $gte: startOfDay, $lte: endOfDay },
+                        paymentStatus: PaymentStatus.PAID,
+                        orderStatus: { $ne: OrderStatus.CANCELLED }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$paymentMethod',
+                        total: { $sum: '$total' }
+                    }
+                }
+            ]);
+            let cash = 0;
+            let card = 0;
+            let upi = 0;
+            let totalSales = 0;
+            salesAggregate.forEach((item) => {
+                const methodTotal = item.total || 0;
+                if (item._id === 'CASH')
+                    cash += methodTotal;
+                if (item._id === 'CARD')
+                    card += methodTotal;
+                if (item._id === 'UPI')
+                    upi += methodTotal;
+                totalSales += methodTotal;
+            });
+            let onlineOrdersCount = 0;
+            let posOrdersCount = 0;
+            const rawOrders = await Order.find({
+                restaurantId: currentRes._id,
+                createdAt: { $gte: startOfDay, $lte: endOfDay },
+                paymentStatus: PaymentStatus.PAID,
+                orderStatus: { $ne: OrderStatus.CANCELLED }
+            });
+            rawOrders.forEach(order => {
+                if (order.orderSource === 'ONLINE')
+                    onlineOrdersCount++;
+                else
+                    posOrdersCount++;
+            });
+            const ingredients = await Ingredient.find({ restaurantId: currentRes._id });
+            const inventoryData = ingredients.map(ing => ({
+                name: ing.name,
+                quantity: ing.currentStock,
+                unit: ing.unit
+            }));
+            const reportData = {
+                restaurantName: currentRes.name,
+                date: now.toLocaleDateString(),
+                sales: {
+                    total: totalSales,
+                    cash,
+                    card,
+                    upi,
+                    onlineOrders: onlineOrdersCount,
+                    posOrders: posOrdersCount
+                },
+                inventory: inventoryData
+            };
+            const tempDir = path.resolve(process.cwd(), 'temp');
+            if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir);
+            }
+            const pdfPath = path.join(tempDir, `test-report-${currentRes._id}-${Date.now()}.pdf`);
+            await PdfService.generateDailyReport(reportData, pdfPath);
+            const media = MessageMedia.fromFilePath(pdfPath);
+            const message = `*Daily Sales & Inventory Report (TEST)*\nRestaurant: ${currentRes.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed test report attached.`;
+            await whatsappService.sendMessage(currentRes.notificationSettings.whatsappNumber, message, media);
+            fs.unlinkSync(pdfPath);
+            res.status(200).json({ success: true, message: 'Test report sent successfully' });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.RestaurantController = RestaurantController;

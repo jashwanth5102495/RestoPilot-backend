@@ -9,6 +9,7 @@ router.use(authenticate, requireTenant);
 router.get('/branches', RestaurantController.getBranches);
 router.post('/', RestaurantController.createBranch);
 router.post('/verify-agent', RestaurantController.verifyAgent);
+router.post('/test-whatsapp-report', RestaurantController.testWhatsappReport);
 router.get('/:branchId/dashboard', RestaurantController.getBranchDashboard);
 router.put('/:id', RestaurantController.updateRestaurant);
 
