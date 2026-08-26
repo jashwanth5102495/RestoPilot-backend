@@ -41,7 +41,6 @@ const app_1 = __importDefault(require("./app"));
 const database_1 = require("./config/database");
 const env_1 = require("./config/env");
 const logger_1 = require("./shared/utils/logger");
-const whatsapp_service_1 = __importDefault(require("./modules/notifications/whatsapp.service"));
 const cron_service_1 = __importDefault(require("./modules/notifications/cron.service"));
 const seedMystery_1 = require("./utils/seedMystery");
 const startServer = async () => {
@@ -49,9 +48,6 @@ const startServer = async () => {
         await (0, database_1.connectDatabase)();
         await (0, seedMystery_1.runMysterySeedIfMissing)();
         // Start background services (non-blocking)
-        whatsapp_service_1.default.initialize().catch(err => {
-            logger_1.logger.error(err, 'WhatsApp service failed to initialize');
-        });
         cron_service_1.default.start();
         const { createServer } = await Promise.resolve().then(() => __importStar(require('http')));
         const { initSocket } = await Promise.resolve().then(() => __importStar(require('./shared/utils/socket')));

@@ -1,4 +1,4 @@
-import TelegramBot from 'node-telegram-bot-api';
+const TelegramBot = require('node-telegram-bot-api');
 import { SystemSettings } from '../settings/system-settings.model';
 import fs from 'fs';
 

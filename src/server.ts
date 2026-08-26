@@ -4,7 +4,6 @@ import { connectDatabase } from './config/database';
 import { env } from './config/env';
 import { logger } from './shared/utils/logger';
 
-import whatsappService from './modules/notifications/whatsapp.service';
 import cronService from './modules/notifications/cron.service';
 import { runMysterySeedIfMissing } from './utils/seedMystery';
 
@@ -15,9 +14,6 @@ const startServer = async () => {
     await runMysterySeedIfMissing();
 
     // Start background services (non-blocking)
-    whatsappService.initialize().catch(err => {
-      logger.error(err, 'WhatsApp service failed to initialize');
-    });
     cronService.start();
 
     const { createServer } = await import('http');
