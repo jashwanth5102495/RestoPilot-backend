@@ -102,7 +102,7 @@ class BillingService {
                 await inventory_service_1.InventoryService.adjustStock(restaurantId, reqIng.ingredientId, -reqIng.quantityInBaseUnit, 'BASE_UNIT', 
                 // We passed `quantityInBaseUnit`, so we can pass any base unit, e.g. the ingredient's actual base unit.
                 // We need a slight modification to `adjustStock` to accept base quantities safely.
-                inventory_transaction_model_1.TransactionType.SALE_CONSUMPTION, session, { referenceType: 'ORDER', referenceId: order._id, createdBy: new mongoose_1.Types.ObjectId(userId) }, false // Prevent negative stock
+                inventory_transaction_model_1.TransactionType.SALE_CONSUMPTION, session, { referenceType: 'ORDER', referenceId: order._id, createdBy: new mongoose_1.Types.ObjectId(userId) }, true // Allow negative stock so billing isn't blocked
                 );
             }
             // 4. Create Bill

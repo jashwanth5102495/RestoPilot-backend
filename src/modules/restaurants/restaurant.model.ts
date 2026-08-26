@@ -35,6 +35,8 @@ export interface IRestaurant extends Document {
   waiterSlug?: string;
   isBillingEnabled: boolean;
   billingSlug?: string;
+  isKdsEnabled: boolean;
+  kdsSlug?: string;
   subscriptionStatus: SubscriptionStatus;
   subscriptionExpiresAt?: Date;
   parentRestaurantId?: Types.ObjectId;
@@ -69,11 +71,13 @@ const RestaurantSchema = new Schema<IRestaurant>(
     currency: { type: String, default: 'INR' },
     timezone: { type: String, default: 'Asia/Kolkata' },
     isOnlineOrderingEnabled: { type: Boolean, default: false },
-    onlineSlug: { type: String },
+    onlineSlug: { type: String, lowercase: true, trim: true },
     isWaiterOrderingEnabled: { type: Boolean, default: false },
-    waiterSlug: { type: String },
+    waiterSlug: { type: String, lowercase: true, trim: true },
     isBillingEnabled: { type: Boolean, default: false },
-    billingSlug: { type: String },
+    billingSlug: { type: String, lowercase: true, trim: true },
+    isKdsEnabled: { type: Boolean, default: false },
+    kdsSlug: { type: String, lowercase: true, trim: true },
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },
@@ -92,6 +96,7 @@ const RestaurantSchema = new Schema<IRestaurant>(
 RestaurantSchema.index({ onlineSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ waiterSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ billingSlug: 1 }, { unique: true, sparse: true });
+RestaurantSchema.index({ kdsSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ parentRestaurantId: 1 });
 
 export const Restaurant = mongoose.model<IRestaurant>('Restaurant', RestaurantSchema);

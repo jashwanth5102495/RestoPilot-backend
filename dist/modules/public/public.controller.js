@@ -207,6 +207,66 @@ class PublicController {
             next(error);
         }
     }
+    static async toggleKds(req, res, next) {
+        try {
+            const reqAny = req;
+            const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
+            const { enabled } = req.body;
+            if (!restaurantId) {
+                return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+            }
+            const restaurant = await restaurant_model_1.Restaurant.findById(restaurantId);
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Restaurant not found' });
+            }
+            restaurant.isKdsEnabled = enabled;
+            if (enabled && !restaurant.kdsSlug) {
+                const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-kds';
+                restaurant.kdsSlug = await PublicController.generateUniqueSlug(restaurant_model_1.Restaurant, baseSlug, 'kdsSlug');
+            }
+            await restaurant.save();
+            res.status(200).json({
+                success: true,
+                data: restaurant
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getKdsOrders(req, res, next) {
+        try {
+            const { slug } = req.params;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ kdsSlug: slug, isKdsEnabled: true }).lean();
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'KDS portal not found or disabled' });
+            }
+            const orders = await order_model_1.Order.find({
+                restaurantId: restaurant._id,
+                orderStatus: { $in: [order_model_1.OrderStatus.PLACED, order_model_1.OrderStatus.PREPARING] }
+            }).lean();
+            res.status(200).json({ success: true, data: orders });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async updateKdsOrderStatus(req, res, next) {
+        try {
+            const { slug, orderId } = req.params;
+            const { status } = req.body;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ kdsSlug: slug, isKdsEnabled: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'KDS portal not found or disabled' });
+            }
+            const { OrderService } = await Promise.resolve().then(() => __importStar(require('../orders/order.service')));
+            const order = await OrderService.updateOrderStatus(restaurant._id.toString(), orderId, status, null);
+            res.status(200).json({ success: true, data: order });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     static async getWaiterTables(req, res, next) {
         try {
             const { slug } = req.params;
@@ -340,6 +400,26 @@ class PublicController {
             const userId = restaurant.ownerId || restaurant._id;
             const result = await BillingService.processSale(restaurant._id, userId, items, paymentMethod, customerId);
             res.status(201).json({ success: true, data: result });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async toggleDishAvailability(req, res, next) {
+        try {
+            const { slug, dishId } = req.params;
+            const { isAvailable } = req.body;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+            }
+            const dish = await dish_model_1.Dish.findOne({ _id: dishId, restaurantId: restaurant._id });
+            if (!dish) {
+                return res.status(404).json({ success: false, message: 'Dish not found' });
+            }
+            dish.isAvailable = isAvailable;
+            await dish.save();
+            res.status(200).json({ success: true, data: dish });
         }
         catch (error) {
             next(error);
