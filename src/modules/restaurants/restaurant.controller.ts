@@ -192,10 +192,8 @@ export class RestaurantController {
         inventory: inventoryData
       };
 
-      const tempDir = path.resolve(process.cwd(), 'temp');
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir);
-      }
+      const os = await import('os');
+      const tempDir = os.tmpdir();
       const pdfPath = path.join(tempDir, `test-report-${currentRes._id}-${Date.now()}.pdf`);
       
       await PdfService.generateDailyReport(reportData, pdfPath);
@@ -208,8 +206,9 @@ export class RestaurantController {
       fs.unlinkSync(pdfPath);
 
       res.status(200).json({ success: true, message: 'Test report sent successfully' });
-    } catch (error) {
-      next(error);
+    } catch (error: any) {
+      console.error('Test Report Error:', error);
+      res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
     }
   }
 }
