@@ -111,7 +111,8 @@ export class RestaurantController {
       const fs = await import('fs');
       const { MessageMedia } = await import('whatsapp-web.js');
 
-      const currentRes = await Restaurant.findById(req.tenantId);
+      const { id } = req.params;
+      const currentRes = await Restaurant.findById(id);
       if (!currentRes) return res.status(404).json({ success: false, message: 'Restaurant not found' });
 
       if (!currentRes.notificationSettings?.whatsappNumber) {
