@@ -96,6 +96,11 @@ class WhatsAppService {
                 console.error('Error generating QR code:', err);
             }
         });
+        this.client.on('authenticated', () => {
+            this.status = 'AUTHENTICATING';
+            this.qrCodeUrl = null;
+            console.log('WhatsApp Client Authenticated. Syncing messages...');
+        });
         this.client.on('ready', () => {
             this.status = 'CONNECTED';
             this.qrCodeUrl = null;
