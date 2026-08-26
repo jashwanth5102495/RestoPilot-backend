@@ -180,14 +180,16 @@ export class AdminController {
     }
   }
 
-  static async getWhatsappStatus(req: Request, res: Response, next: NextFunction) {
+  static async getTelegramStatus(req: Request, res: Response, next: NextFunction) {
     try {
-      const whatsappService = (await import('../notifications/whatsapp.service')).default;
+      const { TelegramService } = await import('../notifications/telegram.service');
+      const botInfo = await TelegramService.getBotInfo();
+      
       res.status(200).json({
         success: true,
         data: {
-          status: whatsappService.getStatus(),
-          qrCodeUrl: whatsappService.getQrCode()
+          status: botInfo ? 'CONNECTED' : 'DISCONNECTED',
+          botName: botInfo?.username
         }
       });
     } catch (error) {
@@ -195,33 +197,31 @@ export class AdminController {
     }
   }
 
-  static async getPairingCode(req: Request, res: Response, next: NextFunction) {
+  static async saveTelegramToken(req: Request, res: Response, next: NextFunction) {
     try {
-      const { phoneNumber } = req.body;
-      if (!phoneNumber) {
-        return res.status(400).json({ success: false, message: 'Phone number is required' });
+      const { token } = req.body;
+      if (!token) {
+        return res.status(400).json({ success: false, message: 'Telegram Bot Token is required' });
       }
 
-      const whatsappService = (await import('../notifications/whatsapp.service')).default;
-      const code = await whatsappService.requestPairingCode(phoneNumber);
+      const { TelegramService } = await import('../notifications/telegram.service');
+      const botInfo = await TelegramService.verifyToken(token);
       
-      res.status(200).json({
-        success: true,
-        data: { code }
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+      if (!botInfo) {
+        return res.status(400).json({ success: false, message: 'Invalid Telegram Bot Token' });
+      }
 
-  static async resetWhatsapp(req: Request, res: Response, next: NextFunction) {
-    try {
-      const whatsappService = (await import('../notifications/whatsapp.service')).default;
-      await whatsappService.reset();
+      const { SystemSettings } = await import('../settings/system-settings.model');
+      await SystemSettings.findOneAndUpdate(
+        { key: 'telegramBotToken' },
+        { value: token },
+        { upsert: true, new: true }
+      );
       
       res.status(200).json({
         success: true,
-        message: 'WhatsApp service has been reset.'
+        message: 'Telegram Bot Token saved successfully.',
+        data: { botName: botInfo.username }
       });
     } catch (error) {
       next(error);

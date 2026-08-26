@@ -9,7 +9,7 @@ router.use(auth_middleware_1.authenticate, tenant_middleware_1.requireTenant);
 router.get('/branches', restaurant_controller_1.RestaurantController.getBranches);
 router.post('/', restaurant_controller_1.RestaurantController.createBranch);
 router.post('/verify-agent', restaurant_controller_1.RestaurantController.verifyAgent);
-router.post('/:id/test-whatsapp-report', restaurant_controller_1.RestaurantController.testWhatsappReport);
+router.post('/:id/test-telegram-report', restaurant_controller_1.RestaurantController.testTelegramReport);
 router.get('/:branchId/dashboard', restaurant_controller_1.RestaurantController.getBranchDashboard);
 router.put('/:id', restaurant_controller_1.RestaurantController.updateRestaurant);
 exports.default = router;

@@ -100,23 +100,22 @@ export class RestaurantController {
     }
   }
 
-  static async testWhatsappReport(req: Request, res: Response, next: NextFunction) {
+  static async testTelegramReport(req: Request, res: Response, next: NextFunction) {
     try {
       const { Restaurant } = await import('./restaurant.model');
       const { Order, PaymentStatus, OrderStatus } = await import('../orders/order.model');
       const { Ingredient } = await import('../ingredients/ingredient.model');
-      const whatsappService = (await import('../notifications/whatsapp.service')).default;
+      const { TelegramService } = await import('../notifications/telegram.service');
       const { PdfService } = await import('../notifications/pdf.service');
       const path = await import('path');
       const fs = await import('fs');
-      const { MessageMedia } = await import('whatsapp-web.js');
 
       const { id } = req.params;
       const currentRes = await Restaurant.findById(id);
       if (!currentRes) return res.status(404).json({ success: false, message: 'Restaurant not found' });
 
-      if (!currentRes.notificationSettings?.whatsappNumber) {
-        return res.status(400).json({ success: false, message: 'No WhatsApp number configured.' });
+      if (!currentRes.notificationSettings?.telegramChatId) {
+        return res.status(400).json({ success: false, message: 'No Telegram Chat ID configured.' });
       }
 
       const now = new Date();
@@ -198,10 +197,8 @@ export class RestaurantController {
       
       await PdfService.generateDailyReport(reportData, pdfPath);
 
-      const media = MessageMedia.fromFilePath(pdfPath);
       const message = `*Daily Sales & Inventory Report (TEST)*\nRestaurant: ${currentRes.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed test report attached.`;
-
-      await whatsappService.sendMessage(currentRes.notificationSettings.whatsappNumber, message, media);
+      await TelegramService.sendMessage(currentRes.notificationSettings.telegramChatId, message, pdfPath);
       
       fs.unlinkSync(pdfPath);
 

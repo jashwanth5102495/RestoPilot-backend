@@ -195,14 +195,15 @@ class AdminController {
             next(error);
         }
     }
-    static async getWhatsappStatus(req, res, next) {
+    static async getTelegramStatus(req, res, next) {
         try {
-            const whatsappService = (await Promise.resolve().then(() => __importStar(require('../notifications/whatsapp.service')))).default;
+            const { TelegramService } = await Promise.resolve().then(() => __importStar(require('../notifications/telegram.service')));
+            const botInfo = await TelegramService.getBotInfo();
             res.status(200).json({
                 success: true,
                 data: {
-                    status: whatsappService.getStatus(),
-                    qrCodeUrl: whatsappService.getQrCode()
+                    status: botInfo ? 'CONNECTED' : 'DISCONNECTED',
+                    botName: botInfo?.username
                 }
             });
         }
@@ -210,30 +211,23 @@ class AdminController {
             next(error);
         }
     }
-    static async getPairingCode(req, res, next) {
+    static async saveTelegramToken(req, res, next) {
         try {
-            const { phoneNumber } = req.body;
-            if (!phoneNumber) {
-                return res.status(400).json({ success: false, message: 'Phone number is required' });
+            const { token } = req.body;
+            if (!token) {
+                return res.status(400).json({ success: false, message: 'Telegram Bot Token is required' });
             }
-            const whatsappService = (await Promise.resolve().then(() => __importStar(require('../notifications/whatsapp.service')))).default;
-            const code = await whatsappService.requestPairingCode(phoneNumber);
+            const { TelegramService } = await Promise.resolve().then(() => __importStar(require('../notifications/telegram.service')));
+            const botInfo = await TelegramService.verifyToken(token);
+            if (!botInfo) {
+                return res.status(400).json({ success: false, message: 'Invalid Telegram Bot Token' });
+            }
+            const { SystemSettings } = await Promise.resolve().then(() => __importStar(require('../settings/system-settings.model')));
+            await SystemSettings.findOneAndUpdate({ key: 'telegramBotToken' }, { value: token }, { upsert: true, new: true });
             res.status(200).json({
                 success: true,
-                data: { code }
-            });
-        }
-        catch (error) {
-            next(error);
-        }
-    }
-    static async resetWhatsapp(req, res, next) {
-        try {
-            const whatsappService = (await Promise.resolve().then(() => __importStar(require('../notifications/whatsapp.service')))).default;
-            await whatsappService.reset();
-            res.status(200).json({
-                success: true,
-                message: 'WhatsApp service has been reset.'
+                message: 'Telegram Bot Token saved successfully.',
+                data: { botName: botInfo.username }
             });
         }
         catch (error) {

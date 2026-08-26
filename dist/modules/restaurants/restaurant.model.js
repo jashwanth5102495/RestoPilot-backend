@@ -78,7 +78,7 @@ const RestaurantSchema = new mongoose_1.Schema({
     inventoryCheckFrequency: { type: String, enum: ['DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY'], default: 'WEEKLY' },
     inventoryCheckSnoozedUntil: { type: Date },
     notificationSettings: {
-        whatsappNumber: { type: String },
+        telegramChatId: { type: String },
         scheduledTime: { type: String },
         enabled: { type: Boolean, default: false }
     },
