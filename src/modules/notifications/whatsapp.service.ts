@@ -45,7 +45,7 @@ console.log('-------------------------------');
 class WhatsAppService {
   private client: Client;
   private qrCodeUrl: string | null = null;
-  private status: 'DISCONNECTED' | 'INITIALIZING' | 'AWAITING_LOGIN' | 'CONNECTED' = 'DISCONNECTED';
+  private status: 'DISCONNECTED' | 'INITIALIZING' | 'AWAITING_LOGIN' | 'AUTHENTICATING' | 'CONNECTED' = 'DISCONNECTED';
   private authPath: string;
 
   constructor() {
@@ -94,6 +94,12 @@ class WhatsAppService {
       } catch (err) {
         console.error('Error generating QR code:', err);
       }
+    });
+
+    this.client.on('authenticated', () => {
+      this.status = 'AUTHENTICATING';
+      this.qrCodeUrl = null;
+      console.log('WhatsApp Client Authenticated. Syncing messages...');
     });
 
     this.client.on('ready', () => {
