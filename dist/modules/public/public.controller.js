@@ -39,6 +39,15 @@ const dish_model_1 = require("../dishes/dish.model");
 const order_model_1 = require("../orders/order.model");
 const category_model_1 = require("../categories/category.model");
 class PublicController {
+    static async generateUniqueSlug(Model, baseSlug, field) {
+        let slug = baseSlug;
+        let counter = 1;
+        while (await Model.exists({ [field]: slug })) {
+            slug = `${baseSlug}-${counter}`;
+            counter++;
+        }
+        return slug;
+    }
     static async getRestaurantMenu(req, res, next) {
         try {
             const { slug } = req.params;
@@ -131,7 +140,8 @@ class PublicController {
             }
             restaurant.isOnlineOrderingEnabled = enabled;
             if (enabled && !restaurant.onlineSlug) {
-                restaurant.onlineSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 1000);
+                const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                restaurant.onlineSlug = await PublicController.generateUniqueSlug(restaurant_model_1.Restaurant, baseSlug, 'onlineSlug');
             }
             await restaurant.save();
             res.status(200).json({
@@ -157,7 +167,8 @@ class PublicController {
             }
             restaurant.isWaiterOrderingEnabled = enabled;
             if (enabled && !restaurant.waiterSlug) {
-                restaurant.waiterSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-waiter-' + Math.floor(Math.random() * 1000);
+                const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-waiter';
+                restaurant.waiterSlug = await PublicController.generateUniqueSlug(restaurant_model_1.Restaurant, baseSlug, 'waiterSlug');
             }
             await restaurant.save();
             res.status(200).json({
@@ -183,7 +194,8 @@ class PublicController {
             }
             restaurant.isBillingEnabled = enabled;
             if (enabled && !restaurant.billingSlug) {
-                restaurant.billingSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-billing-' + Math.floor(Math.random() * 1000);
+                const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-billing';
+                restaurant.billingSlug = await PublicController.generateUniqueSlug(restaurant_model_1.Restaurant, baseSlug, 'billingSlug');
             }
             await restaurant.save();
             res.status(200).json({
