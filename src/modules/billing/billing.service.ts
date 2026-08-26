@@ -71,6 +71,7 @@ export class BillingService {
         paymentMethod,
         paymentStatus: PaymentStatus.PAID,
         orderStatus: OrderStatus.COMPLETED,
+        inventoryConsumed: true,
         createdBy: userId
       });
 

@@ -172,6 +172,10 @@ export class OrderService {
       const order = await Order.findOne({ _id: orderId, restaurantId }).session(session);
       if (!order) throw new ValidationError('Order not found');
 
+      if (order.orderStatus === OrderStatus.COMPLETED && status === OrderStatus.CANCELLED) {
+        throw new ValidationError('Order has already been completed and inventory consumed. Please void the associated bill to properly reverse inventory and financials.');
+      }
+
       order.orderStatus = status;
       order.orderActivity.push({
         action: `STATUS_CHANGED_TO_${status}`,
@@ -191,8 +195,8 @@ export class OrderService {
           }
         }
         
-        // Consume inventory if completed
-        if (status === OrderStatus.COMPLETED) {
+        // Consume inventory if completed and not already consumed
+        if (status === OrderStatus.COMPLETED && !order.inventoryConsumed) {
           try {
             const { OrderConsumptionService } = await import('./order-consumption.service');
             const { InventoryService } = await import('../inventory/inventory.service');
@@ -207,12 +211,15 @@ export class OrderService {
                 'BASE_UNIT',
                 TransactionType.SALE_CONSUMPTION,
                 session,
-                { referenceType: 'ORDER', referenceId: order._id, createdBy: userId ? new mongoose.Types.ObjectId(userId) : undefined },
+                { referenceType: 'ORDER', referenceId: order._id as any, createdBy: userId ? new mongoose.Types.ObjectId(userId) : undefined },
                 true // Allow negative stock so order completion isn't blocked
               );
             }
+            order.inventoryConsumed = true;
+            await order.save({ session });
           } catch (err) {
             console.error(`Failed to consume inventory for order ${order._id}:`, err);
+            throw err; // Re-throw to abort transaction if inventory deduction fails
           }
         }
       }
