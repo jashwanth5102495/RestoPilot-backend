@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Restaurant } from './restaurant.model';
 import { Order, OrderSource } from '../orders/order.model';
 import { Ingredient } from '../ingredients/ingredient.model';
@@ -21,7 +22,7 @@ export class RestaurantService {
     return branches;
   }
 
-  static async getBranchDashboard(restaurantId: string, branchId: string) {
+  static async getBranchDashboard(restaurantId: string, branchId: string, timeframe: string = 'today') {
     const currentRes = await Restaurant.findById(restaurantId);
     if (!currentRes) {
       throw new Error('Current restaurant context not found');
@@ -45,22 +46,51 @@ export class RestaurantService {
       if (!isAuthorized) {
         throw new ForbiddenError('You are not authorized to access this branch dashboard');
       }
-      targetIds = [branchId];
+      targetIds = [new mongoose.Types.ObjectId(branchId)];
     }
 
-    // Calculate 6 days ago start of day in IST (+05:30)
-    const now = new Date();
-    // Adjust to IST
-    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
-    istTime.setUTCDate(istTime.getUTCDate() - 6);
-    istTime.setUTCHours(0, 0, 0, 0);
-    const startOf7DaysAgo = new Date(istTime.getTime() - (5.5 * 60 * 60 * 1000));
+    // Determine the date range based on timeframe
+    let dateFilter: any = {};
+    const nowFilter = new Date();
+    const istTimeFilter = new Date(nowFilter.getTime() + (5.5 * 60 * 60 * 1000));
+    const todayStartIST = new Date(istTimeFilter);
+    todayStartIST.setUTCHours(0, 0, 0, 0);
+    const todayStart = new Date(todayStartIST.getTime() - (5.5 * 60 * 60 * 1000));
+
+    if (timeframe === 'today') {
+      dateFilter = { $gte: todayStart };
+    } else if (timeframe === 'yesterday') {
+      const yesterdayStartIST = new Date(todayStartIST);
+      yesterdayStartIST.setUTCDate(yesterdayStartIST.getUTCDate() - 1);
+      const yesterdayStart = new Date(yesterdayStartIST.getTime() - (5.5 * 60 * 60 * 1000));
+      dateFilter = { $gte: yesterdayStart, $lt: todayStart };
+    } else if (timeframe === 'week') {
+      const weekStartIST = new Date(todayStartIST);
+      weekStartIST.setUTCDate(weekStartIST.getUTCDate() - weekStartIST.getUTCDay());
+      const weekStart = new Date(weekStartIST.getTime() - (5.5 * 60 * 60 * 1000));
+      dateFilter = { $gte: weekStart };
+    } else if (timeframe === 'month') {
+      const monthStartIST = new Date(todayStartIST);
+      monthStartIST.setUTCDate(1);
+      const monthStart = new Date(monthStartIST.getTime() - (5.5 * 60 * 60 * 1000));
+      dateFilter = { $gte: monthStart };
+    } else if (timeframe === 'year') {
+      const yearStartIST = new Date(todayStartIST);
+      yearStartIST.setUTCMonth(0, 1);
+      const yearStart = new Date(yearStartIST.getTime() - (5.5 * 60 * 60 * 1000));
+      dateFilter = { $gte: yearStart };
+    }
+
+    const orderMatchQuery: any = { restaurantId: { $in: targetIds } };
+    if (Object.keys(dateFilter).length > 0) {
+      orderMatchQuery.createdAt = dateFilter;
+    }
 
     const [totalOrders, salesResult, lowStockItems, recentOrders, popularDishesResult, dailySalesResult] = await Promise.all([
-      Order.countDocuments({ restaurantId: { $in: targetIds } }),
+      Order.countDocuments(orderMatchQuery),
       Order.aggregate([
         { $match: { 
-          restaurantId: { $in: targetIds },
+          ...orderMatchQuery,
           orderStatus: { $nin: ['DRAFT', 'CANCELLED'] }
         } },
         { $group: { _id: null, total: { $sum: '$total' } } }
@@ -69,12 +99,12 @@ export class RestaurantService {
         restaurantId: { $in: targetIds },
         $expr: { $lte: ['$currentStock', '$minimumStock'] }
       }),
-      Order.find({ restaurantId: { $in: targetIds } })
+      Order.find(orderMatchQuery)
         .sort({ createdAt: -1 })
         .limit(5),
       Order.aggregate([
         { $match: { 
-          restaurantId: { $in: targetIds },
+          ...orderMatchQuery,
           orderStatus: { $nin: ['DRAFT', 'CANCELLED'] }
         } },
         { $unwind: '$items' },
@@ -93,7 +123,9 @@ export class RestaurantService {
           $match: { 
             restaurantId: { $in: targetIds },
             orderStatus: { $nin: ['DRAFT', 'CANCELLED'] },
-            createdAt: { $gte: startOf7DaysAgo } // Last 7 days including today
+            createdAt: { 
+              $gte: new Date(new Date(new Date(new Date().getTime() + 5.5*60*60*1000).setUTCDate(new Date(new Date().getTime() + 5.5*60*60*1000).getUTCDate() - 6) - 5.5*60*60*1000).setUTCHours(0,0,0,0)) 
+            } 
           } 
         },
         {
@@ -122,7 +154,7 @@ export class RestaurantService {
     }));
 
     const totalOnlineOrders = await Order.countDocuments({ 
-      restaurantId: { $in: targetIds }, 
+      ...orderMatchQuery,
       orderSource: OrderSource.ONLINE 
     });
 
