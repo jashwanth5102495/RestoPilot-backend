@@ -16,6 +16,7 @@ router.post('/settings/waiter-ordering', authenticate, requireTenant, PublicCont
 // Public routes for waiter portal
 router.get('/waiter/:slug/tables', PublicController.getWaiterTables);
 router.get('/waiter/:slug/menu', PublicController.getWaiterMenu);
+router.get('/waiter/:slug/tables/:tableId/order', PublicController.getWaiterTableOrder);
 router.post('/waiter/:slug/tables/:tableId/order', PublicController.placeWaiterTableOrder);
 router.post('/waiter/:slug/tables/:tableId/bill', PublicController.generateWaiterBill);
 
