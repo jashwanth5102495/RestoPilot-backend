@@ -5,6 +5,15 @@ import { Order, OrderSource, OrderStatus, PaymentStatus } from '../orders/order.
 import { Category } from '../categories/category.model';
 
 export class PublicController {
+  private static async generateUniqueSlug(Model: any, baseSlug: string, field: string): Promise<string> {
+    let slug = baseSlug;
+    let counter = 1;
+    while (await Model.exists({ [field]: slug })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    return slug;
+  }
   static async getRestaurantMenu(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
@@ -114,7 +123,8 @@ export class PublicController {
       restaurant.isOnlineOrderingEnabled = enabled;
       
       if (enabled && !restaurant.onlineSlug) {
-        restaurant.onlineSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.floor(Math.random() * 1000);
+        const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        restaurant.onlineSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'onlineSlug');
       }
 
       await restaurant.save();
@@ -146,7 +156,8 @@ export class PublicController {
       restaurant.isWaiterOrderingEnabled = enabled;
       
       if (enabled && !restaurant.waiterSlug) {
-        restaurant.waiterSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-waiter-' + Math.floor(Math.random() * 1000);
+        const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-waiter';
+        restaurant.waiterSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'waiterSlug');
       }
 
       await restaurant.save();
@@ -178,7 +189,8 @@ export class PublicController {
       restaurant.isBillingEnabled = enabled;
       
       if (enabled && !restaurant.billingSlug) {
-        restaurant.billingSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-billing-' + Math.floor(Math.random() * 1000);
+        const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-billing';
+        restaurant.billingSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'billingSlug');
       }
 
       await restaurant.save();
