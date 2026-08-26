@@ -104,9 +104,10 @@ class WhatsAppService {
     });
 
     this.client.on('authenticated', () => {
-      this.status = 'AUTHENTICATING';
+      // Force connected state immediately to bypass heavy sync wait
+      this.status = 'CONNECTED';
       this.qrCodeUrl = null;
-      console.log('WhatsApp Client Authenticated. Syncing messages...');
+      console.log('WhatsApp Client Authenticated. Bypassing full sync wait...');
     });
 
     this.client.on('ready', () => {
