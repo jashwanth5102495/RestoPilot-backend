@@ -108,7 +108,7 @@ class CronService {
             
             await PdfService.generateDailyReport(reportData, pdfPath);
 
-            const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\nPlease find your detailed report attached.`;
+            const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\n*Quick Summary:*\n💰 Total Sales: Rs. ${totalSales.toFixed(2)}\n💵 Cash: Rs. ${cash.toFixed(2)}\n💳 Card: Rs. ${card.toFixed(2)}\n📱 UPI: Rs. ${upi.toFixed(2)}\n\n📦 Total Inventory Items: ${inventoryData.length}\n\nPlease find your detailed report attached.`;
 
             await TelegramService.sendMessage(restaurant.notificationSettings.telegramChatId, message, pdfPath);
             
