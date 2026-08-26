@@ -57,6 +57,7 @@ export interface IOrder extends Document {
     address: string;
   };
   tableId?: Types.ObjectId;
+  inventoryConsumed: boolean;
   startedBy?: Types.ObjectId; // The user who opened the order initially
   createdBy?: Types.ObjectId;
   orderActivity: {
@@ -106,6 +107,7 @@ const OrderSchema = new Schema<IOrder>(
       address: { type: String }
     },
     tableId: { type: Schema.Types.ObjectId, ref: 'Table' },
+    inventoryConsumed: { type: Boolean, default: false },
     startedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
     orderActivity: [OrderActivitySchema],

@@ -32,7 +32,10 @@ export class OrderConsumptionService {
     // Calculate consumption per dish
     for (const item of orderItems) {
       const recipe = recipeMap.get(item.dishId.toString());
-      if (!recipe) continue; // No recipe configured for this dish
+      if (!recipe) {
+        const { AppError } = require('../../shared/errors/AppError');
+        throw new AppError(`Recipe not configured for dish: ${item.dishName}`, 400);
+      }
       
       for (const recipeItem of recipe.items) {
         // We know recipeItem.quantity is already in the ingredient's base unit logically
