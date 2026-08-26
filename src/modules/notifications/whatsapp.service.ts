@@ -81,7 +81,10 @@ class WhatsAppService {
           '--disable-accelerated-2d-canvas',
           '--no-first-run',
           '--no-zygote',
-          '--disable-gpu'
+          '--disable-gpu',
+          '--single-process',
+          '--disable-extensions',
+          '--memory-pressure-off'
         ],
       }
     });
