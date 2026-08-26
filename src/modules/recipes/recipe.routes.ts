@@ -7,6 +7,7 @@ const router = Router();
 
 router.use(authenticate, requireTenant);
 
+router.get('/templates', RecipeController.getAllTemplates);
 router.get('/templates/match', RecipeController.matchTemplate);
 router.get('/', RecipeController.getRecipes);
 router.post('/', RecipeController.updateRecipe);
