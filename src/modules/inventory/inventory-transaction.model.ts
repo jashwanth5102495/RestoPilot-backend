@@ -36,7 +36,7 @@ const InventoryTransactionSchema = new Schema<IInventoryTransaction>(
     unit: { type: String, required: true },
     referenceType: { type: String },
     referenceId: { type: Schema.Types.ObjectId },
-    balanceAfter: { type: Number, required: true, min: 0 },
+    balanceAfter: { type: Number, required: true },
     notes: { type: String },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },

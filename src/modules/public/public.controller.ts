@@ -198,6 +198,27 @@ export class PublicController {
     }
   }
 
+  static async getWaiterTableOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, tableId } = req.params;
+      
+      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true });
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
+      }
+
+      const order = await Order.findOne({ 
+        restaurantId: restaurant._id, 
+        tableId: tableId as string, 
+        orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] } 
+      });
+
+      res.status(200).json({ success: true, data: order || null });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async placeWaiterTableOrder(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug, tableId } = req.params;
