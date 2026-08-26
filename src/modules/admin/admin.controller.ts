@@ -213,4 +213,18 @@ export class AdminController {
       next(error);
     }
   }
+
+  static async resetWhatsapp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const whatsappService = (await import('../notifications/whatsapp.service')).default;
+      await whatsappService.reset();
+      
+      res.status(200).json({
+        success: true,
+        message: 'WhatsApp service has been reset.'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }

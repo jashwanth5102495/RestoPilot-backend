@@ -28,5 +28,6 @@ router.post('/agents', AdminController.createAgent);
 router.delete('/agents/:id', AdminController.deleteAgent);
 router.get('/whatsapp/status', AdminController.getWhatsappStatus);
 router.post('/whatsapp/pair', AdminController.getPairingCode);
+router.post('/whatsapp/reset', AdminController.resetWhatsapp);
 
 export default router;

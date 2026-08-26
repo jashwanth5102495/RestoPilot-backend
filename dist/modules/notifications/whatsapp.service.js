@@ -65,6 +65,9 @@ class WhatsAppService {
             console.log(`[WhatsApp] Auth directory writable: false (${err})`);
         }
         console.log(`[WhatsApp] Chromium executable: ${execPath || 'bundled'}`);
+        this.setupClient();
+    }
+    setupClient() {
         this.client = new whatsapp_web_js_1.Client({
             authStrategy: new whatsapp_web_js_1.LocalAuth({
                 dataPath: this.authPath
@@ -111,6 +114,28 @@ class WhatsAppService {
             this.status = 'DISCONNECTED';
             console.log('WhatsApp Client was disconnected:', reason);
         });
+    }
+    async reset() {
+        console.log('Resetting WhatsApp Client...');
+        this.status = 'INITIALIZING';
+        this.qrCodeUrl = null;
+        try {
+            await this.client.destroy();
+        }
+        catch (e) {
+            console.error('Failed to destroy client during reset:', e);
+        }
+        try {
+            if (fs_1.default.existsSync(this.authPath)) {
+                fs_1.default.rmSync(this.authPath, { recursive: true, force: true });
+                console.log(`[WhatsApp] Deleted auth directory: ${this.authPath}`);
+            }
+        }
+        catch (e) {
+            console.error('Failed to delete auth directory:', e);
+        }
+        this.setupClient();
+        this.initialize();
     }
     async initialize() {
         console.log('Initializing WhatsApp Client...');
