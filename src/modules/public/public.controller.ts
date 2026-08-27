@@ -527,8 +527,8 @@ export class PublicController {
       updatedOrder.paymentMethod = paymentMethod || 'CASH';
       await updatedOrder.save();
 
-      const { io } = await import('../../shared/utils/socket');
-      io?.to(restaurant._id.toString()).emit('order_status_updated', updatedOrder);
+      const { emitToTenant } = await import('../../shared/utils/socket');
+      emitToTenant(restaurant._id.toString(), 'order_status_updated', updatedOrder);
 
       res.status(200).json({ success: true, data: updatedOrder });
     } catch (error) {
