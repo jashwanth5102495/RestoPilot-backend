@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-bullseye AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -12,18 +12,20 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production environment
-FROM node:20-bullseye
+FROM node:20-alpine
 
-# Install Chromium and necessary fonts
-RUN apt-get update && apt-get install -y \
-    chromium \
-    fonts-liberation \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+# Install Chromium and dependencies
+RUN apk add --no-cache \
+      chromium \
+      nss \
+      freetype \
+      harfbuzz \
+      ca-certificates \
+      ttf-freefont
 
 # Tell Puppeteer to use the installed Chromium and not download its own
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
     NODE_ENV=production \
     WHATSAPP_DATA_PATH=/app/data/.wwebjs_auth
 
@@ -39,7 +41,7 @@ COPY --from=builder /app/dist ./dist
 # Create a directory for WhatsApp data to be mounted and make it writable
 RUN mkdir -p /app/data/.wwebjs_auth && chown -R node:node /app/data
 
-# Run as non-root user (important for Puppeteer sandboxing)
+# Run as non-root user
 USER node
 
 # Start the application
