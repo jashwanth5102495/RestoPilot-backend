@@ -26,6 +26,9 @@ router.post('/waiter/:slug/tables/:tableId/bill', PublicController.generateWaite
 // Public routes for billing portal
 router.get('/billing/:slug/menu', PublicController.getBillingMenu);
 router.post('/billing/:slug/sale', PublicController.processBillingSale);
+router.get('/billing/:slug/tables', PublicController.getBillingTables);
+router.get('/billing/:slug/tables/:tableId/order', PublicController.getBillingTableOrder);
+router.post('/billing/:slug/tables/:tableId/settle', PublicController.settleBillingTableOrder);
 router.patch('/billing/:slug/dishes/:dishId/availability', PublicController.toggleDishAvailability);
 
 // Public routes for KDS portal
