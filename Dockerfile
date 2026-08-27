@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-bookworm AS builder
+FROM node:20-bullseye AS builder
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production environment
-FROM node:20-bookworm
+FROM node:20-bullseye
 
 # Install Chromium and necessary fonts
 RUN apt-get update && apt-get install -y \
