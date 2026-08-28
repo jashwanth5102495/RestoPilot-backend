@@ -244,7 +244,7 @@ class PublicController {
             const orders = await order_model_1.Order.find({
                 restaurantId: restaurant._id,
                 orderStatus: { $in: [order_model_1.OrderStatus.PLACED, order_model_1.OrderStatus.PREPARING] }
-            }).lean();
+            }).populate('tableId', 'name').lean();
             res.status(200).json({ success: true, data: orders });
         }
         catch (error) {

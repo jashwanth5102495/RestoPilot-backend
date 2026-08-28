@@ -12,7 +12,7 @@ export class OrderController {
       if (status) query.orderStatus = status;
       if (since) query.createdAt = { $gt: new Date(since as string) };
 
-      let q = Order.find(query).sort({ createdAt: -1 });
+      let q = Order.find(query).populate('tableId', 'name').sort({ createdAt: -1 });
       if (limit) q = q.limit(parseInt(limit as string, 10));
 
       const orders = await q.lean();
