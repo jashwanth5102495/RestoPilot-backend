@@ -29,7 +29,8 @@ export class BillingService {
       const dishMap = new Map(dishes.map(d => [d._id.toString(), d]));
 
       let subtotal = 0;
-      let tax = 0;
+      let cgst = 0;
+      let sgst = 0;
       const orderItems = [];
 
       for (const item of items) {
@@ -39,22 +40,29 @@ export class BillingService {
         }
 
         const lineTotal = dish.price * item.quantity;
-        const lineTax = (lineTotal * dish.taxRate) / 100;
+        const lineTaxRate = dish.taxRate ?? 5;
+        const lineCgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
+        const lineSgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
         
         subtotal += lineTotal;
-        tax += lineTax;
+        cgst += lineCgst;
+        sgst += lineSgst;
 
         orderItems.push({
           dishId: dish._id,
           dishName: dish.name,
           quantity: item.quantity,
           unitPrice: dish.price,
-          taxRate: dish.taxRate,
+          taxRate: lineTaxRate,
           lineTotal
         });
       }
 
-      const total = subtotal + tax; // Add discount logic later if needed
+      subtotal = Number(subtotal.toFixed(2));
+      cgst = Number(cgst.toFixed(2));
+      sgst = Number(sgst.toFixed(2));
+      const tax = Number((cgst + sgst).toFixed(2));
+      const total = Number((subtotal + tax).toFixed(2)); // Add discount logic later if needed
 
       // 2. Create Order
       const orderNumber = await SequenceService.getNextOrderNumber(restaurantId, session);
@@ -67,6 +75,8 @@ export class BillingService {
         subtotal,
         discount: 0,
         tax,
+        cgst,
+        sgst,
         total,
         paymentMethod,
         paymentStatus: PaymentStatus.PAID,
@@ -107,6 +117,8 @@ export class BillingService {
         subtotal,
         discount: 0,
         tax,
+        cgst,
+        sgst,
         total,
         paymentMethod,
         paymentStatus: PaymentStatus.PAID,

@@ -15,6 +15,8 @@ export interface IBill extends Document {
   subtotal: number;
   discount: number;
   tax: number;
+  cgst?: number;
+  sgst?: number;
   total: number;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
@@ -43,6 +45,8 @@ const BillSchema = new Schema<IBill>(
     subtotal: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     tax: { type: Number, required: true },
+    cgst: { type: Number, default: 0, min: 0 },
+    sgst: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true },
     paymentMethod: { type: String, enum: Object.values(PaymentMethod), required: true },
     paymentStatus: { type: String, enum: Object.values(PaymentStatus), default: PaymentStatus.PAID },

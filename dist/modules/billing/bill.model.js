@@ -58,6 +58,8 @@ const BillSchema = new mongoose_1.Schema({
     subtotal: { type: Number, required: true },
     discount: { type: Number, default: 0 },
     tax: { type: Number, required: true },
+    cgst: { type: Number, default: 0, min: 0 },
+    sgst: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true },
     paymentMethod: { type: String, enum: Object.values(order_model_1.PaymentMethod), required: true },
     paymentStatus: { type: String, enum: Object.values(order_model_1.PaymentStatus), default: order_model_1.PaymentStatus.PAID },

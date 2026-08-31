@@ -46,6 +46,8 @@ export interface IOrder extends Document {
   subtotal: number;
   discount: number;
   tax: number;
+  cgst?: number;
+  sgst?: number;
   total: number;
   paymentMethod?: PaymentMethod;
   paymentStatus: PaymentStatus;
@@ -96,6 +98,8 @@ const OrderSchema = new Schema<IOrder>(
     subtotal: { type: Number, required: true, min: 0 },
     discount: { type: Number, default: 0, min: 0 },
     tax: { type: Number, required: true, min: 0 },
+    cgst: { type: Number, default: 0, min: 0 },
+    sgst: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true, min: 0 },
     paymentMethod: { type: String, enum: Object.values(PaymentMethod) },
     paymentStatus: { type: String, enum: Object.values(PaymentStatus), default: PaymentStatus.PENDING },
