@@ -26,6 +26,9 @@ router.post('/billing/:slug/sale', public_controller_1.PublicController.processB
 router.get('/billing/:slug/tables', public_controller_1.PublicController.getBillingTables);
 router.get('/billing/:slug/tables/:tableId/order', public_controller_1.PublicController.getBillingTableOrder);
 router.post('/billing/:slug/tables/:tableId/settle', public_controller_1.PublicController.settleBillingTableOrder);
+router.get('/billing/:slug/online-orders', public_controller_1.PublicController.getBillingOnlineOrders);
+router.post('/billing/:slug/online-orders/:orderId/settle', public_controller_1.PublicController.settleBillingOnlineOrder);
+router.patch('/billing/:slug/online-orders/:orderId/status', public_controller_1.PublicController.updateBillingOnlineOrderStatus);
 router.patch('/billing/:slug/dishes/:dishId/availability', public_controller_1.PublicController.toggleDishAvailability);
 // Public routes for KDS portal
 router.get('/kds/:slug/orders', public_controller_1.PublicController.getKdsOrders);

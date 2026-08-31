@@ -33,6 +33,8 @@ export class OrderService {
         orderNumber,
         items: [],
         subtotal: 0,
+        cgst: 0,
+        sgst: 0,
         tax: 0,
         total: 0,
         orderStatus: OrderStatus.DRAFT,
@@ -127,9 +129,11 @@ export class OrderService {
       }
 
       // Recalculate totals
-      order.subtotal = order.items.reduce((sum, item) => sum + item.lineTotal, 0);
-      order.tax = order.subtotal * 0.05; // 5% tax example
-      order.total = order.subtotal + order.tax - order.discount;
+      order.subtotal = Number(order.items.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2));
+      order.cgst = Number((order.subtotal * 0.025).toFixed(2));
+      order.sgst = Number((order.subtotal * 0.025).toFixed(2));
+      order.tax = Number((order.cgst + order.sgst).toFixed(2));
+      order.total = Number((order.subtotal + order.tax - order.discount).toFixed(2));
 
       await order.save({ session });
       await session.commitTransaction();

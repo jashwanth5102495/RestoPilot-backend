@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Restaurant } from '../restaurants/restaurant.model';
 import { Dish } from '../dishes/dish.model';
-import { Order, OrderSource, OrderStatus, PaymentStatus } from '../orders/order.model';
+import { Order, OrderSource, OrderStatus, PaymentStatus, PaymentMethod } from '../orders/order.model';
 import { Category } from '../categories/category.model';
 
 export class PublicController {
@@ -54,7 +54,8 @@ export class PublicController {
       }
 
       let subtotal = 0;
-      let tax = 0;
+      let cgst = 0;
+      let sgst = 0;
       
       const orderItems = [];
       for (const item of items) {
@@ -64,20 +65,29 @@ export class PublicController {
         }
         
         const lineTotal = dish.price * item.quantity;
+        const lineTaxRate = dish.taxRate ?? 5;
+        const lineCgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
+        const lineSgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
+
         subtotal += lineTotal;
-        tax += lineTotal * ((dish.taxRate || 0) / 100);
+        cgst += lineCgst;
+        sgst += lineSgst;
         
         orderItems.push({
           dishId: dish._id,
           dishName: dish.name,
           quantity: item.quantity,
           unitPrice: dish.price,
-          taxRate: dish.taxRate || 0,
+          taxRate: lineTaxRate,
           lineTotal
         });
       }
 
-      const total = subtotal + tax;
+      subtotal = Number(subtotal.toFixed(2));
+      cgst = Number(cgst.toFixed(2));
+      sgst = Number(sgst.toFixed(2));
+      const tax = Number((cgst + sgst).toFixed(2));
+      const total = Number((subtotal + tax).toFixed(2));
       const orderNumber = `ONL-${Math.floor(100000 + Math.random() * 900000)}`;
 
       const newOrder = new Order({
@@ -87,6 +97,8 @@ export class PublicController {
         subtotal,
         discount: 0,
         tax,
+        cgst,
+        sgst,
         total,
         orderSource: OrderSource.ONLINE,
         orderStatus: OrderStatus.PLACED,
@@ -95,6 +107,14 @@ export class PublicController {
       });
 
       await newOrder.save();
+
+      try {
+        const { emitToTenant } = await import('../../shared/utils/socket');
+        emitToTenant(restaurant._id.toString(), 'order_sent', { order: newOrder });
+        emitToTenant(restaurant._id.toString(), 'new_online_order', { order: newOrder });
+      } catch (sockErr) {
+        console.error('Failed to emit online order socket notification:', sockErr);
+      }
 
       res.status(201).json({
         success: true,
@@ -555,6 +575,80 @@ export class PublicController {
       await dish.save();
 
       res.status(200).json({ success: true, data: dish });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getBillingOnlineOrders(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true }).lean();
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const orders = await Order.find({
+        restaurantId: restaurant._id,
+        orderSource: OrderSource.ONLINE
+      }).sort({ createdAt: -1 }).limit(100).lean();
+
+      res.status(200).json({ success: true, data: orders });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async settleBillingOnlineOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, orderId } = req.params;
+      const { paymentMethod } = req.body;
+
+      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const order = await Order.findOne({
+        _id: orderId,
+        restaurantId: restaurant._id,
+        orderSource: OrderSource.ONLINE
+      });
+
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'Online order not found' });
+      }
+
+      const { OrderService } = await import('../orders/order.service');
+      const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), OrderStatus.COMPLETED, null as any);
+
+      updatedOrder.paymentStatus = PaymentStatus.PAID;
+      updatedOrder.paymentMethod = paymentMethod || PaymentMethod.CASH;
+      await updatedOrder.save();
+
+      const { emitToTenant } = await import('../../shared/utils/socket');
+      emitToTenant(restaurant._id.toString(), 'order_status_updated', { order: updatedOrder });
+
+      res.status(200).json({ success: true, data: updatedOrder });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateBillingOnlineOrderStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, orderId } = req.params;
+      const { status } = req.body;
+
+      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { OrderService } = await import('../orders/order.service');
+      const order = await OrderService.updateOrderStatus(restaurant._id.toString(), orderId as string, status as OrderStatus, null as any);
+
+      res.status(200).json({ success: true, data: order });
     } catch (error) {
       next(error);
     }

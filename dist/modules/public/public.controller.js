@@ -82,7 +82,8 @@ class PublicController {
                 return res.status(400).json({ success: false, message: 'Invalid order data' });
             }
             let subtotal = 0;
-            let tax = 0;
+            let cgst = 0;
+            let sgst = 0;
             const orderItems = [];
             for (const item of items) {
                 const dish = await dish_model_1.Dish.findOne({ _id: item.dishId, restaurantId: restaurant._id });
@@ -90,18 +91,26 @@ class PublicController {
                     return res.status(400).json({ success: false, message: `Dish unavailable` });
                 }
                 const lineTotal = dish.price * item.quantity;
+                const lineTaxRate = dish.taxRate ?? 5;
+                const lineCgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
+                const lineSgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
                 subtotal += lineTotal;
-                tax += lineTotal * ((dish.taxRate || 0) / 100);
+                cgst += lineCgst;
+                sgst += lineSgst;
                 orderItems.push({
                     dishId: dish._id,
                     dishName: dish.name,
                     quantity: item.quantity,
                     unitPrice: dish.price,
-                    taxRate: dish.taxRate || 0,
+                    taxRate: lineTaxRate,
                     lineTotal
                 });
             }
-            const total = subtotal + tax;
+            subtotal = Number(subtotal.toFixed(2));
+            cgst = Number(cgst.toFixed(2));
+            sgst = Number(sgst.toFixed(2));
+            const tax = Number((cgst + sgst).toFixed(2));
+            const total = Number((subtotal + tax).toFixed(2));
             const orderNumber = `ONL-${Math.floor(100000 + Math.random() * 900000)}`;
             const newOrder = new order_model_1.Order({
                 restaurantId: restaurant._id,
@@ -110,6 +119,8 @@ class PublicController {
                 subtotal,
                 discount: 0,
                 tax,
+                cgst,
+                sgst,
                 total,
                 orderSource: order_model_1.OrderSource.ONLINE,
                 orderStatus: order_model_1.OrderStatus.PLACED,
@@ -117,6 +128,14 @@ class PublicController {
                 customerInfo
             });
             await newOrder.save();
+            try {
+                const { emitToTenant } = await Promise.resolve().then(() => __importStar(require('../../shared/utils/socket')));
+                emitToTenant(restaurant._id.toString(), 'order_sent', { order: newOrder });
+                emitToTenant(restaurant._id.toString(), 'new_online_order', { order: newOrder });
+            }
+            catch (sockErr) {
+                console.error('Failed to emit online order socket notification:', sockErr);
+            }
             res.status(201).json({
                 success: true,
                 data: newOrder
@@ -493,6 +512,68 @@ class PublicController {
             dish.isAvailable = isAvailable;
             await dish.save();
             res.status(200).json({ success: true, data: dish });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async getBillingOnlineOrders(req, res, next) {
+        try {
+            const { slug } = req.params;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true }).lean();
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+            }
+            const orders = await order_model_1.Order.find({
+                restaurantId: restaurant._id,
+                orderSource: order_model_1.OrderSource.ONLINE
+            }).sort({ createdAt: -1 }).limit(100).lean();
+            res.status(200).json({ success: true, data: orders });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async settleBillingOnlineOrder(req, res, next) {
+        try {
+            const { slug, orderId } = req.params;
+            const { paymentMethod } = req.body;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+            }
+            const order = await order_model_1.Order.findOne({
+                _id: orderId,
+                restaurantId: restaurant._id,
+                orderSource: order_model_1.OrderSource.ONLINE
+            });
+            if (!order) {
+                return res.status(404).json({ success: false, message: 'Online order not found' });
+            }
+            const { OrderService } = await Promise.resolve().then(() => __importStar(require('../orders/order.service')));
+            const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), order_model_1.OrderStatus.COMPLETED, null);
+            updatedOrder.paymentStatus = order_model_1.PaymentStatus.PAID;
+            updatedOrder.paymentMethod = paymentMethod || order_model_1.PaymentMethod.CASH;
+            await updatedOrder.save();
+            const { emitToTenant } = await Promise.resolve().then(() => __importStar(require('../../shared/utils/socket')));
+            emitToTenant(restaurant._id.toString(), 'order_status_updated', { order: updatedOrder });
+            res.status(200).json({ success: true, data: updatedOrder });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    static async updateBillingOnlineOrderStatus(req, res, next) {
+        try {
+            const { slug, orderId } = req.params;
+            const { status } = req.body;
+            const restaurant = await restaurant_model_1.Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+            }
+            const { OrderService } = await Promise.resolve().then(() => __importStar(require('../orders/order.service')));
+            const order = await OrderService.updateOrderStatus(restaurant._id.toString(), orderId, status, null);
+            res.status(200).json({ success: true, data: order });
         }
         catch (error) {
             next(error);
