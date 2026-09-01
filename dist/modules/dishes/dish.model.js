@@ -48,5 +48,7 @@ const DishSchema = new mongoose_1.Schema({
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true });
 DishSchema.index({ restaurantId: 1, categoryId: 1 });
+DishSchema.index({ restaurantId: 1, isDeleted: 1, isAvailable: 1 });
+DishSchema.index({ restaurantId: 1, categoryId: 1, isDeleted: 1, isAvailable: 1 });
 DishSchema.index({ restaurantId: 1, name: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } });
 exports.Dish = mongoose_1.default.model('Dish', DishSchema);

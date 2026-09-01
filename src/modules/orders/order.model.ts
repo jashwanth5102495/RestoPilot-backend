@@ -121,5 +121,8 @@ const OrderSchema = new Schema<IOrder>(
 
 OrderSchema.index({ restaurantId: 1, orderNumber: 1 }, { unique: true });
 OrderSchema.index({ restaurantId: 1, createdAt: -1 });
+OrderSchema.index({ restaurantId: 1, tableId: 1, orderStatus: 1 });
+OrderSchema.index({ restaurantId: 1, orderStatus: 1 });
+OrderSchema.index({ restaurantId: 1, orderSource: 1, createdAt: -1 });
 
 export const Order = mongoose.model<IOrder>('Order', OrderSchema);

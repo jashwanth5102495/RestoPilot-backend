@@ -106,4 +106,7 @@ const OrderSchema = new mongoose_1.Schema({
 }, { timestamps: true });
 OrderSchema.index({ restaurantId: 1, orderNumber: 1 }, { unique: true });
 OrderSchema.index({ restaurantId: 1, createdAt: -1 });
+OrderSchema.index({ restaurantId: 1, tableId: 1, orderStatus: 1 });
+OrderSchema.index({ restaurantId: 1, orderStatus: 1 });
+OrderSchema.index({ restaurantId: 1, orderSource: 1, createdAt: -1 });
 exports.Order = mongoose_1.default.model('Order', OrderSchema);

@@ -14,11 +14,13 @@ export class InventoryService {
     quantity: number,
     unit: string,
     type: TransactionType,
-    session: ClientSession,
+    session?: ClientSession | null,
     referenceDetails?: { referenceType?: string; referenceId?: Types.ObjectId; notes?: string; createdBy?: Types.ObjectId },
     allowNegativeStock: boolean = false
   ): Promise<IIngredient> {
-    const ingredient = await Ingredient.findOne({ _id: ingredientId, restaurantId }).session(session);
+    let query = Ingredient.findOne({ _id: ingredientId, restaurantId });
+    if (session) query = query.session(session);
+    const ingredient = await query;
     if (!ingredient) {
       throw new AppError(`Ingredient not found: ${ingredientId}`, 404);
     }
@@ -55,11 +57,11 @@ export class InventoryService {
       referenceId: referenceDetails?.referenceId,
       notes: referenceDetails?.notes,
       createdBy: referenceDetails?.createdBy,
-    }], { session });
+    }], session ? { session } : {});
 
     // Update ingredient
     ingredient.currentStock = newBalance;
-    await ingredient.save({ session });
+    await ingredient.save(session ? { session } : {});
 
     return ingredient;
   }

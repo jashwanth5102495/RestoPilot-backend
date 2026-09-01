@@ -11,7 +11,10 @@ class InventoryService {
      * Adjusts stock level and records the transaction atomically.
      */
     static async adjustStock(restaurantId, ingredientId, quantity, unit, type, session, referenceDetails, allowNegativeStock = false) {
-        const ingredient = await ingredient_model_1.Ingredient.findOne({ _id: ingredientId, restaurantId }).session(session);
+        let query = ingredient_model_1.Ingredient.findOne({ _id: ingredientId, restaurantId });
+        if (session)
+            query = query.session(session);
+        const ingredient = await query;
         if (!ingredient) {
             throw new AppError_1.AppError(`Ingredient not found: ${ingredientId}`, 404);
         }
@@ -38,10 +41,10 @@ class InventoryService {
                 referenceId: referenceDetails?.referenceId,
                 notes: referenceDetails?.notes,
                 createdBy: referenceDetails?.createdBy,
-            }], { session });
+            }], session ? { session } : {});
         // Update ingredient
         ingredient.currentStock = newBalance;
-        await ingredient.save({ session });
+        await ingredient.save(session ? { session } : {});
         return ingredient;
     }
     /**

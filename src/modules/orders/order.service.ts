@@ -3,23 +3,23 @@ import { Table, TableStatus } from '../tables/table.model';
 import { Dish } from '../dishes/dish.model';
 import mongoose from 'mongoose';
 import { ValidationError } from '../../shared/errors/AppError';
-import { SequenceService } from '../shared/sequence.service';
+import { SequenceService, runWithTransaction } from '../shared/sequence.service';
 import { emitToTenant } from '../../shared/utils/socket';
 
 export class OrderService {
   static async startTableOrder(restaurantId: string, tableId: string, userId: string) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      const table = await Table.findOne({ _id: tableId, restaurantId, isActive: true }).session(session);
+    return runWithTransaction(async (session) => {
+      const tableQuery = Table.findOne({ _id: tableId, restaurantId, isActive: true });
+      const table = await (session ? tableQuery.session(session) : tableQuery);
       if (!table) throw new ValidationError('Table not found or inactive');
 
       // Check for existing active order
-      const existingOrder = await Order.findOne({
+      const existingQuery = Order.findOne({
         restaurantId,
         tableId,
         orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] }
-      }).session(session);
+      });
+      const existingOrder = await (session ? existingQuery.session(session) : existingQuery);
 
       if (existingOrder) {
         throw new ValidationError('Table already has an active order');
@@ -48,39 +48,30 @@ export class OrderService {
         }]
       });
 
-      await newOrder.save({ session });
+      await newOrder.save(session ? { session } : {});
       
       table.status = TableStatus.OCCUPIED;
-      await table.save({ session });
-
-      await session.commitTransaction();
+      await table.save(session ? { session } : {});
 
       emitToTenant(restaurantId, 'order_started', { order: newOrder, tableId });
       emitToTenant(restaurantId, 'table_status_updated', { tableId, status: TableStatus.OCCUPIED });
 
       return newOrder;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+    });
   }
 
   static async updateOrderItems(restaurantId: string, orderId: string, updates: any[], userId: string) {
-    // updates: { dishId, quantityChange } (quantityChange can be positive or negative)
-    // We use a transaction to safely fetch prices and update the document
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      const order = await Order.findOne({ _id: orderId, restaurantId }).session(session);
+    return runWithTransaction(async (session) => {
+      const orderQuery = Order.findOne({ _id: orderId, restaurantId });
+      const order = await (session ? orderQuery.session(session) : orderQuery);
       if (!order) throw new ValidationError('Order not found');
       if (order.orderStatus === OrderStatus.COMPLETED || order.orderStatus === OrderStatus.CANCELLED) {
         throw new ValidationError('Cannot modify a completed or cancelled order');
       }
 
       for (const update of updates) {
-        const dish = await Dish.findOne({ _id: update.dishId, restaurantId }).session(session);
+        const dishQuery = Dish.findOne({ _id: update.dishId, restaurantId });
+        const dish = await (session ? dishQuery.session(session) : dishQuery);
         if (!dish) throw new ValidationError(`Dish ${update.dishId} not found`);
 
         const existingItemIndex = order.items.findIndex(item => item.dishId.toString() === update.dishId.toString());
@@ -107,7 +98,7 @@ export class OrderService {
           }
         } else if (update.quantityChange > 0) {
           const unitPrice = dish.price;
-          const taxRate = 5; // Simplified tax for now
+          const taxRate = 5;
           
           order.items.push({
             dishId: dish._id,
@@ -135,18 +126,12 @@ export class OrderService {
       order.tax = Number((order.cgst + order.sgst).toFixed(2));
       order.total = Number((order.subtotal + order.tax - order.discount).toFixed(2));
 
-      await order.save({ session });
-      await session.commitTransaction();
+      await order.save(session ? { session } : {});
 
       emitToTenant(restaurantId, 'order_updated', { order });
 
       return order;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+    });
   }
 
   static async sendOrder(restaurantId: string, orderId: string, userId: string) {
@@ -170,10 +155,9 @@ export class OrderService {
   }
 
   static async updateOrderStatus(restaurantId: string, orderId: string, status: OrderStatus, userId: string) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      const order = await Order.findOne({ _id: orderId, restaurantId }).session(session);
+    return runWithTransaction(async (session) => {
+      const orderQuery = Order.findOne({ _id: orderId, restaurantId });
+      const order = await (session ? orderQuery.session(session) : orderQuery);
       if (!order) throw new ValidationError('Order not found');
 
       if (order.orderStatus === OrderStatus.COMPLETED && status === OrderStatus.CANCELLED) {
@@ -187,14 +171,15 @@ export class OrderService {
         timestamp: new Date()
       } as any);
 
-      await order.save({ session });
+      await order.save(session ? { session } : {});
 
       if (status === OrderStatus.COMPLETED || status === OrderStatus.CANCELLED) {
         if (order.tableId) {
-          const table = await Table.findById(order.tableId).session(session);
+          const tableQuery = Table.findById(order.tableId);
+          const table = await (session ? tableQuery.session(session) : tableQuery);
           if (table) {
             table.status = TableStatus.FREE;
-            await table.save({ session });
+            await table.save(session ? { session } : {});
             emitToTenant(restaurantId, 'table_status_updated', { tableId: order.tableId, status: TableStatus.FREE });
           }
         }
@@ -207,37 +192,34 @@ export class OrderService {
             const { TransactionType } = await import('../inventory/inventory-transaction.model');
             
             const requirements = await OrderConsumptionService.calculateOrderConsumption(restaurantId, order.items);
-            for (const req of requirements) {
-              await InventoryService.adjustStock(
-                restaurantId,
-                req.ingredientId,
-                req.quantityInBaseUnit,
-                'BASE_UNIT',
-                TransactionType.SALE_CONSUMPTION,
-                session,
-                { referenceType: 'ORDER', referenceId: order._id as any, createdBy: userId ? new mongoose.Types.ObjectId(userId) : undefined },
-                true // Allow negative stock so order completion isn't blocked
+            if (requirements.length > 0) {
+              await Promise.all(
+                requirements.map(req =>
+                  InventoryService.adjustStock(
+                    restaurantId,
+                    req.ingredientId,
+                    req.quantityInBaseUnit,
+                    'BASE_UNIT',
+                    TransactionType.SALE_CONSUMPTION,
+                    session,
+                    { referenceType: 'ORDER', referenceId: order._id as any, createdBy: userId ? new mongoose.Types.ObjectId(userId) : undefined },
+                    true // Allow negative stock so order completion isn't blocked
+                  )
+                )
               );
             }
             order.inventoryConsumed = true;
-            await order.save({ session });
+            await order.save(session ? { session } : {});
           } catch (err) {
             console.error(`Failed to consume inventory for order ${order._id}:`, err);
-            throw err; // Re-throw to abort transaction if inventory deduction fails
+            throw err;
           }
         }
       }
 
-      await session.commitTransaction();
-      
       emitToTenant(restaurantId, 'order_status_updated', { order });
 
       return order;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
+    });
   }
 }

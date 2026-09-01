@@ -32,9 +32,8 @@ export class OrderConsumptionService {
     // Calculate consumption per dish
     for (const item of orderItems) {
       const recipe = recipeMap.get(item.dishId.toString());
-      if (!recipe) {
-        const { AppError } = require('../../shared/errors/AppError');
-        throw new AppError(`Recipe not configured for dish: ${item.dishName}`, 400);
+      if (!recipe || !recipe.items || recipe.items.length === 0) {
+        continue;
       }
       
       for (const recipeItem of recipe.items) {

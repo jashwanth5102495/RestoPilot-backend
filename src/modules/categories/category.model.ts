@@ -22,5 +22,6 @@ const CategorySchema = new Schema<ICategory>(
 );
 
 CategorySchema.index({ restaurantId: 1, name: 1 }, { unique: true });
+CategorySchema.index({ restaurantId: 1, isActive: 1, displayOrder: 1 });
 
 export const Category = mongoose.model<ICategory>('Category', CategorySchema);
