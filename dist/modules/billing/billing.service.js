@@ -48,120 +48,108 @@ class BillingService {
      * Completes a sale: Creates Order, Deducts Inventory, Creates Bill atomically.
      */
     static async processSale(restaurantId, userId, items, paymentMethod, customerId) {
-        const session = await mongoose_1.default.startSession();
-        session.startTransaction();
-        try {
-            // 1. Validate dishes and calculate totals server-side
-            const dishIds = items.map(i => i.dishId);
-            const dishes = await dish_model_1.Dish.find({ _id: { $in: dishIds }, restaurantId, isDeleted: false }).session(session);
-            const dishMap = new Map(dishes.map(d => [d._id.toString(), d]));
-            let subtotal = 0;
-            let cgst = 0;
-            let sgst = 0;
-            const orderItems = [];
-            for (const item of items) {
-                const dish = dishMap.get(item.dishId);
-                if (!dish || !dish.isAvailable) {
-                    throw new AppError_1.AppError(`Dish ${item.dishId} is unavailable or invalid`, 400);
+        return (0, sequence_service_1.runWithTransaction)(async (session) => {
+            try {
+                // 1. Validate dishes and calculate totals server-side
+                const dishIds = items.map(i => i.dishId);
+                const dishes = await dish_model_1.Dish.find({ _id: { $in: dishIds }, restaurantId, isDeleted: { $ne: true } }).lean();
+                const dishMap = new Map(dishes.map(d => [d._id.toString(), d]));
+                let subtotal = 0;
+                let cgst = 0;
+                let sgst = 0;
+                const orderItems = [];
+                for (const item of items) {
+                    const dish = dishMap.get(item.dishId);
+                    if (!dish || !dish.isAvailable) {
+                        throw new AppError_1.AppError(`Dish ${item.dishId} is unavailable or invalid`, 400);
+                    }
+                    const lineTotal = dish.price * item.quantity;
+                    const lineTaxRate = dish.taxRate ?? 5;
+                    const lineCgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
+                    const lineSgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
+                    subtotal += lineTotal;
+                    cgst += lineCgst;
+                    sgst += lineSgst;
+                    orderItems.push({
+                        dishId: dish._id,
+                        dishName: dish.name,
+                        quantity: item.quantity,
+                        unitPrice: dish.price,
+                        taxRate: lineTaxRate,
+                        lineTotal
+                    });
                 }
-                const lineTotal = dish.price * item.quantity;
-                const lineTaxRate = dish.taxRate ?? 5;
-                const lineCgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
-                const lineSgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
-                subtotal += lineTotal;
-                cgst += lineCgst;
-                sgst += lineSgst;
-                orderItems.push({
-                    dishId: dish._id,
-                    dishName: dish.name,
-                    quantity: item.quantity,
-                    unitPrice: dish.price,
-                    taxRate: lineTaxRate,
-                    lineTotal
+                subtotal = Number(subtotal.toFixed(2));
+                cgst = Number(cgst.toFixed(2));
+                sgst = Number(sgst.toFixed(2));
+                const tax = Number((cgst + sgst).toFixed(2));
+                const total = Number((subtotal + tax).toFixed(2));
+                // 2. Create Order
+                const orderNumber = await sequence_service_1.SequenceService.getNextOrderNumber(restaurantId, session);
+                const order = new order_model_1.Order({
+                    restaurantId,
+                    orderNumber,
+                    customerId,
+                    items: orderItems,
+                    subtotal,
+                    discount: 0,
+                    tax,
+                    cgst,
+                    sgst,
+                    total,
+                    paymentMethod,
+                    paymentStatus: order_model_1.PaymentStatus.PAID,
+                    orderStatus: order_model_1.OrderStatus.COMPLETED,
+                    inventoryConsumed: true,
+                    createdBy: userId
                 });
+                await order.save(session ? { session } : {});
+                // 3. Inventory Deduction
+                const requiredIngredients = await order_consumption_service_1.OrderConsumptionService.calculateOrderConsumption(restaurantId, orderItems);
+                if (requiredIngredients.length > 0) {
+                    await Promise.all(requiredIngredients.map(reqIng => inventory_service_1.InventoryService.adjustStock(restaurantId, reqIng.ingredientId, -reqIng.quantityInBaseUnit, 'BASE_UNIT', inventory_transaction_model_1.TransactionType.SALE_CONSUMPTION, session, { referenceType: 'ORDER', referenceId: order._id, createdBy: new mongoose_1.Types.ObjectId(userId) }, true // Allow negative stock so billing isn't blocked
+                    )));
+                }
+                // 4. Create Bill
+                const billNumber = await sequence_service_1.SequenceService.getNextBillNumber(restaurantId, session);
+                const bill = new bill_model_1.Bill({
+                    restaurantId,
+                    billNumber,
+                    orderId: order._id,
+                    items: orderItems,
+                    subtotal,
+                    discount: 0,
+                    tax,
+                    cgst,
+                    sgst,
+                    total,
+                    paymentMethod,
+                    paymentStatus: order_model_1.PaymentStatus.PAID,
+                    status: bill_model_1.BillStatus.ACTIVE,
+                    issuedBy: userId
+                });
+                await bill.save(session ? { session } : {});
+                return { order, bill };
             }
-            subtotal = Number(subtotal.toFixed(2));
-            cgst = Number(cgst.toFixed(2));
-            sgst = Number(sgst.toFixed(2));
-            const tax = Number((cgst + sgst).toFixed(2));
-            const total = Number((subtotal + tax).toFixed(2)); // Add discount logic later if needed
-            // 2. Create Order
-            const orderNumber = await sequence_service_1.SequenceService.getNextOrderNumber(restaurantId, session);
-            const order = new order_model_1.Order({
-                restaurantId,
-                orderNumber,
-                customerId,
-                items: orderItems,
-                subtotal,
-                discount: 0,
-                tax,
-                cgst,
-                sgst,
-                total,
-                paymentMethod,
-                paymentStatus: order_model_1.PaymentStatus.PAID,
-                orderStatus: order_model_1.OrderStatus.COMPLETED,
-                inventoryConsumed: true,
-                createdBy: userId
-            });
-            await order.save({ session });
-            // 3. Inventory Deduction
-            const requiredIngredients = await order_consumption_service_1.OrderConsumptionService.calculateOrderConsumption(restaurantId, orderItems);
-            for (const reqIng of requiredIngredients) {
-                // deductStock atomically ensures we don't go negative if not allowed
-                await inventory_service_1.InventoryService.adjustStock(restaurantId, reqIng.ingredientId, -reqIng.quantityInBaseUnit, 'BASE_UNIT', 
-                // We passed `quantityInBaseUnit`, so we can pass any base unit, e.g. the ingredient's actual base unit.
-                // We need a slight modification to `adjustStock` to accept base quantities safely.
-                inventory_transaction_model_1.TransactionType.SALE_CONSUMPTION, session, { referenceType: 'ORDER', referenceId: order._id, createdBy: new mongoose_1.Types.ObjectId(userId) }, true // Allow negative stock so billing isn't blocked
-                );
-            }
-            // 4. Create Bill
-            const billNumber = await sequence_service_1.SequenceService.getNextBillNumber(restaurantId, session);
-            const bill = new bill_model_1.Bill({
-                restaurantId,
-                billNumber,
-                orderId: order._id,
-                items: orderItems,
-                subtotal,
-                discount: 0,
-                tax,
-                cgst,
-                sgst,
-                total,
-                paymentMethod,
-                paymentStatus: order_model_1.PaymentStatus.PAID,
-                status: bill_model_1.BillStatus.ACTIVE,
-                issuedBy: userId
-            });
-            await bill.save({ session });
-            await session.commitTransaction();
-            return { order, bill };
-        }
-        catch (error) {
-            await session.abortTransaction();
-            // Differentiate expected vs unexpected errors
-            if (error instanceof AppError_1.AppError) {
-                // Expected validation or business logic error (e.g. INSUFFICIENT_STOCK)
+            catch (error) {
+                if (error instanceof AppError_1.AppError) {
+                    throw error;
+                }
+                const { logger } = require('../../shared/utils/logger');
+                const Sentry = require('@sentry/node');
+                logger.error({
+                    msg: 'CRITICAL: BILL_CREATION_FAILED',
+                    error,
+                    restaurantId,
+                    userId,
+                });
+                Sentry.setTag('error_type', 'BILL_CREATION_FAILED');
+                Sentry.setTag('restaurantId', restaurantId.toString());
+                Sentry.setExtra('userId', userId.toString());
+                Sentry.setExtra('items', items);
                 throw error;
             }
-            const { logger } = require('../../shared/utils/logger');
-            const Sentry = require('@sentry/node');
-            // Unexpected catastrophic billing/inventory crash
-            logger.error({
-                msg: 'CRITICAL: BILL_CREATION_FAILED',
-                error,
-                restaurantId,
-                userId,
-            });
-            Sentry.setTag('error_type', 'BILL_CREATION_FAILED');
-            Sentry.setTag('restaurantId', restaurantId.toString());
-            Sentry.setExtra('userId', userId.toString());
-            Sentry.setExtra('items', items);
-            throw error;
-        }
-        finally {
-            session.endSession();
-        }
+        });
     }
     static async voidBill(restaurantId, billId, userId) {
         const session = await mongoose_1.default.startSession();

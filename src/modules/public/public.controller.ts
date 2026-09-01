@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Request, Response, NextFunction } from 'express';
 import { Restaurant } from '../restaurants/restaurant.model';
 import { Dish } from '../dishes/dish.model';
@@ -5,6 +6,31 @@ import { Order, OrderSource, OrderStatus, PaymentStatus, PaymentMethod } from '.
 import { Category } from '../categories/category.model';
 
 export class PublicController {
+  public static getRestaurantSlugFilter(slug: string | string[] | any, field: 'waiterSlug' | 'billingSlug' | 'onlineSlug' | 'kdsSlug' | 'inventorySlug' = 'waiterSlug') {
+    const raw = Array.isArray(slug) ? slug[0] : (typeof slug === 'string' ? slug : '');
+    const cleaned = (raw || '').trim().toLowerCase();
+    const base = cleaned.replace(/-(waiter|billing|kds|order|pos|inventory)(-\d+)?$/, '');
+    const isObjectId = mongoose.Types.ObjectId.isValid(cleaned);
+    
+    return {
+      $or: [
+        { [field]: cleaned },
+        { [field]: base },
+        { waiterSlug: cleaned },
+        { waiterSlug: base },
+        { billingSlug: cleaned },
+        { billingSlug: base },
+        { onlineSlug: cleaned },
+        { onlineSlug: base },
+        { kdsSlug: cleaned },
+        { kdsSlug: base },
+        { inventorySlug: cleaned },
+        { inventorySlug: base },
+        ...(isObjectId ? [{ _id: cleaned }] : [])
+      ]
+    };
+  }
+
   private static async generateUniqueSlug(Model: any, baseSlug: string, field: string): Promise<string> {
     let slug = baseSlug;
     let counter = 1;
@@ -17,14 +43,17 @@ export class PublicController {
   static async getRestaurantMenu(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ onlineSlug: slug, isOnlineOrderingEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'onlineSlug')).lean();
       
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Restaurant not found or online ordering is disabled' });
       }
 
-      const categories = await Category.find({ restaurantId: restaurant._id, isActive: true }).lean();
-      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: true, isDeleted: false }).lean();
+      const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
+      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+        .populate('categoryId')
+        .sort({ displayOrder: 1, createdAt: -1 })
+        .lean();
 
       res.status(200).json({
         success: true,
@@ -44,7 +73,7 @@ export class PublicController {
       const { slug } = req.params;
       const { items, customerInfo } = req.body;
 
-      const restaurant = await Restaurant.findOne({ onlineSlug: slug, isOnlineOrderingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'onlineSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Restaurant not found' });
       }
@@ -260,7 +289,7 @@ export class PublicController {
   static async getKdsOrders(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ kdsSlug: slug, isKdsEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'kdsSlug')).lean();
       
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'KDS portal not found or disabled' });
@@ -282,7 +311,7 @@ export class PublicController {
       const { slug, orderId } = req.params;
       const { status } = req.body;
 
-      const restaurant = await Restaurant.findOne({ kdsSlug: slug, isKdsEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'kdsSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'KDS portal not found or disabled' });
       }
@@ -299,7 +328,7 @@ export class PublicController {
   static async getWaiterTables(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'waiterSlug')).lean();
       
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
@@ -317,15 +346,16 @@ export class PublicController {
   static async getWaiterMenu(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'waiterSlug')).lean();
       
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
       }
 
-      const categories = await Category.find({ restaurantId: restaurant._id, isActive: true }).lean();
-      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: true, isDeleted: false })
+      const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
+      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
         .populate('categoryId')
+        .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
 
       res.status(200).json({ success: true, data: { categories, dishes } });
@@ -338,7 +368,7 @@ export class PublicController {
     try {
       const { slug, tableId } = req.params;
       
-      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'waiterSlug')).lean();
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
       }
@@ -347,7 +377,7 @@ export class PublicController {
         restaurantId: restaurant._id, 
         tableId: tableId as string, 
         orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] } 
-      });
+      }).lean();
 
       res.status(200).json({ success: true, data: order || null });
     } catch (error) {
@@ -360,7 +390,7 @@ export class PublicController {
       const { slug, tableId } = req.params;
       const { items } = req.body;
 
-      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'waiterSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
       }
@@ -375,7 +405,7 @@ export class PublicController {
       });
 
       if (!order) {
-        order = await OrderService.startTableOrder(restaurant._id.toString(), tableId as string, null as any); // no user id since public waiter
+        order = await OrderService.startTableOrder(restaurant._id.toString(), tableId as string, null as any);
       }
 
       // Update items
@@ -396,7 +426,7 @@ export class PublicController {
     try {
       const { slug, tableId } = req.params;
       
-      const restaurant = await Restaurant.findOne({ waiterSlug: slug, isWaiterOrderingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'waiterSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
       }
@@ -423,15 +453,16 @@ export class PublicController {
   static async getBillingMenu(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug')).lean();
       
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
 
-      const categories = await Category.find({ restaurantId: restaurant._id, isActive: true }).lean();
-      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: true, isDeleted: false })
+      const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
+      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
         .populate('categoryId')
+        .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
 
       res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, logo: restaurant.logo, currency: restaurant.currency }, categories, dishes } });
@@ -445,7 +476,7 @@ export class PublicController {
       const { slug } = req.params;
       const { items, paymentMethod, customerId } = req.body;
 
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
@@ -472,7 +503,7 @@ export class PublicController {
   static async getBillingTables(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug')).lean();
       
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
@@ -503,7 +534,7 @@ export class PublicController {
     try {
       const { slug, tableId } = req.params;
       
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
@@ -525,7 +556,7 @@ export class PublicController {
       const { slug, tableId } = req.params;
       const { paymentMethod } = req.body;
       
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
@@ -561,7 +592,7 @@ export class PublicController {
       const { slug, dishId } = req.params;
       const { isAvailable } = req.body;
 
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
@@ -583,7 +614,7 @@ export class PublicController {
   static async getBillingOnlineOrders(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug')).lean();
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
@@ -604,7 +635,7 @@ export class PublicController {
       const { slug, orderId } = req.params;
       const { paymentMethod } = req.body;
 
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
@@ -640,7 +671,7 @@ export class PublicController {
       const { slug, orderId } = req.params;
       const { status } = req.body;
 
-      const restaurant = await Restaurant.findOne({ billingSlug: slug, isBillingEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
       }
@@ -690,7 +721,7 @@ export class PublicController {
   static async getInventoryMenu(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const restaurant = await Restaurant.findOne({ inventorySlug: slug, isInventoryEnabled: true }).lean();
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'inventorySlug')).lean();
       
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Inventory portal not found or disabled' });
@@ -710,7 +741,7 @@ export class PublicController {
       const { slug } = req.params;
       const { items } = req.body; // Array of { ingredientId, quantity, unit, unitCost }
 
-      const restaurant = await Restaurant.findOne({ inventorySlug: slug, isInventoryEnabled: true });
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'inventorySlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Inventory portal not found or disabled' });
       }

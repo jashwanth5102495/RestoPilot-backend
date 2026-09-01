@@ -8,11 +8,11 @@ class DishController {
     static async getDishes(req, res, next) {
         try {
             const { categoryId } = req.query;
-            const filter = { restaurantId: req.tenantId, isDeleted: false };
+            const filter = { restaurantId: req.tenantId, isDeleted: { $ne: true } };
             if (categoryId) {
                 filter.categoryId = categoryId;
             }
-            const dishes = await dish_model_1.Dish.find(filter).populate('categoryId', 'name').sort({ createdAt: -1 });
+            const dishes = await dish_model_1.Dish.find(filter).populate('categoryId', 'name').sort({ displayOrder: 1, createdAt: -1 }).lean();
             res.status(200).json({ success: true, data: dishes });
         }
         catch (error) {

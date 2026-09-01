@@ -43,4 +43,5 @@ const CategorySchema = new mongoose_1.Schema({
     isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 CategorySchema.index({ restaurantId: 1, name: 1 }, { unique: true });
+CategorySchema.index({ restaurantId: 1, isActive: 1, displayOrder: 1 });
 exports.Category = mongoose_1.default.model('Category', CategorySchema);
