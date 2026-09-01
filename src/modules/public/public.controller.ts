@@ -58,7 +58,14 @@ export class PublicController {
       res.status(200).json({
         success: true,
         data: {
-          restaurant: { name: restaurant.name, logo: restaurant.logo, currency: restaurant.currency },
+          restaurant: { 
+            name: restaurant.name, 
+            address: restaurant.address, 
+            phone: restaurant.phone, 
+            gstNumber: restaurant.gstNumber, 
+            logo: restaurant.logo, 
+            currency: restaurant.currency 
+          },
           categories,
           dishes
         }
@@ -337,7 +344,7 @@ export class PublicController {
       const { Table } = await import('../tables/table.model');
       const tables = await Table.find({ restaurantId: restaurant._id, isActive: true }).sort({ tableNumber: 1 }).lean();
 
-      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name }, tables } });
+      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, address: restaurant.address, phone: restaurant.phone, gstNumber: restaurant.gstNumber }, tables } });
     } catch (error) {
       next(error);
     }
@@ -465,7 +472,7 @@ export class PublicController {
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
 
-      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, logo: restaurant.logo, currency: restaurant.currency }, categories, dishes } });
+      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, address: restaurant.address, phone: restaurant.phone, gstNumber: restaurant.gstNumber, logo: restaurant.logo, currency: restaurant.currency }, categories, dishes } });
     } catch (error) {
       next(error);
     }
@@ -730,7 +737,7 @@ export class PublicController {
       const { Ingredient } = await import('../ingredients/ingredient.model');
       const ingredients = await Ingredient.find({ restaurantId: restaurant._id }).sort({ name: 1 }).lean();
 
-      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, logo: restaurant.logo, currency: restaurant.currency }, ingredients } });
+      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, address: restaurant.address, logo: restaurant.logo, currency: restaurant.currency }, ingredients } });
     } catch (error) {
       next(error);
     }
