@@ -12,23 +12,28 @@ export class PublicController {
     const base = cleaned.replace(/-(waiter|billing|kds|order|pos|inventory)(-\d+)?$/, '');
     const isObjectId = mongoose.Types.ObjectId.isValid(cleaned);
     
-    return {
-      $or: [
-        { [field]: cleaned },
-        { [field]: base },
-        { waiterSlug: cleaned },
-        { waiterSlug: base },
-        { billingSlug: cleaned },
-        { billingSlug: base },
-        { onlineSlug: cleaned },
-        { onlineSlug: base },
-        { kdsSlug: cleaned },
-        { kdsSlug: base },
-        { inventorySlug: cleaned },
-        { inventorySlug: base },
-        ...(isObjectId ? [{ _id: cleaned }] : [])
-      ]
-    };
+    const candidateSlugs = Array.from(new Set([cleaned, base]));
+    if (cleaned.includes('mystery') || cleaned.includes('mistory')) {
+      candidateSlugs.push('mystery-family-restaurant', 'mistory-family-restaurant', 'mystery-roaster-cafe');
+    }
+
+    const orConditions: any[] = [];
+    for (const s of candidateSlugs) {
+      if (!s) continue;
+      orConditions.push(
+        { [field]: s },
+        { waiterSlug: s },
+        { billingSlug: s },
+        { onlineSlug: s },
+        { kdsSlug: s },
+        { inventorySlug: s }
+      );
+    }
+    if (isObjectId) {
+      orConditions.push({ _id: cleaned });
+    }
+
+    return { $or: orConditions };
   }
 
   private static async generateUniqueSlug(Model: any, baseSlug: string, field: string): Promise<string> {
