@@ -69,9 +69,12 @@ const apiLimiter = (0, express_rate_limit_1.default)({
     message: { success: false, message: 'Too many requests, please try again later.' }
 });
 // Middlewares
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({ crossOriginResourcePolicy: false }));
 app.use((0, cors_1.default)({
-    origin: env_1.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, server-to-server) or any host
+        callback(null, true);
+    },
     credentials: true,
 }));
 app.use(express_1.default.json({ limit: '10mb' }));

@@ -166,18 +166,40 @@ export class PublicController {
     }
   }
 
+  private static async resolveRestaurantFromReq(req: Request) {
+    const reqAny = req as any;
+    let restaurantId = reqAny.user?.restaurantId || reqAny.tenantId || reqAny.body?.restaurantId || reqAny.query?.restaurantId;
+
+    if (restaurantId) {
+      const rest = await Restaurant.findById(restaurantId);
+      if (rest) return rest;
+    }
+
+    if (reqAny.user?.userId) {
+      const { User } = await import('../users/user.model');
+      const user = await User.findById(reqAny.user.userId).lean();
+      if (user?.restaurantId) {
+        const rest = await Restaurant.findById(user.restaurantId);
+        if (rest) return rest;
+      }
+      const restByOwner = await Restaurant.findOne({ ownerId: reqAny.user.userId });
+      if (restByOwner) return restByOwner;
+    }
+
+    // Single outlet fallback
+    const totalCount = await Restaurant.countDocuments();
+    if (totalCount === 1) {
+      return await Restaurant.findOne();
+    }
+
+    return null;
+  }
+
   static async toggleOnlineOrdering(req: Request, res: Response, next: NextFunction) {
     try {
-      const reqAny = req as any;
-      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-
-      if (!restaurantId) {
-        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
-      }
-
-      const restaurant = await Restaurant.findById(restaurantId);
+      const restaurant = await PublicController.resolveRestaurantFromReq(req);
       if (!restaurant) {
-        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
       }
 
       const isEnabled = Boolean(req.body.enabled);
@@ -205,16 +227,9 @@ export class PublicController {
 
   static async toggleWaiterOrdering(req: Request, res: Response, next: NextFunction) {
     try {
-      const reqAny = req as any;
-      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-
-      if (!restaurantId) {
-        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
-      }
-
-      const restaurant = await Restaurant.findById(restaurantId);
+      const restaurant = await PublicController.resolveRestaurantFromReq(req);
       if (!restaurant) {
-        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
       }
 
       const isEnabled = Boolean(req.body.enabled);
@@ -242,16 +257,9 @@ export class PublicController {
 
   static async toggleBillingOrdering(req: Request, res: Response, next: NextFunction) {
     try {
-      const reqAny = req as any;
-      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-
-      if (!restaurantId) {
-        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
-      }
-
-      const restaurant = await Restaurant.findById(restaurantId);
+      const restaurant = await PublicController.resolveRestaurantFromReq(req);
       if (!restaurant) {
-        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
       }
 
       const isEnabled = Boolean(req.body.enabled);
@@ -279,16 +287,9 @@ export class PublicController {
 
   static async toggleKds(req: Request, res: Response, next: NextFunction) {
     try {
-      const reqAny = req as any;
-      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-
-      if (!restaurantId) {
-        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
-      }
-
-      const restaurant = await Restaurant.findById(restaurantId);
+      const restaurant = await PublicController.resolveRestaurantFromReq(req);
       if (!restaurant) {
-        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
       }
 
       const isEnabled = Boolean(req.body.enabled);
@@ -715,16 +716,9 @@ export class PublicController {
 
   static async toggleInventory(req: Request, res: Response, next: NextFunction) {
     try {
-      const reqAny = req as any;
-      const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-
-      if (!restaurantId) {
-        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
-      }
-
-      const restaurant = await Restaurant.findById(restaurantId);
+      const restaurant = await PublicController.resolveRestaurantFromReq(req);
       if (!restaurant) {
-        return res.status(404).json({ success: false, message: 'Restaurant not found' });
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
       }
 
       const isEnabled = Boolean(req.body.enabled);

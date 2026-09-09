@@ -12,7 +12,7 @@ let io = null;
 const initSocket = (httpServer) => {
     io = new socket_io_1.Server(httpServer, {
         cors: {
-            origin: env_1.env.FRONTEND_URL,
+            origin: (origin, callback) => callback(null, true),
             credentials: true
         }
     });
