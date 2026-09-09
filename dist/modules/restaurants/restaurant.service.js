@@ -115,6 +115,9 @@ class RestaurantService {
             const yearStart = new Date(yearStartIST.getTime() - (5.5 * 60 * 60 * 1000));
             dateFilter = { $gte: yearStart };
         }
+        else if (timeframe === 'all') {
+            dateFilter = {};
+        }
         const orderMatchQuery = { restaurantId: { $in: targetIds } };
         if (Object.keys(dateFilter).length > 0) {
             orderMatchQuery.createdAt = dateFilter;

@@ -57,7 +57,7 @@ export class RestaurantController {
 
   static async updateRestaurant(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const targetId = (req.params.id === 'current' || req.params.id === 'me' || !req.params.id) ? req.tenantId : req.params.id;
       const { name, phone, email, address, city, state, pincode, gstNumber, notificationSettings } = req.body;
       const { Restaurant } = await import('./restaurant.model');
 
@@ -66,10 +66,11 @@ export class RestaurantController {
 
       const rootId = currentRes.parentRestaurantId || currentRes._id;
 
-      const targetRes = await Restaurant.findById(id);
+      const targetRes = await Restaurant.findById(targetId);
       if (!targetRes) return res.status(404).json({ success: false, message: 'Restaurant not found' });
 
       const isAuthorized = targetRes._id.toString() === rootId.toString() || 
+        targetRes._id.toString() === currentRes._id.toString() ||
         (targetRes.parentRestaurantId && targetRes.parentRestaurantId.toString() === rootId.toString());
 
       if (!isAuthorized) {

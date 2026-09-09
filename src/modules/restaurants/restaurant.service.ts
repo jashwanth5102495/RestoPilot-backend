@@ -79,6 +79,8 @@ export class RestaurantService {
       yearStartIST.setUTCMonth(0, 1);
       const yearStart = new Date(yearStartIST.getTime() - (5.5 * 60 * 60 * 1000));
       dateFilter = { $gte: yearStart };
+    } else if (timeframe === 'all') {
+      dateFilter = {};
     }
 
     const orderMatchQuery: any = { restaurantId: { $in: targetIds } };
