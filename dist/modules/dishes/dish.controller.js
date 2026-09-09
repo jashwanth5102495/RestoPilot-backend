@@ -37,12 +37,32 @@ class DishController {
     }
     static async updateDish(req, res, next) {
         try {
-            if (req.body.categoryId) {
-                const category = await category_model_1.Category.findOne({ _id: req.body.categoryId, restaurantId: req.tenantId });
+            let { categoryId, name, price, taxRate, description, isAvailable, image } = req.body;
+            if (typeof categoryId === 'object' && categoryId?._id) {
+                categoryId = categoryId._id;
+            }
+            if (categoryId && typeof categoryId === 'string' && categoryId.trim() !== '') {
+                const category = await category_model_1.Category.findOne({ _id: categoryId.trim(), restaurantId: req.tenantId });
                 if (!category)
                     throw new AppError_1.NotFoundError('Category not found');
             }
-            const dish = await dish_model_1.Dish.findOneAndUpdate({ _id: req.params.id, restaurantId: req.tenantId, isDeleted: false }, { $set: req.body }, { new: true, runValidators: true });
+            const updateData = {};
+            if (categoryId && typeof categoryId === 'string' && categoryId.trim() !== '') {
+                updateData.categoryId = categoryId.trim();
+            }
+            if (name !== undefined && typeof name === 'string' && name.trim() !== '')
+                updateData.name = name.trim();
+            if (price !== undefined && !isNaN(Number(price)))
+                updateData.price = Number(price);
+            if (taxRate !== undefined && !isNaN(Number(taxRate)))
+                updateData.taxRate = Number(taxRate);
+            if (description !== undefined)
+                updateData.description = description;
+            if (isAvailable !== undefined)
+                updateData.isAvailable = Boolean(isAvailable);
+            if (image !== undefined)
+                updateData.image = image;
+            const dish = await dish_model_1.Dish.findOneAndUpdate({ _id: req.params.id, restaurantId: req.tenantId, isDeleted: false }, { $set: updateData }, { new: true, runValidators: true });
             if (!dish)
                 throw new AppError_1.NotFoundError('Dish not found');
             res.status(200).json({ success: true, data: dish });

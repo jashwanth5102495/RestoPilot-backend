@@ -27,7 +27,13 @@ export const errorHandler = (
     code = 'DUPLICATE_KEY';
   } else if (err.name === 'ValidationError') {
     statusCode = 400;
-    message = 'Mongoose validation error';
+    const mongooseErrors = (err as any).errors;
+    if (mongooseErrors) {
+      const messages = Object.values(mongooseErrors).map((e: any) => e.message);
+      message = messages.join(', ') || 'Validation error';
+    } else {
+      message = err.message || 'Validation error';
+    }
     code = 'VALIDATION_ERROR';
   } else if (err.name === 'JsonWebTokenError') {
     statusCode = 401;

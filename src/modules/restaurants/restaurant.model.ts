@@ -39,6 +39,11 @@ export interface IRestaurant extends Document {
   kdsSlug?: string;
   isInventoryEnabled: boolean;
   inventorySlug?: string;
+  isTablesEnabled: boolean;
+  isRecipesEnabled: boolean;
+  isReportsEnabled: boolean;
+  isNotificationsEnabled: boolean;
+  isBranchesEnabled: boolean;
   subscriptionStatus: SubscriptionStatus;
   subscriptionExpiresAt?: Date;
   parentRestaurantId?: Types.ObjectId;
@@ -72,16 +77,21 @@ const RestaurantSchema = new Schema<IRestaurant>(
     status: { type: String, enum: Object.values(RestaurantStatus), default: RestaurantStatus.ACTIVE },
     currency: { type: String, default: 'INR' },
     timezone: { type: String, default: 'Asia/Kolkata' },
-    isOnlineOrderingEnabled: { type: Boolean, default: false },
+    isOnlineOrderingEnabled: { type: Boolean, default: true },
     onlineSlug: { type: String, lowercase: true, trim: true },
-    isWaiterOrderingEnabled: { type: Boolean, default: false },
+    isWaiterOrderingEnabled: { type: Boolean, default: true },
     waiterSlug: { type: String, lowercase: true, trim: true },
-    isBillingEnabled: { type: Boolean, default: false },
+    isBillingEnabled: { type: Boolean, default: true },
     billingSlug: { type: String, lowercase: true, trim: true },
-    isKdsEnabled: { type: Boolean, default: false },
+    isKdsEnabled: { type: Boolean, default: true },
     kdsSlug: { type: String, lowercase: true, trim: true },
-    isInventoryEnabled: { type: Boolean, default: false },
+    isInventoryEnabled: { type: Boolean, default: true },
     inventorySlug: { type: String, lowercase: true, trim: true },
+    isTablesEnabled: { type: Boolean, default: true },
+    isRecipesEnabled: { type: Boolean, default: true },
+    isReportsEnabled: { type: Boolean, default: true },
+    isNotificationsEnabled: { type: Boolean, default: true },
+    isBranchesEnabled: { type: Boolean, default: true },
     subscriptionStatus: { type: String, enum: Object.values(SubscriptionStatus), default: SubscriptionStatus.PENDING },
     subscriptionExpiresAt: { type: Date },
     parentRestaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant' },

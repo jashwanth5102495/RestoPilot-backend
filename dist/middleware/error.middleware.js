@@ -24,7 +24,14 @@ const errorHandler = (err, req, res, next) => {
     }
     else if (err.name === 'ValidationError') {
         statusCode = 400;
-        message = 'Mongoose validation error';
+        const mongooseErrors = err.errors;
+        if (mongooseErrors) {
+            const messages = Object.values(mongooseErrors).map((e) => e.message);
+            message = messages.join(', ') || 'Validation error';
+        }
+        else {
+            message = err.message || 'Validation error';
+        }
         code = 'VALIDATION_ERROR';
     }
     else if (err.name === 'JsonWebTokenError') {
