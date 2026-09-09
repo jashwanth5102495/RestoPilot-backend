@@ -38,14 +38,31 @@ export class DishController {
 
   static async updateDish(req: Request, res: Response, next: NextFunction) {
     try {
-      if (req.body.categoryId) {
-        const category = await Category.findOne({ _id: req.body.categoryId, restaurantId: req.tenantId });
+      let { categoryId, name, price, taxRate, description, isAvailable, image } = req.body;
+
+      if (typeof categoryId === 'object' && categoryId?._id) {
+        categoryId = categoryId._id;
+      }
+
+      if (categoryId && typeof categoryId === 'string' && categoryId.trim() !== '') {
+        const category = await Category.findOne({ _id: categoryId.trim(), restaurantId: req.tenantId });
         if (!category) throw new NotFoundError('Category not found');
       }
 
+      const updateData: any = {};
+      if (categoryId && typeof categoryId === 'string' && categoryId.trim() !== '') {
+        updateData.categoryId = categoryId.trim();
+      }
+      if (name !== undefined && typeof name === 'string' && name.trim() !== '') updateData.name = name.trim();
+      if (price !== undefined && !isNaN(Number(price))) updateData.price = Number(price);
+      if (taxRate !== undefined && !isNaN(Number(taxRate))) updateData.taxRate = Number(taxRate);
+      if (description !== undefined) updateData.description = description;
+      if (isAvailable !== undefined) updateData.isAvailable = Boolean(isAvailable);
+      if (image !== undefined) updateData.image = image;
+
       const dish = await Dish.findOneAndUpdate(
         { _id: req.params.id, restaurantId: req.tenantId, isDeleted: false },
-        { $set: req.body },
+        { $set: updateData },
         { new: true, runValidators: true }
       );
       if (!dish) throw new NotFoundError('Dish not found');

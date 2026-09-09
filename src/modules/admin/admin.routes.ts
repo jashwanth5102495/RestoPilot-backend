@@ -19,6 +19,8 @@ router.use(authenticate, requireSuperAdmin);
 
 router.get('/restaurants', AdminController.getRestaurants);
 router.delete('/restaurants/:id', AdminController.deleteRestaurant);
+router.put('/restaurants/:id/features', AdminController.updateRestaurantFeatures);
+router.patch('/restaurants/:id/features', AdminController.updateRestaurantFeatures);
 router.get('/backup/export', AdminController.exportBackup);
 router.delete('/backup/wipe', AdminController.wipeBackup);
 router.get('/data-requests', AdminController.getDataRequests);

@@ -89,6 +89,45 @@ class AdminController {
             next(error);
         }
     }
+    static async updateRestaurantFeatures(req, res, next) {
+        try {
+            const { id } = req.params;
+            const { isBillingEnabled, isKdsEnabled, isWaiterOrderingEnabled, isOnlineOrderingEnabled, isInventoryEnabled, isTablesEnabled, isRecipesEnabled, isReportsEnabled, isNotificationsEnabled, isBranchesEnabled, } = req.body;
+            const updateData = {};
+            if (typeof isBillingEnabled === 'boolean')
+                updateData.isBillingEnabled = isBillingEnabled;
+            if (typeof isKdsEnabled === 'boolean')
+                updateData.isKdsEnabled = isKdsEnabled;
+            if (typeof isWaiterOrderingEnabled === 'boolean')
+                updateData.isWaiterOrderingEnabled = isWaiterOrderingEnabled;
+            if (typeof isOnlineOrderingEnabled === 'boolean')
+                updateData.isOnlineOrderingEnabled = isOnlineOrderingEnabled;
+            if (typeof isInventoryEnabled === 'boolean')
+                updateData.isInventoryEnabled = isInventoryEnabled;
+            if (typeof isTablesEnabled === 'boolean')
+                updateData.isTablesEnabled = isTablesEnabled;
+            if (typeof isRecipesEnabled === 'boolean')
+                updateData.isRecipesEnabled = isRecipesEnabled;
+            if (typeof isReportsEnabled === 'boolean')
+                updateData.isReportsEnabled = isReportsEnabled;
+            if (typeof isNotificationsEnabled === 'boolean')
+                updateData.isNotificationsEnabled = isNotificationsEnabled;
+            if (typeof isBranchesEnabled === 'boolean')
+                updateData.isBranchesEnabled = isBranchesEnabled;
+            const restaurant = await restaurant_model_1.Restaurant.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+            if (!restaurant) {
+                return res.status(404).json({ success: false, message: 'Restaurant not found' });
+            }
+            res.status(200).json({
+                success: true,
+                message: 'Restaurant feature access updated successfully',
+                data: restaurant
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
     static async exportBackup(req, res, next) {
         try {
             const { month, year } = req.query;
