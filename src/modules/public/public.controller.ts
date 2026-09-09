@@ -170,7 +170,6 @@ export class PublicController {
     try {
       const reqAny = req as any;
       const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-      const { enabled } = req.body;
 
       if (!restaurantId) {
         return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
@@ -181,18 +180,23 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'Restaurant not found' });
       }
 
-      restaurant.isOnlineOrderingEnabled = enabled;
-      
-      if (enabled && !restaurant.onlineSlug) {
+      const isEnabled = Boolean(req.body.enabled);
+      const updateData: any = { isOnlineOrderingEnabled: isEnabled };
+
+      if (isEnabled && !restaurant.onlineSlug) {
         const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-        restaurant.onlineSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'onlineSlug');
+        updateData.onlineSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'onlineSlug');
       }
 
-      await restaurant.save();
+      const updated = await Restaurant.findByIdAndUpdate(
+        restaurant._id,
+        { $set: updateData },
+        { new: true }
+      );
 
       res.status(200).json({
         success: true,
-        data: restaurant
+        data: updated
       });
     } catch (error) {
       next(error);
@@ -203,7 +207,6 @@ export class PublicController {
     try {
       const reqAny = req as any;
       const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-      const { enabled } = req.body;
 
       if (!restaurantId) {
         return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
@@ -214,18 +217,23 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'Restaurant not found' });
       }
 
-      restaurant.isWaiterOrderingEnabled = enabled;
-      
-      if (enabled && !restaurant.waiterSlug) {
+      const isEnabled = Boolean(req.body.enabled);
+      const updateData: any = { isWaiterOrderingEnabled: isEnabled };
+
+      if (isEnabled && !restaurant.waiterSlug) {
         const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-waiter';
-        restaurant.waiterSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'waiterSlug');
+        updateData.waiterSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'waiterSlug');
       }
 
-      await restaurant.save();
+      const updated = await Restaurant.findByIdAndUpdate(
+        restaurant._id,
+        { $set: updateData },
+        { new: true }
+      );
 
       res.status(200).json({
         success: true,
-        data: restaurant
+        data: updated
       });
     } catch (error) {
       next(error);
@@ -236,7 +244,6 @@ export class PublicController {
     try {
       const reqAny = req as any;
       const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-      const { enabled } = req.body;
 
       if (!restaurantId) {
         return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
@@ -247,18 +254,23 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'Restaurant not found' });
       }
 
-      restaurant.isBillingEnabled = enabled;
-      
-      if (enabled && !restaurant.billingSlug) {
+      const isEnabled = Boolean(req.body.enabled);
+      const updateData: any = { isBillingEnabled: isEnabled };
+
+      if (isEnabled && !restaurant.billingSlug) {
         const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-billing';
-        restaurant.billingSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'billingSlug');
+        updateData.billingSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'billingSlug');
       }
 
-      await restaurant.save();
+      const updated = await Restaurant.findByIdAndUpdate(
+        restaurant._id,
+        { $set: updateData },
+        { new: true }
+      );
 
       res.status(200).json({
         success: true,
-        data: restaurant
+        data: updated
       });
     } catch (error) {
       next(error);
@@ -269,7 +281,6 @@ export class PublicController {
     try {
       const reqAny = req as any;
       const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-      const { enabled } = req.body;
 
       if (!restaurantId) {
         return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
@@ -280,18 +291,23 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'Restaurant not found' });
       }
 
-      restaurant.isKdsEnabled = enabled;
-      
-      if (enabled && !restaurant.kdsSlug) {
+      const isEnabled = Boolean(req.body.enabled);
+      const updateData: any = { isKdsEnabled: isEnabled };
+
+      if (isEnabled && !restaurant.kdsSlug) {
         const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-kds';
-        restaurant.kdsSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'kdsSlug');
+        updateData.kdsSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'kdsSlug');
       }
 
-      await restaurant.save();
+      const updated = await Restaurant.findByIdAndUpdate(
+        restaurant._id,
+        { $set: updateData },
+        { new: true }
+      );
 
       res.status(200).json({
         success: true,
-        data: restaurant
+        data: updated
       });
     } catch (error) {
       next(error);
@@ -701,7 +717,6 @@ export class PublicController {
     try {
       const reqAny = req as any;
       const restaurantId = reqAny.user?.restaurantId || reqAny.tenantId;
-      const { enabled } = req.body;
 
       if (!restaurantId) {
         return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
@@ -712,18 +727,23 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'Restaurant not found' });
       }
 
-      restaurant.isInventoryEnabled = enabled;
-      
-      if (enabled && !restaurant.inventorySlug) {
+      const isEnabled = Boolean(req.body.enabled);
+      const updateData: any = { isInventoryEnabled: isEnabled };
+
+      if (isEnabled && !restaurant.inventorySlug) {
         const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-inventory';
-        restaurant.inventorySlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'inventorySlug');
+        updateData.inventorySlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'inventorySlug');
       }
 
-      await restaurant.save();
+      const updated = await Restaurant.findByIdAndUpdate(
+        restaurant._id,
+        { $set: updateData },
+        { new: true }
+      );
 
       res.status(200).json({
         success: true,
-        data: restaurant
+        data: updated
       });
     } catch (error) {
       next(error);

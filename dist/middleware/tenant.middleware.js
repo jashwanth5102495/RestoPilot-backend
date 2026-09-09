@@ -37,14 +37,30 @@ exports.requireTenant = void 0;
 const AppError_1 = require("../shared/errors/AppError");
 const user_model_1 = require("../modules/users/user.model");
 const Sentry = __importStar(require("@sentry/node"));
-const requireTenant = (req, res, next) => {
+const requireTenant = async (req, res, next) => {
     const reqAny = req;
     if (!reqAny.user) {
         return next(new AppError_1.UnauthorizedError('Not authenticated'));
     }
-    // Super admins are not strictly bound to one tenant for their own operations,
-    // but if they operate on a specific tenant, it should be specified (e.g. via params or body).
-    // For normal users, they MUST have a restaurantId in their token.
+    if (!reqAny.user.restaurantId && reqAny.user.userId) {
+        try {
+            const { User } = await Promise.resolve().then(() => __importStar(require('../modules/users/user.model')));
+            const dbUser = await User.findById(reqAny.user.userId).lean();
+            if (dbUser?.restaurantId) {
+                reqAny.user.restaurantId = dbUser.restaurantId.toString();
+            }
+            else {
+                const { Restaurant } = await Promise.resolve().then(() => __importStar(require('../modules/restaurants/restaurant.model')));
+                const dbRest = await Restaurant.findOne({ ownerId: reqAny.user.userId }).lean();
+                if (dbRest) {
+                    reqAny.user.restaurantId = dbRest._id.toString();
+                }
+            }
+        }
+        catch (err) {
+            console.error('Failed to resolve restaurant context in requireTenant:', err);
+        }
+    }
     if (reqAny.user.role !== user_model_1.UserRole.SUPER_ADMIN && !reqAny.user.restaurantId) {
         return next(new AppError_1.ForbiddenError('User does not belong to a restaurant'));
     }
