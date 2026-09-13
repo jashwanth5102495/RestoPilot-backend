@@ -38,6 +38,8 @@ router.get('/billing/:slug/online-orders', PublicController.getBillingOnlineOrde
 router.post('/billing/:slug/online-orders/:orderId/settle', PublicController.settleBillingOnlineOrder);
 router.patch('/billing/:slug/online-orders/:orderId/status', PublicController.updateBillingOnlineOrderStatus);
 router.patch('/billing/:slug/dishes/:dishId/availability', PublicController.toggleDishAvailability);
+router.get('/billing/:slug/qr-table-orders', PublicController.getBillingQrTableOrders);
+router.post('/billing/:slug/qr-table-orders/:orderId/settle', PublicController.settleBillingQrTableOrder);
 
 // Public routes for KDS portal
 router.get('/kds/:slug/orders', PublicController.getKdsOrders);
