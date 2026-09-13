@@ -331,7 +331,10 @@ export class PublicController {
         restaurantId: restaurant._id, 
         orderStatus: { $in: [OrderStatus.PLACED, OrderStatus.PREPARING] },
         'items.0': { $exists: true }
-      }).populate('tableId', 'name tableNumber').lean();
+      })
+        .populate('tableId', 'name tableNumber')
+        .sort({ createdAt: -1 })
+        .lean();
 
       res.status(200).json({ success: true, data: orders });
     } catch (error) {
