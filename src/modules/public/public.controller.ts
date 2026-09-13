@@ -913,20 +913,32 @@ export class PublicController {
         order = await OrderService.startTableOrder(restaurant._id.toString(), tableId as string, null as any);
       }
 
+      // Map items to include quantityChange expected by updateOrderItems
+      const itemUpdates = (items || []).map((it: any) => ({
+        dishId: it.dishId,
+        quantityChange: it.quantityChange ?? it.quantity ?? 1
+      }));
+
       // Update items
-      if (items && items.length > 0) {
-        order = await OrderService.updateOrderItems(restaurant._id.toString(), order._id.toString(), items, null as any);
+      if (itemUpdates.length > 0) {
+        order = await OrderService.updateOrderItems(restaurant._id.toString(), order._id.toString(), itemUpdates, null as any);
       }
+
+      // Mark order source as TABLE_QR so KDS and Billing can identify it
+      order.orderSource = OrderSource.TABLE_QR;
+      await order.save();
 
       // Send to kitchen
       order = await OrderService.sendOrder(restaurant._id.toString(), order._id.toString(), null as any);
+
+      // Populate tableId for response
+      await order.populate('tableId', 'name tableNumber');
 
       res.status(200).json({ success: true, data: order });
     } catch (error) {
       next(error);
     }
   }
-
   static async getBillingQrTableOrders(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
@@ -937,7 +949,10 @@ export class PublicController {
 
       const orders = await Order.find({
         restaurantId: restaurant._id,
-        orderSource: OrderSource.TABLE_QR,
+        $or: [
+          { orderSource: OrderSource.TABLE_QR },
+          { tableId: { $ne: null } }
+        ],
         orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] }
       })
         .populate('tableId', 'name tableNumber')
