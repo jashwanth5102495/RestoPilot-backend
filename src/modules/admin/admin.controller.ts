@@ -73,6 +73,7 @@ export class AdminController {
         isKdsEnabled,
         isWaiterOrderingEnabled,
         isOnlineOrderingEnabled,
+        isTableQrEnabled,
         isInventoryEnabled,
         isTablesEnabled,
         isRecipesEnabled,
@@ -86,6 +87,7 @@ export class AdminController {
       if (typeof isKdsEnabled === 'boolean') updateData.isKdsEnabled = isKdsEnabled;
       if (typeof isWaiterOrderingEnabled === 'boolean') updateData.isWaiterOrderingEnabled = isWaiterOrderingEnabled;
       if (typeof isOnlineOrderingEnabled === 'boolean') updateData.isOnlineOrderingEnabled = isOnlineOrderingEnabled;
+      if (typeof isTableQrEnabled === 'boolean') updateData.isTableQrEnabled = isTableQrEnabled;
       if (typeof isInventoryEnabled === 'boolean') updateData.isInventoryEnabled = isInventoryEnabled;
       if (typeof isTablesEnabled === 'boolean') updateData.isTablesEnabled = isTablesEnabled;
       if (typeof isRecipesEnabled === 'boolean') updateData.isRecipesEnabled = isRecipesEnabled;

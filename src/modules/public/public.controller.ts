@@ -6,10 +6,10 @@ import { Order, OrderSource, OrderStatus, PaymentStatus, PaymentMethod } from '.
 import { Category } from '../categories/category.model';
 
 export class PublicController {
-  public static getRestaurantSlugFilter(slug: string | string[] | any, field: 'waiterSlug' | 'billingSlug' | 'onlineSlug' | 'kdsSlug' | 'inventorySlug' = 'waiterSlug') {
+  public static getRestaurantSlugFilter(slug: string | string[] | any, field: 'waiterSlug' | 'billingSlug' | 'onlineSlug' | 'kdsSlug' | 'inventorySlug' | 'tableQrSlug' = 'waiterSlug') {
     const raw = Array.isArray(slug) ? slug[0] : (typeof slug === 'string' ? slug : '');
     const cleaned = (raw || '').trim().toLowerCase();
-    const base = cleaned.replace(/-(waiter|billing|kds|order|pos|inventory)(-\d+)?$/, '');
+    const base = cleaned.replace(/-(waiter|billing|kds|order|pos|inventory|qr)(-\d+)?$/, '');
     const isObjectId = mongoose.Types.ObjectId.isValid(cleaned);
     
     const candidateSlugs = Array.from(new Set([cleaned, base]));
@@ -26,7 +26,8 @@ export class PublicController {
         { billingSlug: s },
         { onlineSlug: s },
         { kdsSlug: s },
-        { inventorySlug: s }
+        { inventorySlug: s },
+        { tableQrSlug: s }
       );
     }
     if (isObjectId) {
@@ -819,6 +820,106 @@ export class PublicController {
       }
 
       res.status(201).json({ success: true, data: purchase });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async toggleTableQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      const restaurant = await PublicController.resolveRestaurantFromReq(req);
+      if (!restaurant) {
+        return res.status(400).json({ success: false, message: 'Restaurant context is missing' });
+      }
+
+      const isEnabled = Boolean(req.body.enabled);
+      const updateData: any = { isTableQrEnabled: isEnabled };
+
+      if (isEnabled && !restaurant.tableQrSlug) {
+        const baseSlug = restaurant.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-qr';
+        updateData.tableQrSlug = await PublicController.generateUniqueSlug(Restaurant, baseSlug, 'tableQrSlug');
+      }
+
+      const updated = await Restaurant.findByIdAndUpdate(
+        restaurant._id,
+        { $set: updateData },
+        { new: true }
+      );
+
+      res.status(200).json({
+        success: true,
+        data: updated
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getTableQrMenu(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, tableId } = req.params;
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'tableQrSlug')).lean();
+      
+      if (!restaurant || !restaurant.isTableQrEnabled) {
+        return res.status(404).json({ success: false, message: 'Table QR ordering not found or disabled' });
+      }
+
+      const { Table } = await import('../tables/table.model');
+      const table = await Table.findOne({ _id: tableId, restaurantId: restaurant._id }).lean();
+      if (!table) {
+        return res.status(404).json({ success: false, message: 'Table not found' });
+      }
+
+      const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
+      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+        .populate('categoryId')
+        .sort({ displayOrder: 1, createdAt: -1 })
+        .lean();
+
+      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, address: restaurant.address, phone: restaurant.phone, gstNumber: restaurant.gstNumber, logo: restaurant.logo, currency: restaurant.currency }, table, categories, dishes } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async placeTableQrOrder(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, tableId } = req.params;
+      const { items } = req.body;
+
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'tableQrSlug'));
+      if (!restaurant || !restaurant.isTableQrEnabled) {
+        return res.status(404).json({ success: false, message: 'Table QR ordering not found or disabled' });
+      }
+
+      const { Table } = await import('../tables/table.model');
+      const table = await Table.findOne({ _id: tableId, restaurantId: restaurant._id }).lean();
+      if (!table) {
+        return res.status(404).json({ success: false, message: 'Table not found' });
+      }
+
+      const { OrderService } = await import('../orders/order.service');
+
+      // Check if table has active order, if not start one
+      let order = await Order.findOne({ 
+        restaurantId: restaurant._id, 
+        tableId: tableId as string, 
+        orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] } 
+      });
+
+      if (!order) {
+        order = await OrderService.startTableOrder(restaurant._id.toString(), tableId as string, null as any);
+      }
+
+      // Update items
+      if (items && items.length > 0) {
+        order = await OrderService.updateOrderItems(restaurant._id.toString(), order._id.toString(), items, null as any);
+      }
+
+      // Send to kitchen
+      order = await OrderService.sendOrder(restaurant._id.toString(), order._id.toString(), null as any);
+
+      res.status(200).json({ success: true, data: order });
     } catch (error) {
       next(error);
     }
