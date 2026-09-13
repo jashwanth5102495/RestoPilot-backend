@@ -330,7 +330,7 @@ export class PublicController {
       const orders = await Order.find({ 
         restaurantId: restaurant._id, 
         orderStatus: { $in: [OrderStatus.PLACED, OrderStatus.PREPARING] } 
-      }).populate('tableId', 'name').lean();
+      }).populate('tableId', 'name tableNumber').lean();
 
       res.status(200).json({ success: true, data: orders });
     } catch (error) {
