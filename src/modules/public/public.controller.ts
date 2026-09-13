@@ -169,8 +169,10 @@ export class PublicController {
 
   private static async resolveRestaurantFromReq(req: Request) {
     const reqAny = req as any;
+    console.log("RESOLVING RESTAURANT FOR:", reqAny.user, reqAny.tenantId, reqAny.body?.restaurantId, reqAny.query?.restaurantId);
     let restaurantId = reqAny.user?.restaurantId || reqAny.tenantId || reqAny.body?.restaurantId || reqAny.query?.restaurantId;
 
+    console.log("Found restaurantId:", restaurantId);
     if (restaurantId) {
       const rest = await Restaurant.findById(restaurantId);
       if (rest) return rest;
