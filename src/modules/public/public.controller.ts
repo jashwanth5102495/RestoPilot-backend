@@ -900,6 +900,34 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'Table not found' });
       }
 
+      if (!items || items.length === 0) {
+        return res.status(400).json({ success: false, message: 'Cannot place an empty order' });
+      }
+
+      const { Dish } = await import('../dishes/dish.model');
+      const orderItems: any[] = [];
+
+      for (const item of items) {
+        const dish = await Dish.findOne({ _id: item.dishId, restaurantId: restaurant._id }).lean();
+        if (dish) {
+          const qty = Number(item.quantity || item.quantityChange || 1);
+          const unitPrice = Number(dish.price || 0);
+          const taxRate = 5;
+          orderItems.push({
+            dishId: dish._id,
+            dishName: dish.name,
+            quantity: qty,
+            unitPrice,
+            taxRate,
+            lineTotal: Number((unitPrice * qty).toFixed(2))
+          });
+        }
+      }
+
+      if (orderItems.length === 0) {
+        return res.status(400).json({ success: false, message: 'No valid dishes found in order' });
+      }
+
       const { OrderService } = await import('../orders/order.service');
 
       // Check if table has active order, if not start one
@@ -913,23 +941,25 @@ export class PublicController {
         order = await OrderService.startTableOrder(restaurant._id.toString(), tableId as string, null as any);
       }
 
-      // Map items to include quantityChange expected by updateOrderItems
-      const itemUpdates = (items || []).map((it: any) => ({
-        dishId: it.dishId,
-        quantityChange: it.quantityChange ?? it.quantity ?? 1
-      }));
-
-      // Update items
-      if (itemUpdates.length > 0) {
-        order = await OrderService.updateOrderItems(restaurant._id.toString(), order._id.toString(), itemUpdates, null as any);
-      }
-
-      // Mark order source as TABLE_QR so KDS and Billing can identify it
+      // Set exact items ordered by customer for this order
+      order.items = orderItems as any;
+      order.subtotal = Number(order.items.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2));
+      order.cgst = Number((order.subtotal * 0.025).toFixed(2));
+      order.sgst = Number((order.subtotal * 0.025).toFixed(2));
+      order.tax = Number((order.cgst + order.sgst).toFixed(2));
+      order.total = Number((order.subtotal + order.tax - (order.discount || 0)).toFixed(2));
       order.orderSource = OrderSource.TABLE_QR;
+      order.orderStatus = OrderStatus.PLACED;
+
+      order.orderActivity.push({
+        action: 'ORDER_SENT',
+        timestamp: new Date(),
+        details: `Customer placed QR order for ${table.name || 'Table ' + table.tableNumber}`
+      } as any);
+
       await order.save();
 
-      // Send to kitchen
-      order = await OrderService.sendOrder(restaurant._id.toString(), order._id.toString(), null as any);
+      // Real-time updates handled via polling on frontend
 
       // Populate tableId for response
       await order.populate('tableId', 'name tableNumber');
