@@ -39,6 +39,8 @@ export interface IRestaurant extends Document {
   kdsSlug?: string;
   isInventoryEnabled: boolean;
   inventorySlug?: string;
+  isTableQrEnabled: boolean;
+  tableQrSlug?: string;
   isTablesEnabled: boolean;
   isRecipesEnabled: boolean;
   isReportsEnabled: boolean;
@@ -87,6 +89,8 @@ const RestaurantSchema = new Schema<IRestaurant>(
     kdsSlug: { type: String, lowercase: true, trim: true },
     isInventoryEnabled: { type: Boolean, default: true },
     inventorySlug: { type: String, lowercase: true, trim: true },
+    isTableQrEnabled: { type: Boolean, default: true },
+    tableQrSlug: { type: String, lowercase: true, trim: true },
     isTablesEnabled: { type: Boolean, default: true },
     isRecipesEnabled: { type: Boolean, default: true },
     isReportsEnabled: { type: Boolean, default: true },
@@ -112,6 +116,7 @@ RestaurantSchema.index({ waiterSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ billingSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ kdsSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ inventorySlug: 1 }, { unique: true, sparse: true });
+RestaurantSchema.index({ tableQrSlug: 1 }, { unique: true, sparse: true });
 RestaurantSchema.index({ parentRestaurantId: 1 });
 
 export const Restaurant = mongoose.model<IRestaurant>('Restaurant', RestaurantSchema);

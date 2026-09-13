@@ -9,12 +9,17 @@ const router = Router();
 router.get('/restaurants/:slug', PublicController.getRestaurantMenu);
 router.post('/restaurants/:slug/orders', PublicController.placeOrder);
 
+// Public routes for customer table QR ordering
+router.get('/table-qr/:slug/tables/:tableId/menu', PublicController.getTableQrMenu);
+router.post('/table-qr/:slug/tables/:tableId/order', PublicController.placeTableQrOrder);
+
 // Protected routes for owners
 router.post('/settings/online-ordering', authenticate, requireTenant, PublicController.toggleOnlineOrdering);
 router.post('/settings/waiter-ordering', authenticate, requireTenant, PublicController.toggleWaiterOrdering);
 router.post('/settings/billing-ordering', authenticate, requireTenant, PublicController.toggleBillingOrdering);
 router.post('/settings/kds', authenticate, requireTenant, PublicController.toggleKds);
 router.post('/settings/inventory', authenticate, requireTenant, PublicController.toggleInventory);
+router.post('/settings/table-qr', authenticate, requireTenant, PublicController.toggleTableQr);
 
 // Public routes for waiter portal
 router.get('/waiter/:slug/tables', PublicController.getWaiterTables);
