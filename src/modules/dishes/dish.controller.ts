@@ -53,7 +53,13 @@ export class DishController {
       if (categoryId && typeof categoryId === 'string' && categoryId.trim() !== '') {
         updateData.categoryId = categoryId.trim();
       }
-      if (name !== undefined && typeof name === 'string' && name.trim() !== '') updateData.name = name.trim();
+      if (name !== undefined && typeof name === 'string' && name.trim() !== '') {
+        const existingDish = await Dish.findOne({ restaurantId: req.tenantId, name: name.trim(), _id: { $ne: req.params.id }, isDeleted: false });
+        if (existingDish) {
+          return res.status(400).json({ success: false, message: 'A dish with this name already exists' });
+        }
+        updateData.name = name.trim();
+      }
       if (price !== undefined && !isNaN(Number(price))) updateData.price = Number(price);
       if (taxRate !== undefined && !isNaN(Number(taxRate))) updateData.taxRate = Number(taxRate);
       if (description !== undefined) updateData.description = description;
