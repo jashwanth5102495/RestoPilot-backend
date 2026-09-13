@@ -25,7 +25,8 @@ export enum PaymentStatus {
 
 export enum OrderSource {
   IN_STORE = 'IN_STORE',
-  ONLINE = 'ONLINE'
+  ONLINE = 'ONLINE',
+  TABLE_QR = 'TABLE_QR'
 }
 
 export interface IOrderItem {
