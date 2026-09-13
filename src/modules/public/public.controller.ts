@@ -614,6 +614,20 @@ export class PublicController {
       updatedOrder.paymentMethod = paymentMethod || 'CASH';
       await updatedOrder.save();
 
+      // Free the table if no remaining active orders exist for this table
+      try {
+        const { Table, TableStatus } = await import('../tables/table.model');
+        const remainingActive = await Order.countDocuments({
+          restaurantId: restaurant._id,
+          tableId: order.tableId,
+          orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] },
+          _id: { $ne: order._id }
+        });
+        if (remainingActive === 0) {
+          await Table.findByIdAndUpdate(order.tableId, { status: TableStatus.FREE });
+        }
+      } catch {}
+
       const { emitToTenant } = await import('../../shared/utils/socket');
       emitToTenant(restaurant._id.toString(), 'order_status_updated', updatedOrder);
 
