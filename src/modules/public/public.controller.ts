@@ -896,7 +896,30 @@ export class PublicController {
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
 
-      res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, address: restaurant.address, phone: restaurant.phone, gstNumber: restaurant.gstNumber, logo: restaurant.logo, currency: restaurant.currency }, table, categories, dishes } });
+      // Fetch active order for this table if customer already placed items
+      const activeOrder = await Order.findOne({
+        restaurantId: restaurant._id,
+        tableId: tableId as string,
+        orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] }
+      }).lean();
+
+      res.status(200).json({ 
+        success: true, 
+        data: { 
+          restaurant: { 
+            name: restaurant.name, 
+            address: restaurant.address, 
+            phone: restaurant.phone, 
+            gstNumber: restaurant.gstNumber, 
+            logo: restaurant.logo, 
+            currency: restaurant.currency 
+          }, 
+          table, 
+          categories, 
+          dishes,
+          activeOrder
+        } 
+      });
     } catch (error) {
       next(error);
     }
@@ -959,9 +982,24 @@ export class PublicController {
         order = await OrderService.startTableOrder(restaurant._id.toString(), tableId as string, null as any);
       }
 
-      // Set exact items ordered by customer for this order
-      order.items = orderItems as any;
-      order.subtotal = Number(order.items.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2));
+      // Aggregate newly ordered items with existing active table order items
+      const currentItems = order.items || [];
+      for (const newItem of orderItems) {
+        const existingIndex = currentItems.findIndex(
+          (i: any) => i.dishId?.toString() === newItem.dishId?.toString() || i.dishName === newItem.dishName
+        );
+        if (existingIndex >= 0) {
+          currentItems[existingIndex].quantity += newItem.quantity;
+          currentItems[existingIndex].lineTotal = Number(
+            (currentItems[existingIndex].unitPrice * currentItems[existingIndex].quantity).toFixed(2)
+          );
+        } else {
+          currentItems.push(newItem as any);
+        }
+      }
+
+      order.items = currentItems as any;
+      order.subtotal = Number(order.items.reduce((sum: number, item: any) => sum + (item.lineTotal || 0), 0).toFixed(2));
       order.cgst = Number((order.subtotal * 0.025).toFixed(2));
       order.sgst = Number((order.subtotal * 0.025).toFixed(2));
       order.tax = Number((order.cgst + order.sgst).toFixed(2));
@@ -972,12 +1010,20 @@ export class PublicController {
       order.orderActivity.push({
         action: 'ORDER_SENT',
         timestamp: new Date(),
-        details: `Customer placed QR order for ${table.name || 'Table ' + table.tableNumber}`
+        details: `Customer added QR items for ${table.name || 'Table ' + table.tableNumber}`
       } as any);
 
       await order.save();
 
-      // Real-time updates handled via polling on frontend
+      // Emit real-time notifications
+      try {
+        const { emitToTenant } = await import('../../shared/utils/socket');
+        emitToTenant(restaurant._id.toString(), 'order_sent', { order });
+        emitToTenant(restaurant._id.toString(), 'new_qr_order', { order });
+        emitToTenant(restaurant._id.toString(), 'order_updated', { order });
+      } catch (sockErr) {
+        console.error('Failed to emit QR order socket notification:', sockErr);
+      }
 
       // Populate tableId for response
       await order.populate('tableId', 'name tableNumber');
