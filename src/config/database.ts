@@ -5,8 +5,13 @@ import * as Sentry from '@sentry/node';
 
 export const connectDatabase = async (): Promise<void> => {
   try {
-    await mongoose.connect(env.MONGODB_URI);
-    logger.info('✅ Successfully connected to MongoDB');
+    await mongoose.connect(env.MONGODB_URI, {
+      maxPoolSize: 100,
+      minPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    logger.info('✅ Successfully connected to MongoDB (High-Concurrency Connection Pool Ready)');
 
     // Ensure Super Admin exists
     const { User, UserRole, UserStatus } = await import('../modules/users/user.model');

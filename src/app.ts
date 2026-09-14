@@ -28,12 +28,6 @@ import purchaseRoutes from './modules/purchases/purchase.routes';
 const app = express();
 app.set('trust proxy', 1);
 
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { success: false, message: 'Too many requests, please try again later.' }
-});
-
 // Middlewares
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({
@@ -43,15 +37,15 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Request ID Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   const reqId = req.headers['x-request-id'] || uuidv4();
   (req as any).id = reqId as string;
   res.setHeader('X-Request-ID', (req as any).id);
-  Sentry.setTag('reqId', (req as any).id);
+  if (process.env.SENTRY_DSN) Sentry.setTag('reqId', (req as any).id);
   next();
 });
 
@@ -66,7 +60,6 @@ app.use(pinoHttp({
   },
   serializers: {
     req: (req) => {
-      // Safely serialize request without sensitive data
       return {
         id: (req as any).id,
         method: req.method,
@@ -103,8 +96,8 @@ app.get('/ready', (req: Request, res: Response) => {
   });
 });
 
-// Routes
-app.use('/api/v1/auth', apiLimiter, authRoutes);
+// Routes — ZERO rate limits applied across all routes for unlimited simultaneous table orders
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/dishes', dishRoutes);
 app.use('/api/v1/ingredients', ingredientRoutes);
@@ -119,11 +112,13 @@ app.use('/api/v1/recipes', recipeRoutes);
 app.use('/api/v1/suppliers', supplierRoutes);
 import tableRoutes from './modules/tables/table.routes';
 import staffRoutes from './modules/users/staff.routes';
+import backupRoutes from './modules/backup/backup.routes';
 
 // ...
 app.use('/api/v1/purchases', purchaseRoutes);
 app.use('/api/v1/tables', tableRoutes);
 app.use('/api/v1/staff', staffRoutes);
+app.use('/api/v1', backupRoutes);
 
 app.use('/api/v1', (req: Request, res: Response) => {
   res.status(404).json({ success: false, message: 'API Route Not Found' });
