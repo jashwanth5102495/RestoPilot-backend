@@ -14,7 +14,7 @@ export class SequenceService {
     const counter = await Counter.findOneAndUpdate(
       { restaurantId, sequenceType },
       { $inc: { currentValue: 1 } },
-      { new: true, upsert: true, session }
+      { returnDocument: 'after', upsert: true, session }
     );
     return counter.currentValue;
   }

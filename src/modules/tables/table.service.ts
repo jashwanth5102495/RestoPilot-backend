@@ -89,7 +89,7 @@ export class TableService {
     const table = await Table.findOneAndUpdate(
       { _id: tableId, restaurantId },
       { status },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!table) throw new ValidationError('Table not found');
     emitToTenant(restaurantId, 'table_status_updated', { tableId, status });
@@ -103,7 +103,7 @@ export class TableService {
     const table = await Table.findOneAndUpdate(
       { _id: tableId, restaurantId },
       { name: newName.trim() },
-      { new: true }
+      { returnDocument: 'after' }
     );
     if (!table) throw new ValidationError('Table not found');
     emitToTenant(restaurantId, 'tables_updated', {}); // Tell clients a table was renamed

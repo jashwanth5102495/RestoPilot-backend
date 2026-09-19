@@ -69,7 +69,7 @@ export class DishController {
       const dish = await Dish.findOneAndUpdate(
         { _id: req.params.id, restaurantId: req.tenantId, isDeleted: false },
         { $set: updateData },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
       );
       if (!dish) throw new NotFoundError('Dish not found');
       res.status(200).json({ success: true, data: dish });
@@ -83,7 +83,7 @@ export class DishController {
       const dish = await Dish.findOneAndUpdate(
         { _id: req.params.id, restaurantId: req.tenantId, isDeleted: false },
         { $set: { isDeleted: true } },
-        { new: true }
+        { returnDocument: 'after' }
       );
       if (!dish) throw new NotFoundError('Dish not found');
       res.status(200).json({ success: true, data: {} });

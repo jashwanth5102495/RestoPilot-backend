@@ -50,7 +50,7 @@ export class IngredientController {
       const ingredient = await Ingredient.findOneAndUpdate(
         { _id: req.params.id, restaurantId: req.tenantId, isDeleted: false },
         { $set: req.body },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
       );
       if (!ingredient) throw new NotFoundError('Ingredient not found');
       res.status(200).json({ success: true, data: ingredient });
@@ -64,7 +64,7 @@ export class IngredientController {
       const ingredient = await Ingredient.findOneAndUpdate(
         { _id: req.params.id, restaurantId: req.tenantId, isDeleted: false },
         { $set: { isDeleted: true } },
-        { new: true }
+        { returnDocument: 'after' }
       );
       if (!ingredient) throw new NotFoundError('Ingredient not found');
       res.status(200).json({ success: true, data: {} });

@@ -46,7 +46,7 @@ export class SupplierController {
       const supplier = await Supplier.findOneAndUpdate(
         { _id: id, restaurantId: req.tenantId, isDeleted: false },
         { name, phone, email, address, gstNumber, notes, isActive },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       if (!supplier) {
@@ -65,7 +65,7 @@ export class SupplierController {
       const supplier = await Supplier.findOneAndUpdate(
         { _id: id, restaurantId: req.tenantId, isDeleted: false },
         { isDeleted: true },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       if (!supplier) {

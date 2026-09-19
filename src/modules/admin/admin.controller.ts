@@ -98,7 +98,7 @@ export class AdminController {
       const restaurant = await Restaurant.findByIdAndUpdate(
         id,
         { $set: updateData },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       if (!restaurant) {
@@ -265,13 +265,53 @@ export class AdminController {
       await SystemSettings.findOneAndUpdate(
         { key: 'telegramBotToken' },
         { value: token },
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: 'after' }
       );
       
       res.status(200).json({
         success: true,
         message: 'Telegram Bot Token saved successfully.',
         data: { botName: botInfo.username }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getSubscriptionPrice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { SystemSettings } = await import('../settings/system-settings.model');
+      const setting = await SystemSettings.findOne({ key: 'subscriptionMonthlyPrice' });
+      const amount = setting ? setting.value : 5000;
+      
+      res.status(200).json({
+        success: true,
+        data: { amount }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateSubscriptionPrice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { amount } = req.body;
+      
+      if (typeof amount !== 'number' || amount < 100) {
+        return res.status(400).json({ success: false, message: 'Invalid subscription amount (minimum 100)' });
+      }
+
+      const { SystemSettings } = await import('../settings/system-settings.model');
+      await SystemSettings.findOneAndUpdate(
+        { key: 'subscriptionMonthlyPrice' },
+        { value: amount },
+        { upsert: true }
+      );
+      
+      res.status(200).json({
+        success: true,
+        message: 'Subscription price updated successfully',
+        data: { amount }
       });
     } catch (error) {
       next(error);

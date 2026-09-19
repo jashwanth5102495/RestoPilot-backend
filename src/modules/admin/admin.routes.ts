@@ -31,4 +31,7 @@ router.delete('/agents/:id', AdminController.deleteAgent);
 router.get('/telegram/status', AdminController.getTelegramStatus);
 router.post('/telegram/token', AdminController.saveTelegramToken);
 
+router.get('/subscription-price', AdminController.getSubscriptionPrice);
+router.put('/subscription-price', AdminController.updateSubscriptionPrice);
+
 export default router;

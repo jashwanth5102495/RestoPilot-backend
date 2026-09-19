@@ -76,9 +76,11 @@ export class InventoryService {
     unitCostBaseUnit: number,
     purchaseId: Types.ObjectId,
     createdBy: Types.ObjectId,
-    session: ClientSession
+    session?: ClientSession
   ): Promise<IIngredient> {
-    const ingredient = await Ingredient.findOne({ _id: ingredientId, restaurantId }).session(session);
+    let ingredientQuery = Ingredient.findOne({ _id: ingredientId, restaurantId });
+    if (session) ingredientQuery = ingredientQuery.session(session);
+    const ingredient = await ingredientQuery;
     if (!ingredient) throw new AppError('Ingredient not found', 404);
 
     const oldStock = ingredient.currentStock > 0 ? ingredient.currentStock : 0;

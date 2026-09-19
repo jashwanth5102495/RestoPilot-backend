@@ -216,7 +216,7 @@ export class PublicController {
       const updated = await Restaurant.findByIdAndUpdate(
         restaurant._id,
         { $set: updateData },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       res.status(200).json({
@@ -246,7 +246,7 @@ export class PublicController {
       const updated = await Restaurant.findByIdAndUpdate(
         restaurant._id,
         { $set: updateData },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       res.status(200).json({
@@ -276,7 +276,7 @@ export class PublicController {
       const updated = await Restaurant.findByIdAndUpdate(
         restaurant._id,
         { $set: updateData },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       res.status(200).json({
@@ -306,7 +306,7 @@ export class PublicController {
       const updated = await Restaurant.findByIdAndUpdate(
         restaurant._id,
         { $set: updateData },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       res.status(200).json({
@@ -753,7 +753,7 @@ export class PublicController {
       const updated = await Restaurant.findByIdAndUpdate(
         restaurant._id,
         { $set: updateData },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       res.status(200).json({
@@ -863,7 +863,7 @@ export class PublicController {
       const updated = await Restaurant.findByIdAndUpdate(
         restaurant._id,
         { $set: updateData },
-        { new: true }
+        { returnDocument: 'after' }
       );
 
       res.status(200).json({

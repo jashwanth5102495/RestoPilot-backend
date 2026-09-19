@@ -57,7 +57,7 @@ export class CategoryController {
       const category = await Category.findOneAndUpdate(
         { _id: req.params.id, restaurantId: req.tenantId },
         { $set: req.body },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
       );
       if (!category) throw new NotFoundError('Category not found');
       res.status(200).json({ success: true, data: category });

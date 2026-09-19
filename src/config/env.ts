@@ -13,6 +13,8 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   FRONTEND_URL: z.string().default('http://localhost:5173'),
   LOG_LEVEL: z.string().default('info'),
+  CASHFREE_APP_ID: z.string().optional(),
+  CASHFREE_SECRET_KEY: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);
