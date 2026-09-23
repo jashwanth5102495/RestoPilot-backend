@@ -18,5 +18,6 @@ router.post('/:orderId/send', authorize(UserRole.OWNER, UserRole.MANAGER, UserRo
 
 // Kitchen actions
 router.patch('/:orderId/status', authorize(UserRole.OWNER, UserRole.MANAGER, UserRole.KITCHEN), OrderController.updateOrderStatus);
+router.post('/:orderId/approve-bill', authorize(UserRole.OWNER, UserRole.MANAGER), OrderController.approveBillRequest);
 
 export default router;

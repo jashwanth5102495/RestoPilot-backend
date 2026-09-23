@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Order } from './order.model';
+import { Order, OrderStatus, PaymentStatus, PaymentMethod } from './order.model';
 import { OrderService } from './order.service';
 
 export class OrderController {
@@ -84,6 +84,42 @@ export class OrderController {
           ? await OrderService.updateKitchenBatchStatus(req.tenantId as string, orderId as string, req.body.batchId, status, (req as any).user.userId)
           : await OrderService.updateOrderStatus(req.tenantId as string, orderId as string, status, (req as any).user.userId);
       res.json({ success: true, data: order });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async approveBillRequest(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { orderId } = req.params;
+      const order = await Order.findOne({ _id: orderId, restaurantId: req.tenantId });
+      if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+      if (order.billRequestStatus !== 'REQUESTED') {
+        return res.status(400).json({ success: false, message: 'No pending bill request for this order' });
+      }
+
+      order.paymentMethod = order.billRequestedPaymentMethod === 'ONLINE'
+        ? PaymentMethod.ONLINE
+        : PaymentMethod.CASH;
+      order.paymentStatus = PaymentStatus.PAID;
+      order.billRequestStatus = 'APPROVED';
+      order.billApprovedAt = new Date();
+      await order.save();
+
+      const completedOrder = await OrderService.updateOrderStatus(
+        req.tenantId as string,
+        orderId as string,
+        OrderStatus.COMPLETED,
+        (req as any).user.userId
+      );
+
+      completedOrder.paymentMethod = order.paymentMethod;
+      completedOrder.paymentStatus = PaymentStatus.PAID;
+      completedOrder.billRequestStatus = 'APPROVED';
+      completedOrder.billApprovedAt = order.billApprovedAt;
+      await completedOrder.save();
+
+      res.json({ success: true, data: completedOrder });
     } catch (error) {
       next(error);
     }

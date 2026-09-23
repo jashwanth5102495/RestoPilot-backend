@@ -497,10 +497,28 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'No active order found for this table' });
       }
 
-      const { OrderService } = await import('../orders/order.service');
-      const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), OrderStatus.COMPLETED, null as any);
+      const paymentMethod = req.body.paymentMethod;
+      if (paymentMethod !== 'CASH' && paymentMethod !== 'ONLINE') {
+        return res.status(400).json({ success: false, message: 'Payment method must be CASH or ONLINE' });
+      }
 
-      res.status(200).json({ success: true, data: updatedOrder });
+      if (order.billRequestStatus === 'REQUESTED') {
+        return res.status(409).json({ success: false, message: 'Bill request already sent to the owner' });
+      }
+
+      order.billRequestStatus = 'REQUESTED';
+      order.billRequestedPaymentMethod = paymentMethod;
+      order.billRequestedAt = new Date();
+      await order.save();
+
+      try {
+        const { emitToTenant } = await import('../../shared/utils/socket');
+        emitToTenant(restaurant._id.toString(), 'bill_requested', { order });
+      } catch (socketError) {
+        console.error('Failed to emit bill request notification:', socketError);
+      }
+
+      res.status(200).json({ success: true, data: order });
     } catch (error) {
       next(error);
     }

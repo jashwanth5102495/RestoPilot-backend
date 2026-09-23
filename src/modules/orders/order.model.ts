@@ -11,6 +11,7 @@ export enum OrderStatus {
 
 export enum PaymentMethod {
   CASH = 'CASH',
+  ONLINE = 'ONLINE',
   UPI = 'UPI',
   CARD = 'CARD',
   OTHER = 'OTHER'
@@ -61,6 +62,10 @@ export interface IOrder extends Document {
   total: number;
   paymentMethod?: PaymentMethod;
   paymentStatus: PaymentStatus;
+  billRequestStatus?: 'REQUESTED' | 'APPROVED';
+  billRequestedPaymentMethod?: 'CASH' | 'ONLINE';
+  billRequestedAt?: Date;
+  billApprovedAt?: Date;
   orderStatus: OrderStatus;
   orderSource: OrderSource;
   customerInfo?: {
@@ -122,6 +127,10 @@ const OrderSchema = new Schema<IOrder>(
     total: { type: Number, required: true, min: 0 },
     paymentMethod: { type: String, enum: Object.values(PaymentMethod) },
     paymentStatus: { type: String, enum: Object.values(PaymentStatus), default: PaymentStatus.PENDING },
+    billRequestStatus: { type: String, enum: ['REQUESTED', 'APPROVED'] },
+    billRequestedPaymentMethod: { type: String, enum: ['CASH', 'ONLINE'] },
+    billRequestedAt: { type: Date },
+    billApprovedAt: { type: Date },
     orderStatus: { type: String, enum: Object.values(OrderStatus), default: OrderStatus.PLACED },
     orderSource: { type: String, enum: Object.values(OrderSource), default: OrderSource.IN_STORE },
     customerInfo: {
