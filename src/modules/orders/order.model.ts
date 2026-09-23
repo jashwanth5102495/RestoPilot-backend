@@ -39,11 +39,20 @@ export interface IOrderItem {
   addedBy?: Types.ObjectId; // User who added this item
 }
 
+export interface IKitchenBatch {
+  batchId: string;
+  items: IOrderItem[];
+  status: OrderStatus.PLACED | OrderStatus.PREPARING | OrderStatus.READY;
+  createdAt: Date;
+}
+
 export interface IOrder extends Document {
   restaurantId: Types.ObjectId;
   orderNumber: string;
   customerId?: Types.ObjectId;
   items: IOrderItem[];
+  pendingKitchenItems?: IOrderItem[];
+  kitchenBatches?: IKitchenBatch[];
   subtotal: number;
   discount: number;
   tax: number;
@@ -90,12 +99,21 @@ const OrderActivitySchema = new Schema({
   details: { type: String }
 }, { _id: false });
 
+const KitchenBatchSchema = new Schema<IKitchenBatch>({
+  batchId: { type: String, required: true },
+  items: { type: [OrderItemSchema], default: [] },
+  status: { type: String, enum: [OrderStatus.PLACED, OrderStatus.PREPARING, OrderStatus.READY], required: true },
+  createdAt: { type: Date, default: Date.now }
+}, { _id: false });
+
 const OrderSchema = new Schema<IOrder>(
   {
     restaurantId: { type: Schema.Types.ObjectId, ref: 'Restaurant', required: true },
     orderNumber: { type: String, required: true },
     customerId: { type: Schema.Types.ObjectId },
     items: [OrderItemSchema],
+    pendingKitchenItems: { type: [OrderItemSchema], default: [] },
+    kitchenBatches: { type: [KitchenBatchSchema], default: [] },
     subtotal: { type: Number, required: true, min: 0 },
     discount: { type: Number, default: 0, min: 0 },
     tax: { type: Number, required: true, min: 0 },

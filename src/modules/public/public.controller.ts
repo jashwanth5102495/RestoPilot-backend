@@ -353,7 +353,9 @@ export class PublicController {
       }
 
       const { OrderService } = await import('../orders/order.service');
-      const order = await OrderService.updateOrderStatus(restaurant._id.toString(), orderId as string, status as OrderStatus, null as any);
+      const order = req.body.batchId
+        ? await OrderService.updateKitchenBatchStatus(restaurant._id.toString(), orderId as string, req.body.batchId, status as OrderStatus, null as any)
+        : await OrderService.updateOrderStatus(restaurant._id.toString(), orderId as string, status as OrderStatus, null as any);
 
       res.status(200).json({ success: true, data: order });
     } catch (error) {
@@ -999,6 +1001,16 @@ export class PublicController {
       }
 
       order.items = currentItems as any;
+      order.pendingKitchenItems = orderItems as any;
+      order.kitchenBatches = [
+        ...(order.kitchenBatches || []),
+        {
+          batchId: new mongoose.Types.ObjectId().toString(),
+          items: orderItems,
+          status: OrderStatus.PLACED,
+          createdAt: new Date()
+        }
+      ] as any;
       order.subtotal = Number(order.items.reduce((sum: number, item: any) => sum + (item.lineTotal || 0), 0).toFixed(2));
       order.cgst = Number((order.subtotal * 0.025).toFixed(2));
       order.sgst = Number((order.subtotal * 0.025).toFixed(2));
@@ -1051,7 +1063,25 @@ export class PublicController {
         .sort({ createdAt: -1 })
         .lean();
 
-      res.status(200).json({ success: true, data: orders });
+      const kitchenOrders: any[] = orders.flatMap((order: any) => {
+        if (order.kitchenBatches?.length) {
+          return order.kitchenBatches
+            .filter((batch: any) => batch.status === OrderStatus.PLACED || batch.status === OrderStatus.PREPARING)
+            .map((batch: any) => ({
+              ...order,
+              _id: `${order._id}:${batch.batchId}`,
+              parentOrderId: order._id,
+              kitchenBatchId: batch.batchId,
+              orderStatus: batch.status,
+              items: batch.items
+            }));
+        }
+
+        const items = order.pendingKitchenItems?.length ? order.pendingKitchenItems : order.items;
+        return items.length > 0 ? [{ ...order, items }] : [];
+      });
+
+      res.status(200).json({ success: true, data: kitchenOrders });
     } catch (error) {
       next(error);
     }

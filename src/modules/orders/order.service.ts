@@ -69,6 +69,8 @@ export class OrderService {
         throw new ValidationError('Cannot modify a completed or cancelled order');
       }
 
+      const kitchenBatchItems: any[] = [];
+
       for (const update of updates) {
         const dishQuery = Dish.findOne({ _id: update.dishId, restaurantId });
         const dish = await (session ? dishQuery.session(session) : dishQuery);
@@ -117,6 +119,23 @@ export class OrderService {
             details: `Added ${dish.name} x${update.quantityChange}`
           } as any);
         }
+
+        if (update.quantityChange > 0) {
+          const batchItem = kitchenBatchItems.find(item => item.dishId.toString() === dish._id.toString());
+          if (batchItem) {
+            batchItem.quantity += update.quantityChange;
+            batchItem.lineTotal = Number((batchItem.unitPrice * batchItem.quantity).toFixed(2));
+          } else {
+            kitchenBatchItems.push({
+              dishId: dish._id,
+              dishName: dish.name,
+              quantity: update.quantityChange,
+              unitPrice: dish.price,
+              taxRate: 5,
+              lineTotal: Number((dish.price * update.quantityChange).toFixed(2))
+            });
+          }
+        }
       }
 
       // Recalculate totals
@@ -125,6 +144,18 @@ export class OrderService {
       order.sgst = Number((order.subtotal * 0.025).toFixed(2));
       order.tax = Number((order.cgst + order.sgst).toFixed(2));
       order.total = Number((order.subtotal + order.tax - order.discount).toFixed(2));
+      order.pendingKitchenItems = kitchenBatchItems;
+      if (kitchenBatchItems.length > 0) {
+        order.kitchenBatches = [
+          ...(order.kitchenBatches || []),
+          {
+            batchId: new mongoose.Types.ObjectId().toString(),
+            items: kitchenBatchItems,
+            status: OrderStatus.PLACED,
+            createdAt: new Date()
+          }
+        ] as any;
+      }
 
       await order.save(session ? { session } : {});
 
@@ -165,6 +196,9 @@ export class OrderService {
       }
 
       order.orderStatus = status;
+      if (status === OrderStatus.READY || status === OrderStatus.COMPLETED || status === OrderStatus.CANCELLED) {
+        order.pendingKitchenItems = [];
+      }
       order.orderActivity.push({
         action: `STATUS_CHANGED_TO_${status}`,
         userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
@@ -219,6 +253,38 @@ export class OrderService {
 
       emitToTenant(restaurantId, 'order_status_updated', { order });
 
+      return order;
+    });
+  }
+
+  static async updateKitchenBatchStatus(restaurantId: string, orderId: string, batchId: string, status: OrderStatus, userId: string) {
+    return runWithTransaction(async (session) => {
+      const orderQuery = Order.findOne({ _id: orderId, restaurantId });
+      const order = await (session ? orderQuery.session(session) : orderQuery);
+      if (!order) throw new ValidationError('Order not found');
+
+      const batch = order.kitchenBatches?.find(item => item.batchId === batchId);
+      if (!batch) throw new ValidationError('Kitchen batch not found');
+      if (![OrderStatus.PLACED, OrderStatus.PREPARING, OrderStatus.READY].includes(status)) {
+        throw new ValidationError('Invalid kitchen batch status');
+      }
+
+      batch.status = status as OrderStatus.PLACED | OrderStatus.PREPARING | OrderStatus.READY;
+      const activeBatches = (order.kitchenBatches || []).filter(item => item.status !== OrderStatus.READY);
+      order.orderStatus = activeBatches.some(item => item.status === OrderStatus.PLACED)
+        ? OrderStatus.PLACED
+        : activeBatches.some(item => item.status === OrderStatus.PREPARING)
+          ? OrderStatus.PREPARING
+          : OrderStatus.READY;
+      order.orderActivity.push({
+        action: `KITCHEN_BATCH_${status}`,
+        userId: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+        timestamp: new Date(),
+        details: `Kitchen batch ${batchId} marked ${status}`
+      } as any);
+
+      await order.save(session ? { session } : {});
+      emitToTenant(restaurantId, 'order_status_updated', { order });
       return order;
     });
   }

@@ -8,9 +8,10 @@ export class CashfreeGateway implements PaymentGateway {
 
   constructor() {
     const cashfreeEnvironment = env.CASHFREE_ENV || (env.NODE_ENV === 'production' ? 'production' : 'sandbox');
-    const environment = cashfreeEnvironment === 'production' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
-    const appId = env.CASHFREE_APP_ID;
-    const secretKey = env.CASHFREE_SECRET_KEY;
+    const isProduction = cashfreeEnvironment === 'production';
+    const environment = isProduction ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+    const appId = isProduction ? env.CASHFREE_APP_ID : env.CASHFREE_APP_ID_TEST;
+    const secretKey = isProduction ? env.CASHFREE_SECRET_KEY : env.CASHFREE_SECRET_KEY_TEST;
 
     if (!appId || !secretKey) {
       throw new AppError('Cashfree credentials missing in environment variables', 500);

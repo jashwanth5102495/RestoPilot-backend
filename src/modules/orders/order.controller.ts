@@ -5,7 +5,7 @@ import { OrderService } from './order.service';
 export class OrderController {
   static async getOrders(req: Request, res: Response, next: NextFunction) {
     try {
-      const { source, limit, status, since } = req.query;
+      const { source, limit, status, since, view } = req.query;
       const query: any = { restaurantId: req.tenantId };
       
       if (source) query.orderSource = source;
@@ -16,10 +16,29 @@ export class OrderController {
       if (limit) q = q.limit(parseInt(limit as string, 10));
 
       const orders = await q.lean();
+        const responseOrders: any[] = view === 'kitchen'
+          ? orders.flatMap((order: any) => {
+              if (order.kitchenBatches?.length) {
+                return order.kitchenBatches
+                  .filter((batch: any) => batch.status === 'PLACED' || batch.status === 'PREPARING')
+                  .map((batch: any) => ({
+                    ...order,
+                    _id: `${order._id}:${batch.batchId}`,
+                    parentOrderId: order._id,
+                    kitchenBatchId: batch.batchId,
+                    orderStatus: batch.status,
+                    items: batch.items
+                  }));
+              }
+
+              const items = order.pendingKitchenItems?.length ? order.pendingKitchenItems : order.items;
+              return items.length > 0 ? [{ ...order, items }] : [];
+            })
+          : orders;
 
       res.status(200).json({
         success: true,
-        data: orders
+        data: responseOrders
       });
     } catch (error) {
       next(error);
@@ -61,7 +80,9 @@ export class OrderController {
     try {
       const { orderId } = req.params;
       const { status } = req.body;
-      const order = await OrderService.updateOrderStatus(req.tenantId as string, orderId as string, status, (req as any).user.userId);
+        const order = req.body.batchId
+          ? await OrderService.updateKitchenBatchStatus(req.tenantId as string, orderId as string, req.body.batchId, status, (req as any).user.userId)
+          : await OrderService.updateOrderStatus(req.tenantId as string, orderId as string, status, (req as any).user.userId);
       res.json({ success: true, data: order });
     } catch (error) {
       next(error);
