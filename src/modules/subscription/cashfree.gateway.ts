@@ -7,7 +7,8 @@ export class CashfreeGateway implements PaymentGateway {
   private cashfree: Cashfree;
 
   constructor() {
-    const environment = env.NODE_ENV === 'production' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
+    const cashfreeEnvironment = env.CASHFREE_ENV || (env.NODE_ENV === 'production' ? 'production' : 'sandbox');
+    const environment = cashfreeEnvironment === 'production' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX;
     const appId = env.CASHFREE_APP_ID;
     const secretKey = env.CASHFREE_SECRET_KEY;
 
