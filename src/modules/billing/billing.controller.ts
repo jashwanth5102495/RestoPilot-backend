@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { BillingService } from './billing.service';
 import { Restaurant, SubscriptionStatus } from '../restaurants/restaurant.model';
 import { DataRequest } from '../admin/data-request.model';
+import { SubscriptionController } from '../subscription/subscription.controller';
 
 export class BillingController {
   static async processSale(req: Request, res: Response, next: NextFunction) {
@@ -23,25 +24,7 @@ export class BillingController {
   }
 
   static async paySubscription(req: Request, res: Response, next: NextFunction) {
-    try {
-      const restaurantId = req.user?.restaurantId;
-      if (!restaurantId) return res.status(400).json({ success: false, message: 'Restaurant ID missing' });
-      
-      const restaurant = await Restaurant.findById(restaurantId);
-      if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found' });
-      
-      restaurant.subscriptionStatus = SubscriptionStatus.ACTIVE;
-      
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 1);
-      restaurant.subscriptionExpiresAt = expiresAt;
-      
-      await restaurant.save();
-      
-      res.status(200).json({ success: true, data: { subscriptionStatus: restaurant.subscriptionStatus, subscriptionExpiresAt: restaurant.subscriptionExpiresAt } });
-    } catch (error) {
-      next(error);
-    }
+    return SubscriptionController.createPaymentOrder(req, res, next);
   }
 
   static async payDataRequest(req: Request, res: Response, next: NextFunction) {

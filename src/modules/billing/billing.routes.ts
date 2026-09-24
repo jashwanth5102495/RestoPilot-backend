@@ -3,13 +3,14 @@ import { BillingController } from './billing.controller';
 import { validate } from '../../middleware/validation.middleware';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireTenant } from '../../middleware/tenant.middleware';
+import { requireSubscriptionAccess } from '../../middleware/subscription-access.middleware';
 import { authorize } from '../../middleware/role.middleware';
 import { UserRole } from '../users/user.model';
 import { processSaleSchema } from './billing.schema';
 
 const router = Router();
 
-router.use(authenticate, requireTenant);
+router.use(authenticate, requireTenant, requireSubscriptionAccess);
 
 // Only specific roles can process sales
 router.post(

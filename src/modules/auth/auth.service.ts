@@ -6,6 +6,7 @@ import { Restaurant, RestaurantStatus } from '../restaurants/restaurant.model';
 import { Category } from '../categories/category.model';
 import { env } from '../../config/env';
 import { UnauthorizedError, ValidationError } from '../../shared/errors/AppError';
+import { SubscriptionService } from '../subscription/subscription.service';
 
 export class AuthService {
   static async login(email: string, password: string) {
@@ -181,6 +182,7 @@ export class AuthService {
       }
 
       await session.commitTransaction();
+      await SubscriptionService.ensureSubscription(restaurant._id);
 
       const payload = {
         userId: owner._id.toString(),

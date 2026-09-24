@@ -6,6 +6,7 @@ import { logger } from './shared/utils/logger';
 
 import cronService from './modules/notifications/cron.service';
 import { runMysterySeedIfMissing } from './utils/seedMystery';
+import autopayCronService from './modules/subscription/autopay.cron.service';
 
 const startServer = async () => {
   try {
@@ -15,6 +16,7 @@ const startServer = async () => {
 
     // Start background services (non-blocking)
     cronService.start();
+    autopayCronService.start();
 
     const { createServer } = await import('http');
     const { initSocket } = await import('./shared/utils/socket');

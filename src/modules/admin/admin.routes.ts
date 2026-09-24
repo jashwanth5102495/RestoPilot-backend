@@ -4,6 +4,7 @@ import { authenticate } from '../../middleware/auth.middleware';
 import { UserRole } from '../users/user.model';
 import { UnauthorizedError } from '../../shared/errors/AppError';
 import { Request, Response, NextFunction } from 'express';
+import { AutoPayController } from '../subscription/autopay.controller';
 
 const router = Router();
 
@@ -33,5 +34,8 @@ router.post('/telegram/token', AdminController.saveTelegramToken);
 
 router.get('/subscription-price', AdminController.getSubscriptionPrice);
 router.put('/subscription-price', AdminController.updateSubscriptionPrice);
+router.get('/subscriptions', AutoPayController.adminList);
+router.patch('/subscriptions/:restaurantId', AutoPayController.adminUpdate);
+router.post('/subscriptions/payments/:paymentId/refund', AutoPayController.adminRefund);
 
 export default router;

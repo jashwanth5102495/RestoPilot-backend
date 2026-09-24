@@ -3,11 +3,12 @@ import { IngredientController } from './ingredient.controller';
 import { validate } from '../../middleware/validation.middleware';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireTenant } from '../../middleware/tenant.middleware';
+import { requireSubscriptionAccess } from '../../middleware/subscription-access.middleware';
 import { createIngredientSchema, updateIngredientSchema } from './ingredient.schema';
 
 const router = Router();
 
-router.use(authenticate, requireTenant);
+router.use(authenticate, requireTenant, requireSubscriptionAccess);
 
 router.get('/', IngredientController.getIngredients);
 router.post('/', validate(createIngredientSchema), IngredientController.createIngredient);

@@ -6,12 +6,15 @@ import { GatewayFactory } from './gateway.factory';
 import { v4 as uuidv4 } from 'uuid';
 import { AppError } from '../../shared/errors/AppError';
 import { env } from '../../config/env';
+import { SubscriptionService } from './subscription.service';
+import { SubscriptionPaymentType } from './subscription-payment.model';
+import { SubscriptionWebhookEvent } from './subscription-webhook-event.model';
+import { MandateStatus, RestaurantSubscription, RestaurantSubscriptionStatus, SubscriptionPaymentMode } from './restaurant-subscription.model';
 
 export class SubscriptionController {
   static async getSubscriptionPrice(req: Request, res: Response, next: NextFunction) {
     try {
-      const setting = await SystemSettings.findOne({ key: 'subscriptionMonthlyPrice' });
-      const amount = setting ? setting.value : 5000; // default ₹5000
+      const amount = await SubscriptionService.getDefaultAmount();
       res.status(200).json({ success: true, data: { amount } });
     } catch (error) {
       next(error);
@@ -28,8 +31,8 @@ export class SubscriptionController {
 
       const owner: any = restaurant.ownerId; // User model
 
-      const setting = await SystemSettings.findOne({ key: 'subscriptionMonthlyPrice' });
-      const amount = setting ? setting.value : 5000;
+      const subscription = await SubscriptionService.ensureSubscription(restaurantId);
+      const amount = await SubscriptionService.getChargeAmount(subscription);
 
       const orderId = `SUB_${restaurantId}_${Date.now()}_${uuidv4().substring(0, 4)}`;
 
@@ -54,6 +57,7 @@ export class SubscriptionController {
         amount,
         currency: 'INR',
         status: PaymentStatus.CREATED,
+        paymentType: SubscriptionPaymentType.NORMAL_PAYMENT,
         gateway: env.NODE_ENV === 'production' ? 'cashfree' : 'mock',
       });
       await payment.save();
@@ -89,27 +93,20 @@ export class SubscriptionController {
       const status = await gateway.verifyPayment(orderId);
 
       if (status === 'PAID') {
-        payment.status = PaymentStatus.PAID;
-        payment.paidAt = new Date();
-        
-        const restaurant = await Restaurant.findById(restaurantId);
-        if (restaurant) {
-          restaurant.subscriptionStatus = SubscriptionStatus.ACTIVE;
-          
-          let expiresAt = new Date();
-          // If already active and has expiry in the future, extend it
-          if (restaurant.subscriptionExpiresAt && restaurant.subscriptionExpiresAt > new Date()) {
-             expiresAt = new Date(restaurant.subscriptionExpiresAt);
-          }
-          expiresAt.setDate(expiresAt.getDate() + 30); // 30 days subscription
-          
-          restaurant.subscriptionExpiresAt = expiresAt;
-          await restaurant.save();
-
-          payment.expiresAt = expiresAt;
+        const claimedPayment = await SubscriptionPayment.findOneAndUpdate(
+          { _id: payment._id, status: { $ne: PaymentStatus.PAID } },
+          { $set: { status: PaymentStatus.PAID, paidAt: new Date() } },
+          { new: true }
+        );
+        if (!claimedPayment) {
+          return res.status(200).json({ success: true, data: { status: 'PAID' } });
         }
+        
+        const subscription = await SubscriptionService.ensureSubscription(restaurantId);
+        const updatedSubscription = await SubscriptionService.applySuccessfulPayment(subscription._id, claimedPayment.amount);
+        claimedPayment.expiresAt = updatedSubscription?.currentPeriodEnd;
 
-        await payment.save();
+        await claimedPayment.save();
       } else if (status === 'FAILED' || status === 'EXPIRED') {
         payment.status = status as PaymentStatus;
         await payment.save();
@@ -134,8 +131,8 @@ export class SubscriptionController {
   }
 
   static async handleWebhook(req: Request, res: Response, next: NextFunction) {
+    let webhookEventKey: string | undefined;
     try {
-      // Cashfree webhook signature verification
       const signature = req.headers['x-webhook-signature'] as string;
       const timestamp = req.headers['x-webhook-timestamp'] as string;
       
@@ -153,52 +150,142 @@ export class SubscriptionController {
         return res.status(400).send('Invalid signature');
       }
 
-      const payload = req.body;
-      const orderId = payload?.data?.order?.order_id;
-      
-      if (!orderId) {
-        return res.status(200).send('OK'); // Ignore if no order ID
+      const payload = req.body || {};
+      const eventType = String(payload.type || payload.event || 'UNKNOWN');
+      const data = payload.data || {};
+      const orderId = data.order?.order_id || data.order_id;
+      const subscriptionDetails = data.subscription_details || data.subscription || {};
+      const authorizationDetails = data.authorization_details || {};
+      const paymentDetails = data.payment_details || data.payment || {};
+      const subscriptionId = data.subscription_id || subscriptionDetails.subscription_id || subscriptionDetails.cf_subscription_id;
+      const paymentId = data.payment_id || paymentDetails.payment_id;
+      const eventStatus = data.payment_status || paymentDetails.payment_status || data.authorization_status || authorizationDetails.authorization_status || data.subscription_status || subscriptionDetails.subscription_status || 'UNKNOWN';
+      const eventKey = String(req.headers['x-idempotency-key'] || `${eventType}:${orderId || subscriptionId || 'unknown'}:${paymentId || eventStatus}`);
+      webhookEventKey = eventKey;
+
+      try {
+        await SubscriptionWebhookEvent.create({
+          eventKey,
+          eventType,
+          subscriptionId,
+          paymentId,
+          payload,
+        });
+      } catch (error: any) {
+        if (error?.code === 11000) return res.status(200).send('OK');
+        throw error;
       }
 
-      const payment = await SubscriptionPayment.findOne({ orderId });
-      if (!payment) {
-        return res.status(200).send('OK'); // Order not found, ignore
-      }
-
-      // If already paid, ignore
-      if (payment.status === PaymentStatus.PAID) {
-        return res.status(200).send('OK');
-      }
-
-      // Fallback verification just to be completely safe
-      const status = await gateway.verifyPayment(orderId);
-      
-      if (status === 'PAID') {
-        payment.status = PaymentStatus.PAID;
-        payment.paidAt = new Date();
-        
-        const restaurant = await Restaurant.findById(payment.restaurantId);
-        if (restaurant) {
-          restaurant.subscriptionStatus = SubscriptionStatus.ACTIVE;
-          
-          let expiresAt = new Date();
-          if (restaurant.subscriptionExpiresAt && restaurant.subscriptionExpiresAt > new Date()) {
-             expiresAt = new Date(restaurant.subscriptionExpiresAt);
+      if (eventType === 'SUBSCRIPTION_AUTH_STATUS' || eventType === 'SUBSCRIPTION_STATUS_CHANGED') {
+        const subscription = subscriptionId
+          ? await RestaurantSubscription.findOne({ cashfreeSubscriptionId: subscriptionId })
+          : null;
+        if (subscription) {
+          if (eventType === 'SUBSCRIPTION_AUTH_STATUS') {
+            subscription.mandateStatus = eventStatus === 'SUCCESS' ? MandateStatus.ACTIVE : MandateStatus.FAILED;
+            subscription.paymentMode = eventStatus === 'SUCCESS' ? SubscriptionPaymentMode.AUTOPAY : SubscriptionPaymentMode.NORMAL;
+            if (eventStatus !== 'SUCCESS') subscription.failureReason = data.authorization_details?.authorization_message || 'Autopay authorization failed';
+          } else if (['CANCELLED', 'CUSTOMER_CANCELLED', 'EXPIRED'].includes(eventStatus)) {
+            subscription.mandateStatus = MandateStatus.CANCELLED;
+            subscription.paymentMode = SubscriptionPaymentMode.NORMAL;
           }
-          expiresAt.setDate(expiresAt.getDate() + 30);
-          
-          restaurant.subscriptionExpiresAt = expiresAt;
-          await restaurant.save();
-
-          payment.expiresAt = expiresAt;
+          await subscription.save();
         }
+      }
 
-        await payment.save();
+      if (eventType === 'SUBSCRIPTION_PAYMENT_SUCCESS') {
+        const subscription = subscriptionId
+          ? await RestaurantSubscription.findOne({ cashfreeSubscriptionId: subscriptionId })
+          : null;
+        if (subscription) {
+          const amount = Number(data.payment_amount || data.payment?.payment_amount || subscription.amount);
+          const payment = await SubscriptionPayment.findOneAndUpdate(
+            { paymentId: String(paymentId) },
+            {
+              $setOnInsert: {
+                restaurantId: subscription.restaurantId,
+                subscriptionId,
+                orderId: `AUTOPAY_${paymentId}`,
+                paymentId: String(paymentId),
+                amount,
+                currency: subscription.currency,
+                paymentType: SubscriptionPaymentType.CHARGE,
+                gateway: env.NODE_ENV === 'production' ? 'cashfree' : 'mock',
+              },
+              $set: { status: PaymentStatus.PAID, paidAt: new Date(), gatewayResponse: payload },
+            },
+            { upsert: true, new: true }
+          );
+          const updatedSubscription = await SubscriptionService.applySuccessfulPayment(subscription._id, amount);
+          payment.expiresAt = updatedSubscription?.currentPeriodEnd;
+          payment.periodStart = updatedSubscription?.currentPeriodStart;
+          payment.periodEnd = updatedSubscription?.currentPeriodEnd;
+          await payment.save();
+        }
+      }
+
+      if (eventType === 'SUBSCRIPTION_PAYMENT_FAILED') {
+        const subscription = subscriptionId
+          ? await RestaurantSubscription.findOne({ cashfreeSubscriptionId: subscriptionId })
+          : null;
+        if (subscription) {
+          subscription.failureReason = data.payment_message || data.payment?.payment_message || 'Recurring payment failed';
+          if (!subscription.currentPeriodEnd || subscription.currentPeriodEnd <= new Date()) {
+            subscription.status = RestaurantSubscriptionStatus.PAYMENT_FAILED;
+            await subscription.save();
+            await SubscriptionService.syncRestaurantAccess(subscription);
+          } else {
+            await subscription.save();
+          }
+        }
+      }
+
+      if (eventType === 'REFUND_STATUS_WEBHOOK') {
+        const refund = data.refund || data;
+        const payment = await SubscriptionPayment.findOne({
+          $or: [{ refundId: refund.refund_id }, { orderId: refund.order_id }],
+        });
+        if (payment) {
+          payment.refundStatus = refund.refund_status;
+          payment.refundArn = refund.refund_arn;
+          payment.gatewayResponse = payload;
+          if (refund.refund_status === 'SUCCESS') {
+            const refundAmount = Number(refund.refund_amount || 0);
+            payment.refundedAmount = Math.min(payment.amount, Math.max(payment.refundedAmount, refundAmount));
+            payment.status = payment.refundedAmount >= payment.amount ? PaymentStatus.REFUNDED : PaymentStatus.PAID;
+          } else if (['FAILED', 'CANCELLED'].includes(refund.refund_status)) {
+            payment.status = PaymentStatus.REFUND_FAILED;
+          } else {
+            payment.status = PaymentStatus.REFUND_PENDING;
+          }
+          await payment.save();
+        }
+      }
+
+      if (orderId && eventType !== 'REFUND_STATUS_WEBHOOK' && !subscriptionId) {
+        const payment = await SubscriptionPayment.findOne({ orderId });
+        if (payment && payment.status !== PaymentStatus.PAID) {
+          const status = await gateway.verifyPayment(orderId);
+          if (status === 'PAID') {
+            payment.status = PaymentStatus.PAID;
+            payment.paidAt = new Date();
+            const subscription = await SubscriptionService.ensureSubscription(payment.restaurantId);
+            const updatedSubscription = await SubscriptionService.applySuccessfulPayment(subscription._id, payment.amount);
+            payment.expiresAt = updatedSubscription?.currentPeriodEnd;
+            await payment.save();
+          } else if (status === 'FAILED' || status === 'EXPIRED') {
+            payment.status = status as PaymentStatus;
+            await payment.save();
+          }
+        }
       }
 
       res.status(200).send('OK');
     } catch (error) {
       console.error('Webhook error:', error);
+      if (webhookEventKey) {
+        await SubscriptionWebhookEvent.deleteOne({ eventKey: webhookEventKey }).catch(() => undefined);
+      }
       res.status(500).send('Internal Server Error');
     }
   }

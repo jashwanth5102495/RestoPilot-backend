@@ -2,10 +2,11 @@ import { Router } from 'express';
 import { InventoryCheckController } from './inventory-check.controller';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireTenant } from '../../middleware/tenant.middleware';
+import { requireSubscriptionAccess } from '../../middleware/subscription-access.middleware';
 
 const router = Router();
 
-router.use(authenticate, requireTenant);
+router.use(authenticate, requireTenant, requireSubscriptionAccess);
 
 router.get('/checks/status', InventoryCheckController.getCheckStatus);
 router.post('/checks', InventoryCheckController.submitChecks);

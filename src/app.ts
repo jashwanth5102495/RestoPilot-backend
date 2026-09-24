@@ -38,7 +38,12 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({
+  limit: '50mb',
+  verify: (req, _res, buffer) => {
+    (req as any).rawBody = buffer.toString('utf8');
+  },
+}));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Request ID Middleware
