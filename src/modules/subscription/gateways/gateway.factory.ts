@@ -1,7 +1,7 @@
-import { PaymentGateway } from './payment-gateway.interface';
+import { PaymentGateway } from '../contracts/payment-gateway.interface';
 import { CashfreeGateway } from './cashfree.gateway';
 import { MockGateway } from './mock.gateway';
-import { env } from '../../config/env';
+import { env } from '../../../config/env';
 
 export class GatewayFactory {
   static getGateway(): PaymentGateway {

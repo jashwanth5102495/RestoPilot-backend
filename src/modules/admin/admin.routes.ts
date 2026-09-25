@@ -4,7 +4,7 @@ import { authenticate } from '../../middleware/auth.middleware';
 import { UserRole } from '../users/user.model';
 import { UnauthorizedError } from '../../shared/errors/AppError';
 import { Request, Response, NextFunction } from 'express';
-import { AutoPayController } from '../subscription/autopay.controller';
+import { AutoPayController } from '../subscription/controllers/autopay.controller';
 
 const router = Router();
 

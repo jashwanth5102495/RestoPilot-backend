@@ -1,11 +1,11 @@
 import cron from 'node-cron';
 import { v4 as uuidv4 } from 'uuid';
-import { GatewayFactory } from './gateway.factory';
-import { AutoPayGateway } from './autopay-gateway.interface';
-import { RestaurantSubscription, MandateStatus, RestaurantSubscriptionStatus } from './restaurant-subscription.model';
-import { PaymentStatus, SubscriptionPayment, SubscriptionPaymentType } from './subscription-payment.model';
-import { SubscriptionService } from './subscription.service';
-import { env } from '../../config/env';
+import { GatewayFactory } from '../gateways/gateway.factory';
+import { AutoPayGateway } from '../contracts/autopay-gateway.interface';
+import { RestaurantSubscription, MandateStatus, RestaurantSubscriptionStatus } from '../models/restaurant-subscription.model';
+import { PaymentStatus, SubscriptionPayment, SubscriptionPaymentType } from '../models/subscription-payment.model';
+import { SubscriptionService } from '../services/subscription.service';
+import { env } from '../../../config/env';
 
 class AutopayCronService {
   start() {

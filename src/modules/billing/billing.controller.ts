@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { BillingService } from './billing.service';
 import { Restaurant, SubscriptionStatus } from '../restaurants/restaurant.model';
 import { DataRequest } from '../admin/data-request.model';
-import { SubscriptionController } from '../subscription/subscription.controller';
+import { SubscriptionController } from '../subscription/controllers/subscription.controller';
 
 export class BillingController {
   static async processSale(req: Request, res: Response, next: NextFunction) {

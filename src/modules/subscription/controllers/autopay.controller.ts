@@ -1,18 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { Restaurant } from '../restaurants/restaurant.model';
-import { SubscriptionPayment, PaymentStatus, SubscriptionPaymentType } from './subscription-payment.model';
+import { Restaurant } from '../../restaurants/restaurant.model';
+import { SubscriptionPayment, PaymentStatus, SubscriptionPaymentType } from '../models/subscription-payment.model';
 import {
   MandateStatus,
   RestaurantSubscription,
   RestaurantSubscriptionStatus,
   SubscriptionPaymentMode,
-} from './restaurant-subscription.model';
-import { AutoPayGateway } from './autopay-gateway.interface';
-import { GatewayFactory } from './gateway.factory';
-import { SubscriptionService } from './subscription.service';
-import { AppError } from '../../shared/errors/AppError';
-import { env } from '../../config/env';
+} from '../models/restaurant-subscription.model';
+import { AutoPayGateway } from '../contracts/autopay-gateway.interface';
+import { GatewayFactory } from '../gateways/gateway.factory';
+import { SubscriptionService } from '../services/subscription.service';
+import { AppError } from '../../../shared/errors/AppError';
+import { env } from '../../../config/env';
 
 const getAutoPayGateway = () => GatewayFactory.getGateway() as PaymentGatewayWithAutopay;
 

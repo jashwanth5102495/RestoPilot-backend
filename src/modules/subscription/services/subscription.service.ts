@@ -1,12 +1,12 @@
 import { Types } from 'mongoose';
-import { SystemSettings } from '../settings/system-settings.model';
-import { Restaurant, SubscriptionStatus } from '../restaurants/restaurant.model';
+import { SystemSettings } from '../../settings/system-settings.model';
+import { Restaurant, SubscriptionStatus } from '../../restaurants/restaurant.model';
 import {
   MandateStatus,
   RestaurantSubscription,
   RestaurantSubscriptionStatus,
   SubscriptionPaymentMode,
-} from './restaurant-subscription.model';
+} from '../models/restaurant-subscription.model';
 
 const DEFAULT_SUBSCRIPTION_PRICE = 5000;
 

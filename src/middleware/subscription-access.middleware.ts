@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Restaurant } from '../modules/restaurants/restaurant.model';
 import { PublicController } from '../modules/public/public.controller';
-import { SubscriptionService } from '../modules/subscription/subscription.service';
+import { SubscriptionService } from '../modules/subscription/services/subscription.service';
 import { ForbiddenError } from '../shared/errors/AppError';
 
 export const requireSubscriptionAccess = async (req: Request, res: Response, next: NextFunction) => {

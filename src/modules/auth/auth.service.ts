@@ -6,7 +6,7 @@ import { Restaurant, RestaurantStatus } from '../restaurants/restaurant.model';
 import { Category } from '../categories/category.model';
 import { env } from '../../config/env';
 import { UnauthorizedError, ValidationError } from '../../shared/errors/AppError';
-import { SubscriptionService } from '../subscription/subscription.service';
+import { SubscriptionService } from '../subscription/services/subscription.service';
 
 export class AuthService {
   static async login(email: string, password: string) {

@@ -1,5 +1,5 @@
-import { CreateOrderParams, PaymentGateway } from './payment-gateway.interface';
-import { AutoPayGateway } from './autopay-gateway.interface';
+import { CreateOrderParams, PaymentGateway } from '../contracts/payment-gateway.interface';
+import { AutoPayGateway } from '../contracts/autopay-gateway.interface';
 
 export class MockGateway implements PaymentGateway, AutoPayGateway {
   async createOrder(params: CreateOrderParams): Promise<{ paymentSessionId: string; gatewayOrderId: string }> {

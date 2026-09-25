@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import { SystemSettings } from '../settings/system-settings.model';
-import { SubscriptionPayment, PaymentStatus } from './subscription-payment.model';
-import { Restaurant, SubscriptionStatus } from '../restaurants/restaurant.model';
-import { GatewayFactory } from './gateway.factory';
+import { SystemSettings } from '../../settings/system-settings.model';
+import { SubscriptionPayment, PaymentStatus } from '../models/subscription-payment.model';
+import { Restaurant, SubscriptionStatus } from '../../restaurants/restaurant.model';
+import { GatewayFactory } from '../gateways/gateway.factory';
 import { v4 as uuidv4 } from 'uuid';
-import { AppError } from '../../shared/errors/AppError';
-import { env } from '../../config/env';
-import { SubscriptionService } from './subscription.service';
-import { SubscriptionPaymentType } from './subscription-payment.model';
-import { SubscriptionWebhookEvent } from './subscription-webhook-event.model';
-import { MandateStatus, RestaurantSubscription, RestaurantSubscriptionStatus, SubscriptionPaymentMode } from './restaurant-subscription.model';
+import { AppError } from '../../../shared/errors/AppError';
+import { env } from '../../../config/env';
+import { SubscriptionService } from '../services/subscription.service';
+import { SubscriptionPaymentType } from '../models/subscription-payment.model';
+import { SubscriptionWebhookEvent } from '../models/subscription-webhook-event.model';
+import { MandateStatus, RestaurantSubscription, RestaurantSubscriptionStatus, SubscriptionPaymentMode } from '../models/restaurant-subscription.model';
 
 export class SubscriptionController {
   static async getSubscriptionPrice(req: Request, res: Response, next: NextFunction) {

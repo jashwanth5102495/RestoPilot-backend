@@ -1,5 +1,5 @@
 import { Cashfree, CFEnvironment } from 'cashfree-pg';
-import { CreateOrderParams, PaymentGateway } from './payment-gateway.interface';
+import { CreateOrderParams, PaymentGateway } from '../contracts/payment-gateway.interface';
 import {
   AutoPayGateway,
   AutopayAction,
@@ -7,9 +7,9 @@ import {
   CreateRefundParams,
   CreateSubscriptionParams,
   RaiseChargeParams,
-} from './autopay-gateway.interface';
-import { env } from '../../config/env';
-import { AppError } from '../../shared/errors/AppError';
+} from '../contracts/autopay-gateway.interface';
+import { env } from '../../../config/env';
+import { AppError } from '../../../shared/errors/AppError';
 
 export class CashfreeGateway implements PaymentGateway, AutoPayGateway {
   private cashfree: Cashfree;

@@ -6,7 +6,7 @@ import { logger } from './shared/utils/logger';
 
 import cronService from './modules/notifications/cron.service';
 import { runMysterySeedIfMissing } from './utils/seedMystery';
-import autopayCronService from './modules/subscription/autopay.cron.service';
+import autopayCronService from './modules/subscription/jobs/autopay.cron.service';
 
 const startServer = async () => {
   try {

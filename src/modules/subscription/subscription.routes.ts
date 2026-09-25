@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
-import { SubscriptionController } from './subscription.controller';
+import { SubscriptionController } from './controllers/subscription.controller';
 import { authenticate } from '../../middleware/auth.middleware';
 import { authorize } from '../../middleware/role.middleware';
 import { UserRole } from '../users/user.model';
 import express from 'express';
-import { AutoPayController } from './autopay.controller';
+import { AutoPayController } from './controllers/autopay.controller';
 
 const router = Router();
 
