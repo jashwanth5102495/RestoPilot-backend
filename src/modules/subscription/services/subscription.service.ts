@@ -9,12 +9,20 @@ import {
 } from '../models/restaurant-subscription.model';
 
 const DEFAULT_SUBSCRIPTION_PRICE = 5000;
+const DEFAULT_MINIMUM_SUBSCRIPTION_PRICE = 100;
 
 export class SubscriptionService {
+  static async getMinimumAmount(): Promise<number> {
+    const setting = await SystemSettings.findOne({ key: 'subscriptionMinimumPrice' }).lean();
+    const amount = Number(setting?.value);
+    return Number.isFinite(amount) && amount >= 1 ? amount : DEFAULT_MINIMUM_SUBSCRIPTION_PRICE;
+  }
+
   static async getDefaultAmount(): Promise<number> {
     const setting = await SystemSettings.findOne({ key: 'subscriptionMonthlyPrice' }).lean();
     const amount = Number(setting?.value);
-    return Number.isFinite(amount) && amount >= 100 ? amount : DEFAULT_SUBSCRIPTION_PRICE;
+    const minimumAmount = await this.getMinimumAmount();
+    return Number.isFinite(amount) && amount >= minimumAmount ? amount : DEFAULT_SUBSCRIPTION_PRICE;
   }
 
   static async ensureSubscription(restaurantId: string | Types.ObjectId) {

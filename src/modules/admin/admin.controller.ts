@@ -4,6 +4,7 @@ import { Order } from '../orders/order.model';
 import { Ingredient } from '../ingredients/ingredient.model';
 import { DataRequest, DataRequestStatus } from './data-request.model';
 import { Agent } from './agent.model';
+import { SubscriptionService } from '../subscription/services/subscription.service';
 
 export class AdminController {
   static async getRestaurants(req: Request, res: Response, next: NextFunction) {
@@ -282,11 +283,12 @@ export class AdminController {
     try {
       const { SystemSettings } = await import('../settings/system-settings.model');
       const setting = await SystemSettings.findOne({ key: 'subscriptionMonthlyPrice' });
-      const amount = setting ? setting.value : 5000;
+      const amount = await SubscriptionService.getDefaultAmount();
+      const minimumAmount = await SubscriptionService.getMinimumAmount();
       
       res.status(200).json({
         success: true,
-        data: { amount }
+        data: { amount, minimumAmount }
       });
     } catch (error) {
       next(error);
@@ -297,8 +299,9 @@ export class AdminController {
     try {
       const { amount } = req.body;
       
-      if (typeof amount !== 'number' || amount < 100) {
-        return res.status(400).json({ success: false, message: 'Invalid subscription amount (minimum 100)' });
+      const minimumAmount = await SubscriptionService.getMinimumAmount();
+      if (typeof amount !== 'number' || amount < minimumAmount) {
+        return res.status(400).json({ success: false, message: `Invalid subscription amount (minimum ${minimumAmount})` });
       }
 
       const { SystemSettings } = await import('../settings/system-settings.model');
@@ -312,6 +315,43 @@ export class AdminController {
         success: true,
         message: 'Subscription price updated successfully',
         data: { amount }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getSubscriptionMinimumPrice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const minimumAmount = await SubscriptionService.getMinimumAmount();
+      res.status(200).json({ success: true, data: { minimumAmount } });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateSubscriptionMinimumPrice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { minimumAmount } = req.body;
+      const currentDefaultAmount = await SubscriptionService.getDefaultAmount();
+      if (typeof minimumAmount !== 'number' || minimumAmount < 1) {
+        return res.status(400).json({ success: false, message: 'Minimum subscription amount must be at least 1' });
+      }
+      if (minimumAmount > currentDefaultAmount) {
+        return res.status(400).json({ success: false, message: 'Minimum threshold cannot exceed the default subscription price' });
+      }
+
+      const { SystemSettings } = await import('../settings/system-settings.model');
+      await SystemSettings.findOneAndUpdate(
+        { key: 'subscriptionMinimumPrice' },
+        { value: minimumAmount },
+        { upsert: true }
+      );
+
+      res.status(200).json({
+        success: true,
+        message: 'Minimum subscription threshold updated successfully',
+        data: { minimumAmount },
       });
     } catch (error) {
       next(error);

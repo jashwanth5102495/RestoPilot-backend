@@ -34,6 +34,8 @@ router.post('/telegram/token', AdminController.saveTelegramToken);
 
 router.get('/subscription-price', AdminController.getSubscriptionPrice);
 router.put('/subscription-price', AdminController.updateSubscriptionPrice);
+router.get('/subscription-minimum-price', AdminController.getSubscriptionMinimumPrice);
+router.put('/subscription-minimum-price', AdminController.updateSubscriptionMinimumPrice);
 router.get('/subscriptions', AutoPayController.adminList);
 router.patch('/subscriptions/:restaurantId', AutoPayController.adminUpdate);
 router.post('/subscriptions/payments/:paymentId/refund', AutoPayController.adminRefund);

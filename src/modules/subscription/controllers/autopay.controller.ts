@@ -152,8 +152,9 @@ export class AutoPayController {
       const subscription = await SubscriptionService.ensureSubscription(restaurantId);
 
       if (amount !== undefined && amount !== null) {
-        if (typeof amount !== 'number' || amount < 100) {
-          throw new AppError('Subscription amount must be at least 100', 400);
+        const minimumAmount = await SubscriptionService.getMinimumAmount();
+        if (typeof amount !== 'number' || amount < minimumAmount) {
+          throw new AppError(`Subscription amount must be at least ${minimumAmount}`, 400);
         }
         if (subscription.currentPeriodEnd && subscription.currentPeriodEnd > new Date()) {
           subscription.pendingAmount = amount;
