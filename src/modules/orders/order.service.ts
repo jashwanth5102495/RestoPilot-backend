@@ -246,7 +246,8 @@ export class OrderService {
             await order.save(session ? { session } : {});
           } catch (err) {
             console.error(`Failed to consume inventory for order ${order._id}:`, err);
-            throw err;
+            // Do not re-throw: order is already COMPLETED in DB.
+            // Inventory failure is non-fatal — log it and proceed.
           }
         }
       }
