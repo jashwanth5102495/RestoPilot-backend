@@ -497,17 +497,13 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'No active order found for this table' });
       }
 
-      const paymentMethod = req.body.paymentMethod;
-      if (paymentMethod !== 'CASH' && paymentMethod !== 'ONLINE') {
-        return res.status(400).json({ success: false, message: 'Payment method must be CASH or ONLINE' });
-      }
+      // Payment mode is no longer selected at this stage
 
       if (order.billRequestStatus === 'REQUESTED') {
         return res.status(409).json({ success: false, message: 'Bill request already sent to the owner' });
       }
 
       order.billRequestStatus = 'REQUESTED';
-      order.billRequestedPaymentMethod = paymentMethod;
       order.billRequestedAt = new Date();
       await order.save();
 
@@ -620,6 +616,97 @@ export class PublicController {
       });
 
       res.status(200).json({ success: true, data: order || null });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async generateBillingBill(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, tableId } = req.params;
+      
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const order = await Order.findOne({ 
+        restaurantId: restaurant._id, 
+        tableId: tableId as string, 
+        orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] } 
+      });
+
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'No active order found for this table' });
+      }
+
+      if (order.billRequestStatus !== 'REQUESTED') {
+        return res.status(400).json({ success: false, message: 'Bill has not been requested by the waiter' });
+      }
+
+      order.billRequestStatus = 'APPROVED';
+      order.billApprovedAt = new Date();
+      await order.save();
+
+      const { emitToTenant } = await import('../../shared/utils/socket');
+      emitToTenant(restaurant._id.toString(), 'order_status_updated', order);
+
+      res.status(200).json({ success: true, data: order });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async settleWaiterBill(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, tableId } = req.params;
+      const { paymentMethod } = req.body;
+      
+      if (paymentMethod !== 'CASH' && paymentMethod !== 'ONLINE') {
+        return res.status(400).json({ success: false, message: 'Payment method must be CASH or ONLINE' });
+      }
+
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'waiterSlug'));
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Waiter portal not found or disabled' });
+      }
+
+      const order = await Order.findOne({ 
+        restaurantId: restaurant._id, 
+        tableId: tableId as string, 
+        orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] } 
+      });
+
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'No active order found for this table' });
+      }
+
+      const { OrderService } = await import('../orders/order.service');
+      const updatedOrder = await OrderService.updateOrderStatus(restaurant._id.toString(), order._id.toString(), OrderStatus.COMPLETED, null as any);
+      
+      updatedOrder.paymentStatus = PaymentStatus.PAID;
+      updatedOrder.paymentMethod = paymentMethod;
+      updatedOrder.billRequestStatus = 'APPROVED';
+      await updatedOrder.save();
+
+      // Free the table
+      try {
+        const { Table, TableStatus } = await import('../tables/table.model');
+        const remainingActive = await Order.countDocuments({
+          restaurantId: restaurant._id,
+          tableId: order.tableId,
+          orderStatus: { $nin: [OrderStatus.COMPLETED, OrderStatus.CANCELLED] },
+          _id: { $ne: order._id }
+        });
+        if (remainingActive === 0) {
+          await Table.findByIdAndUpdate(order.tableId, { status: TableStatus.FREE });
+        }
+      } catch {}
+
+      const { emitToTenant } = await import('../../shared/utils/socket');
+      emitToTenant(restaurant._id.toString(), 'order_status_updated', updatedOrder);
+
+      res.status(200).json({ success: true, data: updatedOrder });
     } catch (error) {
       next(error);
     }

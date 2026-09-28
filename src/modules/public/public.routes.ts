@@ -27,12 +27,14 @@ router.get('/waiter/:slug/menu', PublicController.getWaiterMenu);
 router.get('/waiter/:slug/tables/:tableId/order', PublicController.getWaiterTableOrder);
 router.post('/waiter/:slug/tables/:tableId/order', PublicController.placeWaiterTableOrder);
 router.post('/waiter/:slug/tables/:tableId/bill', PublicController.generateWaiterBill);
+router.post('/waiter/:slug/tables/:tableId/settle', PublicController.settleWaiterBill);
 
 // Public routes for billing portal
 router.get('/billing/:slug/menu', PublicController.getBillingMenu);
 router.post('/billing/:slug/sale', PublicController.processBillingSale);
 router.get('/billing/:slug/tables', PublicController.getBillingTables);
 router.get('/billing/:slug/tables/:tableId/order', PublicController.getBillingTableOrder);
+router.post('/billing/:slug/tables/:tableId/generate-bill', PublicController.generateBillingBill);
 router.post('/billing/:slug/tables/:tableId/settle', PublicController.settleBillingTableOrder);
 router.get('/billing/:slug/online-orders', PublicController.getBillingOnlineOrders);
 router.post('/billing/:slug/online-orders/:orderId/settle', PublicController.settleBillingOnlineOrder);
