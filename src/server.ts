@@ -10,15 +10,16 @@ import { runMysterySeedIfMissing } from './utils/seedMystery';
 const startServer = async () => {
   try {
     await connectDatabase();
-    
+
     await runMysterySeedIfMissing();
 
     // Start background services (non-blocking)
     cronService.start();
 
+
     const { createServer } = await import('http');
     const { initSocket } = await import('./shared/utils/socket');
-    
+
     const httpServer = createServer(app);
     initSocket(httpServer);
 
