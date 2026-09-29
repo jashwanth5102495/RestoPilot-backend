@@ -57,6 +57,12 @@ export interface IRestaurant extends Document {
     enabled: boolean;
   };
   tableCount: number;
+  dynamicPricing?: {
+    enabled: boolean;
+    startTime: string;
+    endTime: string;
+    percentage: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -106,7 +112,13 @@ const RestaurantSchema = new Schema<IRestaurant>(
       scheduledTime: { type: String },
       enabled: { type: Boolean, default: false }
     },
-    tableCount: { type: Number, default: 0, min: 0 }
+    tableCount: { type: Number, default: 0, min: 0 },
+    dynamicPricing: {
+      enabled: { type: Boolean, default: false },
+      startTime: { type: String },
+      endTime: { type: String },
+      percentage: { type: Number, default: 0 }
+    }
   },
   { timestamps: true }
 );

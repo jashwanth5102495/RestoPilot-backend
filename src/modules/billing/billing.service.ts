@@ -7,6 +7,8 @@ import { OrderConsumptionService } from '../orders/order-consumption.service';
 import { InventoryService } from '../inventory/inventory.service';
 import { TransactionType } from '../inventory/inventory-transaction.model';
 import { AppError } from '../../shared/errors/AppError';
+import { Restaurant } from '../restaurants/restaurant.model';
+import { applyDynamicPricingToDishes, calculateDynamicPrice } from '../../shared/utils/pricing';
 
 export class BillingService {
   /**
@@ -23,7 +25,12 @@ export class BillingService {
       try {
         // 1. Validate dishes and calculate totals server-side
         const dishIds = items.map(i => i.dishId);
-        const dishes = await Dish.find({ _id: { $in: dishIds }, restaurantId, isDeleted: { $ne: true } }).lean();
+        let dishes = await Dish.find({ _id: { $in: dishIds }, restaurantId, isDeleted: { $ne: true } }).lean();
+        
+        const restaurant = await Restaurant.findById(restaurantId).lean();
+        if (restaurant) {
+          dishes = applyDynamicPricingToDishes(dishes, restaurant);
+        }
         const dishMap = new Map(dishes.map(d => [d._id.toString(), d]));
 
         let subtotal = 0;

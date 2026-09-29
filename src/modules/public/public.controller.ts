@@ -4,6 +4,7 @@ import { Restaurant } from '../restaurants/restaurant.model';
 import { Dish } from '../dishes/dish.model';
 import { Order, OrderSource, OrderStatus, PaymentStatus, PaymentMethod } from '../orders/order.model';
 import { Category } from '../categories/category.model';
+import { applyDynamicPricingToDishes, calculateDynamicPrice } from '../../shared/utils/pricing';
 
 export class PublicController {
   public static getRestaurantSlugFilter(slug: string | string[] | any, field: 'waiterSlug' | 'billingSlug' | 'onlineSlug' | 'kdsSlug' | 'inventorySlug' | 'tableQrSlug' = 'waiterSlug') {
@@ -56,10 +57,12 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
+      
+      dishes = applyDynamicPricingToDishes(dishes, restaurant);
 
       res.status(200).json({
         success: true,
@@ -101,12 +104,13 @@ export class PublicController {
       
       const orderItems = [];
       for (const item of items) {
-        const dish = await Dish.findOne({ _id: item.dishId, restaurantId: restaurant._id });
+        const dish = await Dish.findOne({ _id: item.dishId, restaurantId: restaurant._id }).lean();
         if (!dish || !dish.isAvailable) {
           return res.status(400).json({ success: false, message: `Dish unavailable` });
         }
         
-        const lineTotal = dish.price * item.quantity;
+        const currentPrice = calculateDynamicPrice(dish.price, restaurant);
+        const lineTotal = currentPrice * item.quantity;
         const lineTaxRate = dish.taxRate ?? 5;
         const lineCgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
         const lineSgst = Number(((lineTotal * (lineTaxRate / 2)) / 100).toFixed(2));
@@ -119,7 +123,7 @@ export class PublicController {
           dishId: dish._id,
           dishName: dish.name,
           quantity: item.quantity,
-          unitPrice: dish.price,
+          unitPrice: currentPrice,
           taxRate: lineTaxRate,
           lineTotal
         });
@@ -409,10 +413,12 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
+        
+      dishes = applyDynamicPricingToDishes(dishes, restaurant);
 
       res.status(200).json({ success: true, data: { categories, dishes } });
     } catch (error) {
@@ -530,10 +536,12 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
+        
+      dishes = applyDynamicPricingToDishes(dishes, restaurant);
 
       res.status(200).json({ success: true, data: { restaurant: { name: restaurant.name, address: restaurant.address, phone: restaurant.phone, gstNumber: restaurant.gstNumber, logo: restaurant.logo, currency: restaurant.currency }, categories, dishes } });
     } catch (error) {
@@ -1016,10 +1024,12 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      const dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
+        
+      dishes = applyDynamicPricingToDishes(dishes, restaurant);
 
       // Fetch active order for this table if customer already placed items
       const activeOrder = await Order.findOne({
@@ -1077,7 +1087,7 @@ export class PublicController {
         const dish = await Dish.findOne({ _id: item.dishId, restaurantId: restaurant._id }).lean();
         if (dish) {
           const qty = Number(item.quantity || item.quantityChange || 1);
-          const unitPrice = Number(dish.price || 0);
+          const unitPrice = calculateDynamicPrice(Number(dish.price || 0), restaurant);
           const taxRate = 5;
           orderItems.push({
             dishId: dish._id,
