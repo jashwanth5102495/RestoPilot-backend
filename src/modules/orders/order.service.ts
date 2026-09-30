@@ -1,10 +1,12 @@
 import { Order, OrderStatus, OrderSource } from './order.model';
 import { Table, TableStatus } from '../tables/table.model';
 import { Dish } from '../dishes/dish.model';
+import { Restaurant } from '../restaurants/restaurant.model';
 import mongoose from 'mongoose';
 import { ValidationError } from '../../shared/errors/AppError';
 import { SequenceService, runWithTransaction } from '../shared/sequence.service';
 import { emitToTenant } from '../../shared/utils/socket';
+import { calculateDynamicPrice } from '../../shared/utils/pricing';
 
 export class OrderService {
   static async startTableOrder(restaurantId: string, tableId: string, userId: string) {
@@ -71,6 +73,8 @@ export class OrderService {
 
       const kitchenBatchItems: any[] = [];
 
+      const restaurant = await Restaurant.findById(restaurantId).lean();
+
       for (const update of updates) {
         const dishQuery = Dish.findOne({ _id: update.dishId, restaurantId });
         const dish = await (session ? dishQuery.session(session) : dishQuery);
@@ -99,7 +103,7 @@ export class OrderService {
             } as any);
           }
         } else if (update.quantityChange > 0) {
-          const unitPrice = dish.price;
+          const unitPrice = calculateDynamicPrice(dish.price, restaurant);
           const taxRate = 5;
           
           order.items.push({
@@ -130,9 +134,9 @@ export class OrderService {
               dishId: dish._id,
               dishName: dish.name,
               quantity: update.quantityChange,
-              unitPrice: dish.price,
+              unitPrice: calculateDynamicPrice(dish.price, restaurant),
               taxRate: 5,
-              lineTotal: Number((dish.price * update.quantityChange).toFixed(2))
+              lineTotal: Number((calculateDynamicPrice(dish.price, restaurant) * update.quantityChange).toFixed(2))
             });
           }
         }

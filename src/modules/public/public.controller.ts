@@ -87,7 +87,7 @@ export class PublicController {
   static async placeOrder(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const { items, customerInfo } = req.body;
+      const { items, customerInfo, expectedTotal } = req.body;
 
       const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'onlineSlug'));
       if (!restaurant) {
@@ -134,6 +134,11 @@ export class PublicController {
       sgst = Number(sgst.toFixed(2));
       const tax = Number((cgst + sgst).toFixed(2));
       const total = Number((subtotal + tax).toFixed(2));
+      
+      if (expectedTotal !== undefined && Math.abs(total - expectedTotal) > 0.01) {
+        return res.status(409).json({ success: false, message: 'Price mismatch. The menu prices have updated. Please refresh the menu and try again.' });
+      }
+      
       const orderNumber = `ONL-${Math.floor(100000 + Math.random() * 900000)}`;
 
       const newOrder = new Order({
@@ -552,7 +557,7 @@ export class PublicController {
   static async processBillingSale(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const { items, paymentMethod, customerId } = req.body;
+      const { items, paymentMethod, customerId, expectedTotal } = req.body;
 
       const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
@@ -569,7 +574,8 @@ export class PublicController {
         userId as any,
         items,
         paymentMethod,
-        customerId
+        customerId,
+        expectedTotal
       );
 
       res.status(201).json({ success: true, data: result });
@@ -1063,7 +1069,7 @@ export class PublicController {
   static async placeTableQrOrder(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug, tableId } = req.params;
-      const { items } = req.body;
+      const { items, expectedTotal } = req.body;
 
       const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'tableQrSlug'));
       if (!restaurant || !restaurant.isTableQrEnabled) {
@@ -1102,6 +1108,16 @@ export class PublicController {
 
       if (orderItems.length === 0) {
         return res.status(400).json({ success: false, message: 'No valid dishes found in order' });
+      }
+
+      // Price mismatch check for new items
+      if (expectedTotal !== undefined) {
+        const newSubtotal = orderItems.reduce((sum: number, item: any) => sum + item.lineTotal, 0);
+        const newTax = Number((newSubtotal * 0.05).toFixed(2));
+        const newTotal = Number((newSubtotal + newTax).toFixed(2));
+        if (Math.abs(newTotal - expectedTotal) > 0.01) {
+          return res.status(409).json({ success: false, message: 'Price mismatch. The menu prices have updated. Please refresh the menu and try again.' });
+        }
       }
 
       const { OrderService } = await import('../orders/order.service');

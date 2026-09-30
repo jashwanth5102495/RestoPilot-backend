@@ -19,7 +19,8 @@ export class BillingService {
     userId: string | Types.ObjectId,
     items: { dishId: string; quantity: number }[],
     paymentMethod: PaymentMethod,
-    customerId?: string | Types.ObjectId
+    customerId?: string | Types.ObjectId,
+    expectedTotal?: number
   ) {
     return runWithTransaction(async (session) => {
       try {
@@ -68,6 +69,10 @@ export class BillingService {
         sgst = Number(sgst.toFixed(2));
         const tax = Number((cgst + sgst).toFixed(2));
         const total = Number((subtotal + tax).toFixed(2));
+        
+        if (expectedTotal !== undefined && Math.abs(total - expectedTotal) > 0.01) {
+          throw new AppError(`Price mismatch. The menu prices have updated. Please refresh the menu and try again.`, 409);
+        }
 
         // 2. Create Order
         const orderNumber = await SequenceService.getNextOrderNumber(restaurantId, session);
