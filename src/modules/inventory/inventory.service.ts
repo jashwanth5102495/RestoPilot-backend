@@ -35,11 +35,12 @@ export class InventoryService {
     const isOutgoing = [TransactionType.SALE_CONSUMPTION, TransactionType.WASTAGE, TransactionType.ADJUSTMENT_OUT].includes(type);
     
     const adjustment = isOutgoing && baseQuantity > 0 ? -baseQuantity : baseQuantity;
-    const newBalance = ingredient.currentStock + adjustment;
+    const adjustmentInIngredientUnit = UnitConverter.fromBaseUnit(adjustment, ingredient.unit);
+    const newBalance = ingredient.currentStock + adjustmentInIngredientUnit;
 
     if (newBalance < 0 && !allowNegativeStock) {
       throw new AppError(
-        `Insufficient inventory for ${ingredient.name}. Available: ${ingredient.currentStock}${ingredient.unit}, Required: ${Math.abs(adjustment)}${ingredient.unit}`,
+        `Insufficient inventory for ${ingredient.name}. Available: ${ingredient.currentStock}${ingredient.unit}, Required: ${Math.abs(adjustmentInIngredientUnit)}${ingredient.unit}`,
         400,
         'INSUFFICIENT_STOCK'
       );
@@ -50,8 +51,8 @@ export class InventoryService {
       restaurantId,
       ingredientId,
       type,
-      quantity: adjustment,
-      unit: ingredient.unit, // Always store in base unit
+      quantity: adjustmentInIngredientUnit,
+      unit: ingredient.unit, // Store in the ingredient's display unit
       balanceAfter: newBalance,
       referenceType: referenceDetails?.referenceType,
       referenceId: referenceDetails?.referenceId,
@@ -83,17 +84,13 @@ export class InventoryService {
     const ingredient = await ingredientQuery;
     if (!ingredient) throw new AppError('Ingredient not found', 404);
 
-    const oldStock = ingredient.currentStock > 0 ? ingredient.currentStock : 0;
-    const oldCost = ingredient.averageCost;
-    
-    // Weighted Average Calculation
-    const totalOldValue = oldStock * oldCost;
-    const totalNewValue = purchasedQtyBaseUnit * unitCostBaseUnit;
-    const newStock = oldStock + purchasedQtyBaseUnit;
-    
-    const newAverageCost = (totalOldValue + totalNewValue) / newStock;
-
-    ingredient.averageCost = newAverageCost;
+    const oldStockDisplayUnit = ingredient.currentStock > 0 ? ingredient.currentStock : 0;
+    const oldStockBaseUnit = UnitConverter.toBaseUnit(oldStockDisplayUnit, ingredient.unit);
+    // The user requested to use the exact latest price entered rather than weighted average.
+    // So we just overwrite the average cost with the most recent unit cost.
+    if (unitCostBaseUnit > 0) {
+      ingredient.averageCost = unitCostBaseUnit;
+    }
     
     // Rely on adjustStock to save the stock change and record transaction
     await ingredient.save({ session });
@@ -102,7 +99,7 @@ export class InventoryService {
       restaurantId,
       ingredientId,
       purchasedQtyBaseUnit,
-      ingredient.unit,
+      'BASE_UNIT',
       TransactionType.PURCHASE,
       session,
       { referenceType: 'PURCHASE', referenceId: purchaseId, createdBy }
@@ -168,7 +165,7 @@ export class InventoryService {
             restaurantId,
             ingredient._id,
             variance,
-            'BASE_UNIT',
+            ingredient.unit, // Pass the ingredient's unit, not BASE_UNIT, since variance is calculated in display units
             TransactionType.PHYSICAL_STOCK_ADJUSTMENT,
             session,
             { referenceType: 'PHYSICAL_CHECK', referenceId: checkRecord._id, notes: check.notes, createdBy: new Types.ObjectId(userId) },

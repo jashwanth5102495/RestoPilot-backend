@@ -23,6 +23,18 @@ export class UnitConverter {
   }
 
   /**
+   * Converts a given quantity from the base unit back to a given target unit
+   */
+  static fromBaseUnit(quantity: number, toUnit: string): number {
+    const unit = toUnit.toLowerCase();
+    const multiplier = this.conversions[unit];
+    if (multiplier === undefined) {
+      throw new Error(`Unsupported unit: ${toUnit}`);
+    }
+    return quantity / multiplier;
+  }
+
+  /**
    * Normalizes a unit string to its standard base unit equivalent for comparisons
    * e.g., 'kg' -> 'g', 'L' -> 'ml'
    */
