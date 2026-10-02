@@ -10,7 +10,7 @@ export function calculateDynamicPrice(basePrice: number, restaurant: any): numbe
     timeZone: restaurant.timezone || 'Asia/Kolkata',
     hour: 'numeric',
     minute: 'numeric',
-    hour12: false
+    hourCycle: 'h23'
   });
   
   const parts = formatter.formatToParts(now);

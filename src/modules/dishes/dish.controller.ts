@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { Dish } from './dish.model';
 import { Category } from '../categories/category.model';
+import { Restaurant } from '../restaurants/restaurant.model';
 import { NotFoundError } from '../../shared/errors/AppError';
+import { applyDynamicPricingToDishes } from '../../shared/utils/pricing';
 
 export class DishController {
   static async getDishes(req: Request, res: Response, next: NextFunction) {
@@ -13,7 +15,13 @@ export class DishController {
         filter.categoryId = categoryId;
       }
 
-      const dishes = await Dish.find(filter).populate('categoryId', 'name').sort({ displayOrder: 1, createdAt: -1 }).lean();
+      let dishes = await Dish.find(filter).populate('categoryId', 'name').sort({ displayOrder: 1, createdAt: -1 }).lean();
+      
+      const restaurant = await Restaurant.findById(req.tenantId).lean();
+      if (restaurant) {
+        dishes = applyDynamicPricingToDishes(dishes, restaurant);
+      }
+      
       res.status(200).json({ success: true, data: dishes });
     } catch (error) {
       next(error);
