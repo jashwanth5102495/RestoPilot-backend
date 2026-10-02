@@ -14,9 +14,6 @@ export class PublicController {
     const isObjectId = mongoose.Types.ObjectId.isValid(cleaned);
     
     const candidateSlugs = Array.from(new Set([cleaned, base]));
-    if (cleaned.includes('mystery') || cleaned.includes('mistory')) {
-      candidateSlugs.push('mystery-family-restaurant', 'mistory-family-restaurant', 'mystery-roaster-cafe');
-    }
 
     const orConditions: any[] = [];
     for (const s of candidateSlugs) {
@@ -198,11 +195,7 @@ export class PublicController {
       if (restByOwner) return restByOwner;
     }
 
-    // Single outlet fallback
-    const totalCount = await Restaurant.countDocuments();
-    if (totalCount === 1) {
-      return await Restaurant.findOne();
-    }
+    // Single outlet fallback removed to fully support multi-tenant architecture
 
     return null;
   }

@@ -104,7 +104,7 @@ export class OrderService {
           }
         } else if (update.quantityChange > 0) {
           const unitPrice = calculateDynamicPrice(dish.price, restaurant);
-          const taxRate = 5;
+          const taxRate = dish.taxRate ?? 5;
           
           order.items.push({
             dishId: dish._id,
@@ -135,7 +135,7 @@ export class OrderService {
               dishName: dish.name,
               quantity: update.quantityChange,
               unitPrice: calculateDynamicPrice(dish.price, restaurant),
-              taxRate: 5,
+              taxRate: dish.taxRate ?? 5,
               lineTotal: Number((calculateDynamicPrice(dish.price, restaurant) * update.quantityChange).toFixed(2))
             });
           }
@@ -144,10 +144,10 @@ export class OrderService {
 
       // Recalculate totals
       order.subtotal = Number(order.items.reduce((sum, item) => sum + item.lineTotal, 0).toFixed(2));
-      order.cgst = Number((order.subtotal * 0.025).toFixed(2));
-      order.sgst = Number((order.subtotal * 0.025).toFixed(2));
+      order.cgst = Number(order.items.reduce((sum, item) => sum + Number(((item.lineTotal * ((item.taxRate || 5) / 2)) / 100).toFixed(2)), 0).toFixed(2));
+      order.sgst = Number(order.items.reduce((sum, item) => sum + Number(((item.lineTotal * ((item.taxRate || 5) / 2)) / 100).toFixed(2)), 0).toFixed(2));
       order.tax = Number((order.cgst + order.sgst).toFixed(2));
-      order.total = Number((order.subtotal + order.tax - order.discount).toFixed(2));
+      order.total = Number((order.subtotal + order.tax - (order.discount || 0)).toFixed(2));
       order.pendingKitchenItems = kitchenBatchItems;
       if (kitchenBatchItems.length > 0) {
         order.kitchenBatches = [

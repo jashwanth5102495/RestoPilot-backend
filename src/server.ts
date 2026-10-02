@@ -5,13 +5,10 @@ import { env } from './config/env';
 import { logger } from './shared/utils/logger';
 
 import cronService from './modules/notifications/cron.service';
-import { runMysterySeedIfMissing } from './utils/seedMystery';
 
 const startServer = async () => {
   try {
     await connectDatabase();
-
-    await runMysterySeedIfMissing();
 
     // Start background services (non-blocking)
     cronService.start();
