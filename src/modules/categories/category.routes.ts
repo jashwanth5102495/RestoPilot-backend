@@ -12,6 +12,8 @@ router.use(authenticate, requireTenant);
 router.get('/', CategoryController.getCategories);
 router.post('/', validate(createCategorySchema), CategoryController.createCategory);
 router.put('/:id', validate(updateCategorySchema), CategoryController.updateCategory);
+router.patch('/:id/toggle', CategoryController.toggleCategory);
+router.patch('/:id', validate(updateCategorySchema), CategoryController.updateCategory);
 router.delete('/:id', CategoryController.deleteCategory);
 
 export default router;

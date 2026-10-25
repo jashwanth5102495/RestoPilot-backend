@@ -8,14 +8,30 @@ import { applyDynamicPricingToDishes } from '../../shared/utils/pricing';
 export class DishController {
   static async getDishes(req: Request, res: Response, next: NextFunction) {
     try {
-      const { categoryId } = req.query;
+      const { categoryId, activeOnly, activeCategoriesOnly } = req.query;
       const filter: any = { restaurantId: req.tenantId, isDeleted: { $ne: true } };
       
       if (categoryId) {
         filter.categoryId = categoryId;
       }
 
-      let dishes = await Dish.find(filter).populate('categoryId', 'name').sort({ displayOrder: 1, createdAt: -1 }).lean();
+      if (activeOnly === 'true') {
+        filter.isAvailable = { $ne: false };
+      }
+
+      if (activeCategoriesOnly === 'true') {
+        const activeCategories = await Category.find({ restaurantId: req.tenantId, isActive: { $ne: false } }).select('_id');
+        const activeCatIds = activeCategories.map(c => c._id);
+        if (filter.categoryId) {
+          if (!activeCatIds.some(id => id.toString() === filter.categoryId.toString())) {
+            return res.status(200).json({ success: true, data: [] });
+          }
+        } else {
+          filter.categoryId = { $in: activeCatIds };
+        }
+      }
+
+      let dishes = await Dish.find(filter).populate('categoryId', 'name isActive').sort({ displayOrder: 1, createdAt: -1 }).lean();
       
       const restaurant = await Restaurant.findById(req.tenantId).lean();
       if (restaurant) {

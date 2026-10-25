@@ -1,6 +1,7 @@
 import { Order, OrderStatus, OrderSource } from './order.model';
 import { Table, TableStatus } from '../tables/table.model';
 import { Dish } from '../dishes/dish.model';
+import { Category } from '../categories/category.model';
 import { Restaurant } from '../restaurants/restaurant.model';
 import mongoose from 'mongoose';
 import { ValidationError } from '../../shared/errors/AppError';
@@ -103,6 +104,16 @@ export class OrderService {
             } as any);
           }
         } else if (update.quantityChange > 0) {
+          if (!dish.isAvailable) {
+            throw new ValidationError(`Dish "${dish.name}" is currently out of stock`);
+          }
+          if (dish.categoryId) {
+            const category = await (session ? Category.findOne({ _id: dish.categoryId, restaurantId }).session(session) : Category.findOne({ _id: dish.categoryId, restaurantId }));
+            if (category && category.isActive === false) {
+              throw new ValidationError(`Category "${category.name}" is currently hidden from the menu`);
+            }
+          }
+
           const unitPrice = calculateDynamicPrice(dish.price, restaurant);
           const taxRate = dish.taxRate ?? 5;
           

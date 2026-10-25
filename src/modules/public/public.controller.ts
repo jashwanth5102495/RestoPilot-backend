@@ -54,7 +54,13 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      const activeCategoryIds = categories.map(c => c._id);
+      let dishes = await Dish.find({ 
+        restaurantId: restaurant._id, 
+        isAvailable: { $ne: false }, 
+        isDeleted: { $ne: true },
+        categoryId: { $in: activeCategoryIds }
+      })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
@@ -99,11 +105,14 @@ export class PublicController {
       let cgst = 0;
       let sgst = 0;
       
+      const activeCategories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).select('_id');
+      const activeCategoryIds = new Set(activeCategories.map(c => c._id.toString()));
+
       const orderItems = [];
       for (const item of items) {
         const dish = await Dish.findOne({ _id: item.dishId, restaurantId: restaurant._id }).lean();
-        if (!dish || !dish.isAvailable) {
-          return res.status(400).json({ success: false, message: `Dish unavailable` });
+        if (!dish || !dish.isAvailable || (dish.categoryId && !activeCategoryIds.has(dish.categoryId.toString()))) {
+          return res.status(400).json({ success: false, message: `Dish unavailable or category inactive` });
         }
         
         const currentPrice = calculateDynamicPrice(dish.price, restaurant);
@@ -411,7 +420,13 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      const activeCategoryIds = categories.map(c => c._id);
+      let dishes = await Dish.find({ 
+        restaurantId: restaurant._id, 
+        isAvailable: { $ne: false }, 
+        isDeleted: { $ne: true },
+        categoryId: { $in: activeCategoryIds }
+      })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
@@ -534,7 +549,13 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      const activeCategoryIds = categories.map(c => c._id);
+      let dishes = await Dish.find({ 
+        restaurantId: restaurant._id, 
+        isAvailable: { $ne: false }, 
+        isDeleted: { $ne: true },
+        categoryId: { $in: activeCategoryIds }
+      })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
@@ -1023,7 +1044,13 @@ export class PublicController {
       }
 
       const categories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).sort({ displayOrder: 1 }).lean();
-      let dishes = await Dish.find({ restaurantId: restaurant._id, isAvailable: { $ne: false }, isDeleted: { $ne: true } })
+      const activeCategoryIds = categories.map(c => c._id);
+      let dishes = await Dish.find({ 
+        restaurantId: restaurant._id, 
+        isAvailable: { $ne: false }, 
+        isDeleted: { $ne: true },
+        categoryId: { $in: activeCategoryIds }
+      })
         .populate('categoryId')
         .sort({ displayOrder: 1, createdAt: -1 })
         .lean();
@@ -1082,9 +1109,12 @@ export class PublicController {
       const { Dish } = await import('../dishes/dish.model');
       const orderItems: any[] = [];
 
+      const activeCategories = await Category.find({ restaurantId: restaurant._id, isDeleted: { $ne: true }, isActive: { $ne: false } }).select('_id');
+      const activeCatIds = new Set(activeCategories.map(c => c._id.toString()));
+
       for (const item of items) {
         const dish = await Dish.findOne({ _id: item.dishId, restaurantId: restaurant._id }).lean();
-        if (dish) {
+        if (dish && dish.isAvailable && (!dish.categoryId || activeCatIds.has(dish.categoryId.toString()))) {
           const qty = Number(item.quantity || item.quantityChange || 1);
           const unitPrice = calculateDynamicPrice(Number(dish.price || 0), restaurant);
           const taxRate = 5;
