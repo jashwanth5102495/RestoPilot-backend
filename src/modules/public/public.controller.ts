@@ -1302,4 +1302,446 @@ export class PublicController {
     }
   }
 
+  // ==========================================
+  // BILLING HISTORY & PREVIOUS BILLS
+  // ==========================================
+  static async getBillingHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug')).lean();
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { Bill } = await import('../billing/bill.model');
+      const bills = await Bill.find({ restaurantId: restaurant._id })
+        .sort({ createdAt: -1 })
+        .limit(150)
+        .lean();
+
+      const orderIds = bills.map(b => b.orderId).filter(Boolean);
+      const orders = await Order.find({
+        restaurantId: restaurant._id,
+        _id: { $in: orderIds }
+      }).lean();
+      const orderMap = new Map(orders.map(o => [o._id.toString(), o]));
+
+      const completedOrders = await Order.find({
+        restaurantId: restaurant._id,
+        orderStatus: OrderStatus.COMPLETED
+      })
+        .sort({ createdAt: -1 })
+        .limit(100)
+        .lean();
+
+      const historyList: any[] = [];
+      const seenOrderIds = new Set<string>();
+
+      for (const b of bills) {
+        const matchedOrder = b.orderId ? orderMap.get(b.orderId.toString()) : null;
+        if (b.orderId) seenOrderIds.add(b.orderId.toString());
+
+        historyList.push({
+          _id: b._id,
+          billId: b._id,
+          orderId: b.orderId,
+          billNumber: b.billNumber,
+          orderNumber: matchedOrder?.orderNumber || b.billNumber,
+          createdAt: b.createdAt || b.issuedAt,
+          items: b.items || matchedOrder?.items || [],
+          subtotal: b.subtotal,
+          discount: b.discount || 0,
+          tax: b.tax,
+          cgst: b.cgst,
+          sgst: b.sgst,
+          total: b.total,
+          paymentMethod: b.paymentMethod,
+          paymentStatus: b.paymentStatus,
+          status: b.status,
+          customerInfo: matchedOrder?.customerInfo,
+          tableName: matchedOrder?.tableId ? (matchedOrder as any).tableName : '',
+          orderSource: matchedOrder?.orderSource || 'IN_STORE'
+        });
+      }
+
+      for (const o of completedOrders) {
+        if (!seenOrderIds.has(o._id.toString())) {
+          historyList.push({
+            _id: o._id,
+            orderId: o._id,
+            billNumber: o.orderNumber,
+            orderNumber: o.orderNumber,
+            createdAt: o.createdAt,
+            items: o.items || [],
+            subtotal: o.subtotal,
+            discount: o.discount || 0,
+            tax: o.tax,
+            cgst: o.cgst,
+            sgst: o.sgst,
+            total: o.total,
+            paymentMethod: o.paymentMethod || 'CASH',
+            paymentStatus: o.paymentStatus || 'PAID',
+            status: 'ACTIVE',
+            customerInfo: o.customerInfo,
+            tableName: (o as any).tableName || '',
+            orderSource: o.orderSource || 'IN_STORE'
+          });
+        }
+      }
+
+      historyList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      res.status(200).json({
+        success: true,
+        data: historyList
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // ==========================================
+  // DRINKS TAB & INVENTORY MANAGEMENT
+  // ==========================================
+  static async getBillingDrinks(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug')).lean();
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { DrinkItem } = await import('../drinks/drink.model');
+      const drinks = await DrinkItem.find({
+        restaurantId: restaurant._id,
+        isDeleted: { $ne: true }
+      }).sort({ category: 1, name: 1 }).lean();
+
+      res.status(200).json({
+        success: true,
+        data: {
+          restaurant: {
+            name: restaurant.name,
+            address: restaurant.address,
+            phone: restaurant.phone,
+            gstNumber: restaurant.gstNumber,
+            logo: restaurant.logo,
+            currency: restaurant.currency
+          },
+          drinks
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async addBillingDrink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const { name, price, category, currentStock, unit, cost, minStock } = req.body;
+
+      if (!name || price === undefined || price === null) {
+        return res.status(400).json({ success: false, message: 'Drink name and price are required' });
+      }
+
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { DrinkItem, DrinkStockLog } = await import('../drinks/drink.model');
+      const stock = Math.max(0, Number(currentStock || 0));
+
+      const newDrink = new DrinkItem({
+        restaurantId: restaurant._id,
+        name: name.trim(),
+        price: Number(price),
+        category: category?.trim() || 'Drinks',
+        currentStock: stock,
+        unit: unit?.trim() || 'bottle',
+        cost: Number(cost || 0),
+        minStock: Number(minStock || 5),
+        isAvailable: stock > 0
+      });
+
+      await newDrink.save();
+
+      if (stock > 0) {
+        await DrinkStockLog.create({
+          restaurantId: restaurant._id,
+          drinkId: newDrink._id,
+          drinkName: newDrink.name,
+          type: 'RESTOCK',
+          quantityChange: stock,
+          stockAfter: stock,
+          notes: 'Initial stock on creation'
+        });
+      }
+
+      res.status(201).json({ success: true, data: newDrink });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateBillingDrink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, drinkId } = req.params;
+      const { name, price, category, unit, cost, minStock, isAvailable, currentStock } = req.body;
+
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { DrinkItem } = await import('../drinks/drink.model');
+      const drink = await DrinkItem.findOne({ _id: drinkId, restaurantId: restaurant._id });
+      if (!drink) {
+        return res.status(404).json({ success: false, message: 'Drink item not found' });
+      }
+
+      if (name !== undefined) drink.name = name.trim();
+      if (price !== undefined) drink.price = Number(price);
+      if (category !== undefined) drink.category = category.trim();
+      if (unit !== undefined) drink.unit = unit.trim();
+      if (cost !== undefined) drink.cost = Number(cost);
+      if (minStock !== undefined) drink.minStock = Number(minStock);
+      if (isAvailable !== undefined) drink.isAvailable = Boolean(isAvailable);
+      if (currentStock !== undefined) drink.currentStock = Math.max(0, Number(currentStock));
+
+      await drink.save();
+
+      res.status(200).json({ success: true, data: drink });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteBillingDrink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug, drinkId } = req.params;
+
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { DrinkItem } = await import('../drinks/drink.model');
+      const drink = await DrinkItem.findOne({ _id: drinkId, restaurantId: restaurant._id });
+      if (!drink) {
+        return res.status(404).json({ success: false, message: 'Drink item not found' });
+      }
+
+      drink.isDeleted = true;
+      await drink.save();
+
+      res.status(200).json({ success: true, message: 'Drink item deleted successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async restockBillingDrink(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const { drinkId, quantityToAdd, notes, items } = req.body;
+
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { DrinkItem, DrinkStockLog } = await import('../drinks/drink.model');
+
+      const restockList: { drinkId: string; quantityToAdd: number; notes?: string }[] = [];
+      if (items && Array.isArray(items)) {
+        restockList.push(...items);
+      } else if (drinkId && quantityToAdd !== undefined) {
+        restockList.push({ drinkId, quantityToAdd: Number(quantityToAdd), notes });
+      }
+
+      if (restockList.length === 0) {
+        return res.status(400).json({ success: false, message: 'No items provided for restocking' });
+      }
+
+      const updatedDrinks = [];
+      for (const item of restockList) {
+        const qty = Number(item.quantityToAdd || 0);
+        if (qty <= 0) continue;
+
+        const updated = await DrinkItem.findOneAndUpdate(
+          { _id: item.drinkId, restaurantId: restaurant._id },
+          { 
+            $inc: { currentStock: qty },
+            $set: { isAvailable: true }
+          },
+          { returnDocument: 'after' }
+        );
+
+        if (updated) {
+          updatedDrinks.push(updated);
+          await DrinkStockLog.create({
+            restaurantId: restaurant._id,
+            drinkId: updated._id,
+            drinkName: updated.name,
+            type: 'RESTOCK',
+            quantityChange: qty,
+            stockAfter: updated.currentStock,
+            notes: item.notes || notes || 'Restocked via Drinks Portal'
+          });
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        message: `Successfully restocked ${updatedDrinks.length} item(s)`,
+        data: updatedDrinks
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async processDrinksSale(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slug } = req.params;
+      const { items, subtotal, discount, tax, cgst, sgst, total, paymentMethod, customerInfo, notes } = req.body;
+
+      if (!items || !items.length) {
+        return res.status(400).json({ success: false, message: 'No items provided for the bill' });
+      }
+
+      const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
+      if (!restaurant) {
+        return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { DrinkItem, DrinkStockLog } = await import('../drinks/drink.model');
+
+      // 1. Decrement inventory stock atomically for each drink item sold
+      for (const item of items) {
+        if (item.drinkId) {
+          const qty = Number(item.quantity || 1);
+          const updated = await DrinkItem.findOneAndUpdate(
+            { _id: item.drinkId, restaurantId: restaurant._id },
+            { $inc: { currentStock: -qty } },
+            { returnDocument: 'after' }
+          );
+
+          if (updated) {
+            if (updated.currentStock <= 0) {
+              updated.isAvailable = false;
+              await updated.save();
+            }
+
+            await DrinkStockLog.create({
+              restaurantId: restaurant._id,
+              drinkId: updated._id,
+              drinkName: updated.name,
+              type: 'SALE',
+              quantityChange: -qty,
+              stockAfter: updated.currentStock,
+              notes: notes || 'Sold via Drinks Tab'
+            });
+          }
+        }
+      }
+
+      // 2. Generate sequential order and bill numbers
+      const { SequenceService } = await import('../shared/sequence.service');
+      let orderNumber: string;
+      let billNumber: string;
+      try {
+        orderNumber = await SequenceService.getNextOrderNumber(restaurant._id);
+      } catch {
+        orderNumber = `DRK-${Date.now().toString().slice(-6)}`;
+      }
+      try {
+        billNumber = await SequenceService.getNextBillNumber(restaurant._id);
+      } catch {
+        billNumber = `INV-${Date.now().toString().slice(-6)}`;
+      }
+
+      // 3. Prepare order items
+      const orderItems = items.map((it: any) => ({
+        dishId: it.drinkId ? new mongoose.Types.ObjectId(it.drinkId) : new mongoose.Types.ObjectId(),
+        dishName: it.name || it.dishName || 'Drink',
+        quantity: Number(it.quantity || 1),
+        unitPrice: Number(it.unitPrice || 0),
+        taxRate: Number(it.taxRate || 0),
+        lineTotal: Number(it.lineTotal || (Number(it.unitPrice || 0) * Number(it.quantity || 1)))
+      }));
+
+      const finalSubtotal = Number(Number(subtotal || 0).toFixed(2));
+      const finalDiscount = Number(Number(discount || 0).toFixed(2));
+      const finalCgst = Number(Number(cgst || 0).toFixed(2));
+      const finalSgst = Number(Number(sgst || 0).toFixed(2));
+      const finalTax = Number(Number(tax !== undefined ? tax : (finalCgst + finalSgst)).toFixed(2));
+      const finalTotal = Number(Number(total || (finalSubtotal - finalDiscount + finalTax)).toFixed(2));
+
+      // 4. Create and save Order
+      const order = new Order({
+        restaurantId: restaurant._id,
+        orderNumber,
+        items: orderItems,
+        subtotal: finalSubtotal,
+        discount: finalDiscount,
+        tax: finalTax,
+        cgst: finalCgst,
+        sgst: finalSgst,
+        total: finalTotal,
+        paymentMethod: paymentMethod || PaymentMethod.CASH,
+        paymentStatus: PaymentStatus.PAID,
+        orderStatus: OrderStatus.COMPLETED,
+        orderSource: OrderSource.IN_STORE,
+        inventoryConsumed: true,
+        customerInfo: customerInfo || {},
+        createdBy: restaurant.ownerId || restaurant._id,
+        orderActivity: [{
+          action: 'DRINKS_BILL_GENERATED',
+          userId: restaurant.ownerId || restaurant._id,
+          timestamp: new Date(),
+          details: `Drinks Bill ${billNumber} generated via ${paymentMethod || 'CASH'}`
+        }]
+      });
+      await order.save();
+
+      // 5. Create and save Bill
+      const { Bill, BillStatus } = await import('../billing/bill.model');
+      const bill = new Bill({
+        restaurantId: restaurant._id,
+        billNumber,
+        orderId: order._id,
+        items: orderItems,
+        subtotal: finalSubtotal,
+        discount: finalDiscount,
+        tax: finalTax,
+        cgst: finalCgst,
+        sgst: finalSgst,
+        total: finalTotal,
+        paymentMethod: paymentMethod || PaymentMethod.CASH,
+        paymentStatus: PaymentStatus.PAID,
+        status: BillStatus.ACTIVE,
+        issuedBy: restaurant.ownerId || restaurant._id
+      });
+      await bill.save();
+
+      try {
+        const { emitToTenant } = await import('../../shared/utils/socket');
+        emitToTenant(restaurant._id.toString(), 'bill_generated', { order, bill });
+      } catch {}
+
+      res.status(201).json({
+        success: true,
+        data: {
+          order,
+          bill
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }

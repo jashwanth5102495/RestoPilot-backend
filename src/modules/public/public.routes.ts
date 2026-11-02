@@ -43,6 +43,17 @@ router.patch('/billing/:slug/dishes/:dishId/availability', PublicController.togg
 router.get('/billing/:slug/qr-table-orders', PublicController.getBillingQrTableOrders);
 router.post('/billing/:slug/qr-table-orders/:orderId/settle', PublicController.settleBillingQrTableOrder);
 
+// History routes for billing portal
+router.get('/billing/:slug/history', PublicController.getBillingHistory);
+
+// Drinks & drinks inventory routes for billing portal
+router.get('/billing/:slug/drinks', PublicController.getBillingDrinks);
+router.post('/billing/:slug/drinks', PublicController.addBillingDrink);
+router.put('/billing/:slug/drinks/:drinkId', PublicController.updateBillingDrink);
+router.delete('/billing/:slug/drinks/:drinkId', PublicController.deleteBillingDrink);
+router.post('/billing/:slug/drinks/restock', PublicController.restockBillingDrink);
+router.post('/billing/:slug/drinks/sale', PublicController.processDrinksSale);
+
 // Public routes for KDS portal
 router.get('/kds/:slug/orders', PublicController.getKdsOrders);
 router.patch('/kds/:slug/orders/:orderId/status', PublicController.updateKdsOrderStatus);
