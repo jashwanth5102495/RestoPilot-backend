@@ -14,6 +14,10 @@ const runSeed = async () => {
   await connectDatabase();
   console.log('Seeding Butter Chicken Scenario...');
 
+    if (process.env.NODE_ENV === 'production') {
+    console.error('CRITICAL: dropDatabase() is prohibited in production mode to prevent accidental data loss!');
+    process.exit(1);
+  }
   await mongoose.connection.dropDatabase();
 
   const restaurant = await Restaurant.create({
@@ -112,3 +116,4 @@ const runSeed = async () => {
 };
 
 runSeed().catch(console.error);
+

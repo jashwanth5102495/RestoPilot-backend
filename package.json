@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
     "seed": "ts-node src/scripts/seed.ts",
-    "populate-mystery": "node dist/scripts/populate-mystery-cafe.js"
+    "populate-mystery": "node dist/scripts/populate-mystery-cafe.js",
+    "seed-drinks": "ts-node src/scripts/seed-drinks.ts"
   },
   "keywords": [],
   "author": "",
@@ -66,3 +67,5 @@
     "ts-node": "^10.9.2"
   }
 }
+
+

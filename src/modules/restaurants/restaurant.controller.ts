@@ -113,6 +113,7 @@ export class RestaurantController {
       const { Restaurant } = await import('./restaurant.model');
       const { Order, PaymentStatus, OrderStatus } = await import('../orders/order.model');
       const { Ingredient } = await import('../ingredients/ingredient.model');
+      const { DrinkItem } = await import('../drinks/drink.model');
       const { TelegramService } = await import('../notifications/telegram.service');
       const { PdfService } = await import('../notifications/pdf.service');
       const path = await import('path');
@@ -127,17 +128,15 @@ export class RestaurantController {
       }
 
       const now = new Date();
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const endOfDay = new Date();
-      endOfDay.setHours(23, 59, 59, 999);
+      const tz = currentRes.timezone || 'Asia/Kolkata';
+      // Last 24 Hours rolling window
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
       const salesAggregate = await Order.aggregate([
         {
           $match: {
             restaurantId: currentRes._id,
-            createdAt: { $gte: startOfDay, $lte: endOfDay },
+            createdAt: { $gte: twentyFourHoursAgo },
             paymentStatus: PaymentStatus.PAID,
             orderStatus: { $ne: OrderStatus.CANCELLED }
           }
@@ -168,7 +167,7 @@ export class RestaurantController {
       
       const rawOrders = await Order.find({
         restaurantId: currentRes._id,
-        createdAt: { $gte: startOfDay, $lte: endOfDay },
+        createdAt: { $gte: twentyFourHoursAgo },
         paymentStatus: PaymentStatus.PAID,
         orderStatus: { $ne: OrderStatus.CANCELLED }
       });
@@ -178,16 +177,32 @@ export class RestaurantController {
         else posOrdersCount++;
       });
 
-      const ingredients = await Ingredient.find({ restaurantId: currentRes._id });
-      const inventoryData = ingredients.map(ing => ({
-        name: ing.name,
-        quantity: ing.currentStock,
-        unit: ing.unit
-      }));
+      const ingredients = await Ingredient.find({
+        restaurantId: currentRes._id,
+        isDeleted: { $ne: true }
+      }).sort({ name: 1 });
+
+      const drinks = await DrinkItem.find({
+        restaurantId: currentRes._id,
+        isDeleted: { $ne: true }
+      }).sort({ category: 1, name: 1 });
+
+      const inventoryData = [
+        ...ingredients.map(ing => ({
+          name: ing.name,
+          quantity: ing.currentStock,
+          unit: ing.unit || 'unit'
+        })),
+        ...drinks.map(d => ({
+          name: `${d.name} (${d.category || 'Drink'})`,
+          quantity: d.currentStock,
+          unit: d.unit || 'bottle'
+        }))
+      ];
 
       const reportData = {
         restaurantName: currentRes.name,
-        date: now.toLocaleDateString(),
+        date: `${now.toLocaleDateString('en-IN', { timeZone: tz })} (Last 24 Hours)`,
         sales: {
           total: totalSales,
           cash,
@@ -205,14 +220,36 @@ export class RestaurantController {
       
       await PdfService.generateDailyReport(reportData, pdfPath);
 
-      const message = `*Daily Sales & Inventory Report (TEST)*\nRestaurant: ${currentRes.name}\nDate: ${now.toLocaleDateString()}\n\n*Quick Summary:*\n💰 Total Sales: Rs. ${totalSales.toFixed(2)}\n💵 Cash: Rs. ${cash.toFixed(2)}\n💳 Card: Rs. ${card.toFixed(2)}\n📱 UPI: Rs. ${upi.toFixed(2)}\n\n📦 Total Inventory Items: ${inventoryData.length}\n\nPlease find your detailed test report attached.`;
+      const message = `*Daily 24-Hour Sales & Inventory Report (TEST)*\n` +
+        `🏠 Restaurant: *${currentRes.name}*\n` +
+        `📅 Date: ${now.toLocaleDateString('en-IN', { timeZone: tz })}\n\n` +
+        `*📊 Last 24 Hours Sales:*\n` +
+        `💰 Total Sales: *₹${totalSales.toFixed(2)}*\n` +
+        `💵 Cash: ₹${cash.toFixed(2)}\n` +
+        `💳 Card: ₹${card.toFixed(2)}\n` +
+        `📱 UPI: ₹${upi.toFixed(2)}\n` +
+        `📦 Online Orders: ${onlineOrdersCount} | POS Orders: ${posOrdersCount}\n\n` +
+        `*📋 Inventory Summary:*\n` +
+        `🥘 Kitchen Ingredients: ${ingredients.length}\n` +
+        `🍾 Drinks & Beverages: ${drinks.length}\n` +
+        `📦 Total Tracked Items: ${inventoryData.length}\n\n` +
+        `Please find your detailed report attached below.`;
+
       await TelegramService.sendMessage(currentRes.notificationSettings.telegramChatId, message, pdfPath);
       
-      fs.unlinkSync(pdfPath);
+      if (fs.existsSync(pdfPath)) {
+        fs.unlinkSync(pdfPath);
+      }
 
       res.status(200).json({ success: true, message: 'Test report sent successfully' });
     } catch (error: any) {
       console.error('Test Report Error:', error);
+      if (error.message && error.message.includes('chat not found')) {
+        return res.status(400).json({
+          success: false,
+          message: 'Telegram Chat Not Found. Please open Telegram on your phone or PC, search for @rest_blu_bot, and tap START (or send /start). Then try sending the test report again.'
+        });
+      }
       res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
     }
   }

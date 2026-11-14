@@ -3,42 +3,73 @@ import { Restaurant } from '../restaurants/restaurant.model';
 import { Order, PaymentStatus, OrderStatus } from '../orders/order.model';
 import { Ingredient } from '../ingredients/ingredient.model';
 import { TelegramService } from './telegram.service';
-import mongoose from 'mongoose';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
 
 class CronService {
+  private sentToday = new Map<string, string>(); // restaurantId -> YYYY-MM-DD
+
   public start() {
     // Run every minute
     cron.schedule('* * * * *', async () => {
       try {
         const now = new Date();
-        const currentHours = now.getHours().toString().padStart(2, '0');
-        const currentMinutes = now.getMinutes().toString().padStart(2, '0');
-        const currentTime = `${currentHours}:${currentMinutes}`; // HH:mm format
 
-        // Find restaurants with enabled notifications matching the current time
+        // Find all restaurants with enabled telegram notifications
         const restaurants = await Restaurant.find({
           'notificationSettings.enabled': true,
-          'notificationSettings.scheduledTime': currentTime,
         });
 
         for (const restaurant of restaurants) {
           if (!restaurant.notificationSettings?.telegramChatId) continue;
 
-          // Calculate today's sales
-          const startOfDay = new Date();
-          startOfDay.setHours(0, 0, 0, 0);
+          const scheduledTime = restaurant.notificationSettings.scheduledTime || '21:00';
+          const tz = restaurant.timezone || 'Asia/Kolkata';
 
-          const endOfDay = new Date();
-          endOfDay.setHours(23, 59, 59, 999);
+          // Get current time formatted in restaurant's configured local timezone (HH:mm)
+          let currentLocalTime = '';
+          let localDateStr = '';
+          try {
+            const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+              timeZone: tz,
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
+            });
+            currentLocalTime = timeFormatter.format(now);
+
+            const dateFormatter = new Intl.DateTimeFormat('en-CA', {
+              timeZone: tz,
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            });
+            localDateStr = dateFormatter.format(now); // YYYY-MM-DD
+          } catch (e) {
+            currentLocalTime = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false });
+            localDateStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+          }
+
+          // Check if scheduled time matches current local time
+          if (currentLocalTime !== scheduledTime) {
+            continue;
+          }
+
+          // Prevent duplicate sends within the same minute or same day
+          const lastSentKey = restaurant._id.toString();
+          if (this.sentToday.get(lastSentKey) === localDateStr) {
+            continue;
+          }
+
+          // Calculate last 24 hours sales
+          const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
           const salesAggregate = await Order.aggregate([
             {
               $match: {
                 restaurantId: restaurant._id,
-                createdAt: { $gte: startOfDay, $lte: endOfDay },
+                createdAt: { $gte: twentyFourHoursAgo },
                 paymentStatus: PaymentStatus.PAID,
                 orderStatus: { $ne: OrderStatus.CANCELLED }
               }
@@ -66,10 +97,10 @@ class CronService {
 
           let onlineOrdersCount = 0;
           let posOrdersCount = 0;
-          
+
           const rawOrders = await Order.find({
             restaurantId: restaurant._id,
-            createdAt: { $gte: startOfDay, $lte: endOfDay },
+            createdAt: { $gte: twentyFourHoursAgo },
             paymentStatus: PaymentStatus.PAID,
             orderStatus: { $ne: OrderStatus.CANCELLED }
           });
@@ -79,19 +110,38 @@ class CronService {
             else posOrdersCount++;
           });
 
-          const ingredients = await Ingredient.find({ restaurantId: restaurant._id });
-          const inventoryData = ingredients.map(ing => ({
-            name: ing.name,
-            quantity: ing.currentStock,
-            unit: ing.unit
-          }));
+          // Fetch all inventory: Ingredients AND Drinks
+          const { DrinkItem } = await import('../drinks/drink.model');
+
+          const ingredients = await Ingredient.find({
+            restaurantId: restaurant._id,
+            isDeleted: { $ne: true }
+          }).sort({ name: 1 });
+
+          const drinks = await DrinkItem.find({
+            restaurantId: restaurant._id,
+            isDeleted: { $ne: true }
+          }).sort({ category: 1, name: 1 });
+
+          const inventoryData = [
+            ...ingredients.map(ing => ({
+              name: ing.name,
+              quantity: ing.currentStock,
+              unit: ing.unit || 'unit'
+            })),
+            ...drinks.map(d => ({
+              name: `${d.name} (${d.category || 'Drink'})`,
+              quantity: d.currentStock,
+              unit: d.unit || 'bottle'
+            }))
+          ];
 
           try {
             const { PdfService } = await import('./pdf.service');
 
             const reportData = {
               restaurantName: restaurant.name,
-              date: now.toLocaleDateString(),
+              date: `${now.toLocaleDateString('en-IN', { timeZone: tz })} (Last 24 Hours)`,
               sales: {
                 total: totalSales,
                 cash: cash,
@@ -105,19 +155,35 @@ class CronService {
 
             const tempDir = os.tmpdir();
             const pdfPath = path.join(tempDir, `report-${restaurant._id}-${Date.now()}.pdf`);
-            
+
             await PdfService.generateDailyReport(reportData, pdfPath);
 
-            const message = `*Daily Sales & Inventory Report*\nRestaurant: ${restaurant.name}\nDate: ${now.toLocaleDateString()}\n\n*Quick Summary:*\n💰 Total Sales: Rs. ${totalSales.toFixed(2)}\n💵 Cash: Rs. ${cash.toFixed(2)}\n💳 Card: Rs. ${card.toFixed(2)}\n📱 UPI: Rs. ${upi.toFixed(2)}\n\n📦 Total Inventory Items: ${inventoryData.length}\n\nPlease find your detailed report attached.`;
+            const message = `*Daily 24-Hour Sales & Inventory Report*\n` +
+              `🏠 Restaurant: *${restaurant.name}*\n` +
+              `📅 Date: ${now.toLocaleDateString('en-IN', { timeZone: tz })}\n\n` +
+              `*📊 Last 24 Hours Sales:*\n` +
+              `💰 Total Sales: *₹${totalSales.toFixed(2)}*\n` +
+              `💵 Cash: ₹${cash.toFixed(2)}\n` +
+              `💳 Card: ₹${card.toFixed(2)}\n` +
+              `📱 UPI: ₹${upi.toFixed(2)}\n` +
+              `📦 Online Orders: ${onlineOrdersCount} | POS Orders: ${posOrdersCount}\n\n` +
+              `*📋 Inventory Summary:*\n` +
+              `🥘 Kitchen Ingredients: ${ingredients.length}\n` +
+              `🍾 Drinks & Beverages: ${drinks.length}\n` +
+              `📦 Total Tracked Items: ${inventoryData.length}\n\n` +
+              `Please find your detailed report attached below.`;
 
             await TelegramService.sendMessage(restaurant.notificationSettings.telegramChatId, message, pdfPath);
-            
-            console.log(`Sent daily report PDF to restaurant ${restaurant._id} on Telegram: ${restaurant.notificationSettings.telegramChatId}`);
-            
+
+            this.sentToday.set(lastSentKey, localDateStr);
+            console.log(`Sent daily 24h report PDF to restaurant ${restaurant._id} on Telegram: ${restaurant.notificationSettings.telegramChatId}`);
+
             // Clean up PDF
-            fs.unlinkSync(pdfPath);
-          } catch (err) {
-            console.error(`Failed to generate/send daily report PDF to ${restaurant._id}:`, err);
+            if (fs.existsSync(pdfPath)) {
+              fs.unlinkSync(pdfPath);
+            }
+          } catch (err: any) {
+            console.error(`Failed to generate/send daily report PDF to ${restaurant._id}:`, err?.message || err);
           }
         }
       } catch (error) {
