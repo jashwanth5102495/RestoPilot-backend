@@ -52,9 +52,17 @@ export interface IRestaurant extends Document {
   inventoryCheckFrequency: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
   inventoryCheckSnoozedUntil?: Date;
   notificationSettings?: {
-    telegramChatId: string;
-    scheduledTime: string;
-    enabled: boolean;
+    telegramChatId?: string;
+    scheduledTime?: string;
+    enabled?: boolean;
+    shift1Enabled?: boolean;
+    shift1StartTime?: string;
+    shift1EndTime?: string;
+    shift1SendTime?: string;
+    shift2Enabled?: boolean;
+    shift2StartTime?: string;
+    shift2EndTime?: string;
+    shift2SendTime?: string;
   };
   tableCount: number;
   dynamicPricing?: {
@@ -109,8 +117,16 @@ const RestaurantSchema = new Schema<IRestaurant>(
     inventoryCheckSnoozedUntil: { type: Date },
     notificationSettings: {
       telegramChatId: { type: String },
-      scheduledTime: { type: String },
-      enabled: { type: Boolean, default: false }
+      scheduledTime: { type: String, default: '23:30' },
+      enabled: { type: Boolean, default: false },
+      shift1Enabled: { type: Boolean, default: true },
+      shift1StartTime: { type: String, default: '10:00' },
+      shift1EndTime: { type: String, default: '23:30' },
+      shift1SendTime: { type: String, default: '23:30' },
+      shift2Enabled: { type: Boolean, default: true },
+      shift2StartTime: { type: String, default: '23:31' },
+      shift2EndTime: { type: String, default: '09:59' },
+      shift2SendTime: { type: String, default: '10:00' },
     },
     tableCount: { type: Number, default: 0, min: 0 },
     dynamicPricing: {

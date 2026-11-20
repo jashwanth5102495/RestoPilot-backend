@@ -4,8 +4,11 @@ import fs from 'fs';
 
 export class TelegramService {
   private static async getBotToken(): Promise<string | null> {
-    const setting = await SystemSettings.findOne({ key: 'telegramBotToken' });
-    return setting ? setting.value : null;
+    try {
+      const setting = await SystemSettings.findOne({ key: 'telegramBotToken' });
+      if (setting && setting.value) return setting.value;
+    } catch {}
+    return process.env.TELEGRAM_BOT_TOKEN || null;
   }
 
   static async getBotInfo() {
@@ -34,13 +37,23 @@ export class TelegramService {
 
   static async sendMessage(chatId: string, text: string, mediaPath?: string) {
     const token = await this.getBotToken();
-    if (!token) throw new Error('Telegram bot token not configured');
+    if (!token) throw new Error('Telegram bot token not configured. Please configure it in the Admin Telegram Setup or TELEGRAM_BOT_TOKEN environment variable.');
 
     const bot = new TelegramBot(token, { polling: false });
 
     if (mediaPath && fs.existsSync(mediaPath)) {
-      await bot.sendDocument(chatId, mediaPath, { caption: text });
-    } else {
+      try {
+        await bot.sendDocument(chatId, mediaPath, { caption: text, parse_mode: 'Markdown' });
+        return;
+      } catch (docErr) {
+        console.warn('Failed to send document via Telegram, falling back to text message:', docErr);
+      }
+    }
+    
+    try {
+      await bot.sendMessage(chatId, text, { parse_mode: 'Markdown' });
+    } catch {
+      // Fallback without parse_mode in case of markdown parsing issue
       await bot.sendMessage(chatId, text);
     }
   }

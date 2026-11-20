@@ -5,6 +5,7 @@ import path from 'path';
 export interface ReportData {
   restaurantName: string;
   date: string;
+  shiftTitle?: string;
   sales: {
     total: number;
     cash: number;
@@ -32,8 +33,8 @@ export class PdfService {
         // Header
         doc.fontSize(24).font('Helvetica-Bold').text(data.restaurantName, { align: 'center' });
         doc.moveDown(0.5);
-        doc.fontSize(16).font('Helvetica').text('Daily Sales & Inventory Report', { align: 'center' });
-        doc.fontSize(12).fillColor('gray').text(`Date: ${data.date}`, { align: 'center' });
+        doc.fontSize(16).font('Helvetica').text(data.shiftTitle || 'Sales & Inventory Report', { align: 'center' });
+        doc.fontSize(12).fillColor('gray').text(`Date / Period: ${data.date}`, { align: 'center' });
         doc.moveDown(2);
 
         // Sales Section
@@ -93,7 +94,9 @@ export class PdfService {
           
           y = doc.y;
           doc.text(item.name, 50, y);
-          doc.text(`${item.quantity.toFixed(2)} ${item.unit}`, 400, y, { align: 'right' });
+          const qtyNum = Number(item.quantity);
+          const qtyStr = isNaN(qtyNum) ? '0.00' : qtyNum.toFixed(2);
+          doc.text(`${qtyStr} ${item.unit || 'unit'}`, 400, y, { align: 'right' });
           doc.moveDown(0.2);
         }
 

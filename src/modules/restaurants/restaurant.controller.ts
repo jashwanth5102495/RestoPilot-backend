@@ -111,146 +111,73 @@ export class RestaurantController {
   static async testTelegramReport(req: Request, res: Response, next: NextFunction) {
     try {
       const { Restaurant } = await import('./restaurant.model');
-      const { Order, PaymentStatus, OrderStatus } = await import('../orders/order.model');
-      const { Ingredient } = await import('../ingredients/ingredient.model');
-      const { DrinkItem } = await import('../drinks/drink.model');
-      const { TelegramService } = await import('../notifications/telegram.service');
-      const { PdfService } = await import('../notifications/pdf.service');
-      const path = await import('path');
-      const fs = await import('fs');
+      const { sendRestaurantShiftReport, calculateShiftRange } = await import('../notifications/cron.service');
 
       const { id } = req.params;
       const currentRes = await Restaurant.findById(id);
       if (!currentRes) return res.status(404).json({ success: false, message: 'Restaurant not found' });
 
       if (!currentRes.notificationSettings?.telegramChatId) {
-        return res.status(400).json({ success: false, message: 'No Telegram Chat ID configured.' });
+        return res.status(400).json({
+          success: false,
+          message: 'No Telegram Chat ID configured. Please enter your Telegram Chat ID, enable notifications, and save preferences.'
+        });
       }
 
-      const now = new Date();
+      const requestedShift = (req.body?.shift || req.query?.shift || 'SHIFT_1').toString().toUpperCase();
       const tz = currentRes.timezone || 'Asia/Kolkata';
-      // Last 24 Hours rolling window
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const now = new Date();
+      const localDateStr = now.toLocaleDateString('en-CA', { timeZone: tz });
 
-      const salesAggregate = await Order.aggregate([
-        {
-          $match: {
-            restaurantId: currentRes._id,
-            createdAt: { $gte: twentyFourHoursAgo },
-            paymentStatus: PaymentStatus.PAID,
-            orderStatus: { $ne: OrderStatus.CANCELLED }
-          }
-        },
-        {
-          $group: {
-            _id: '$paymentMethod',
-            total: { $sum: '$total' }
-          }
-        }
-      ]);
+      let startTime: Date;
+      let endTime: Date;
+      let shiftLabel: string;
 
-      let cash = 0;
-      let card = 0;
-      let upi = 0;
-      let totalSales = 0;
-
-      salesAggregate.forEach((item) => {
-        const methodTotal = item.total || 0;
-        if (item._id === 'CASH') cash += methodTotal;
-        if (item._id === 'CARD') card += methodTotal;
-        if (item._id === 'UPI') upi += methodTotal;
-        totalSales += methodTotal;
-      });
-
-      let onlineOrdersCount = 0;
-      let posOrdersCount = 0;
-      
-      const rawOrders = await Order.find({
-        restaurantId: currentRes._id,
-        createdAt: { $gte: twentyFourHoursAgo },
-        paymentStatus: PaymentStatus.PAID,
-        orderStatus: { $ne: OrderStatus.CANCELLED }
-      });
-
-      rawOrders.forEach(order => {
-        if (order.orderSource === 'ONLINE') onlineOrdersCount++;
-        else posOrdersCount++;
-      });
-
-      const ingredients = await Ingredient.find({
-        restaurantId: currentRes._id,
-        isDeleted: { $ne: true }
-      }).sort({ name: 1 });
-
-      const drinks = await DrinkItem.find({
-        restaurantId: currentRes._id,
-        isDeleted: { $ne: true }
-      }).sort({ category: 1, name: 1 });
-
-      const inventoryData = [
-        ...ingredients.map(ing => ({
-          name: ing.name,
-          quantity: ing.currentStock,
-          unit: ing.unit || 'unit'
-        })),
-        ...drinks.map(d => ({
-          name: `${d.name} (${d.category || 'Drink'})`,
-          quantity: d.currentStock,
-          unit: d.unit || 'bottle'
-        }))
-      ];
-
-      const reportData = {
-        restaurantName: currentRes.name,
-        date: `${now.toLocaleDateString('en-IN', { timeZone: tz })} (Last 24 Hours)`,
-        sales: {
-          total: totalSales,
-          cash,
-          card,
-          upi,
-          onlineOrders: onlineOrdersCount,
-          posOrders: posOrdersCount
-        },
-        inventory: inventoryData
-      };
-
-      const os = await import('os');
-      const tempDir = os.tmpdir();
-      const pdfPath = path.join(tempDir, `test-report-${currentRes._id}-${Date.now()}.pdf`);
-      
-      await PdfService.generateDailyReport(reportData, pdfPath);
-
-      const message = `*Daily 24-Hour Sales & Inventory Report (TEST)*\n` +
-        `🏠 Restaurant: *${currentRes.name}*\n` +
-        `📅 Date: ${now.toLocaleDateString('en-IN', { timeZone: tz })}\n\n` +
-        `*📊 Last 24 Hours Sales:*\n` +
-        `💰 Total Sales: *₹${totalSales.toFixed(2)}*\n` +
-        `💵 Cash: ₹${cash.toFixed(2)}\n` +
-        `💳 Card: ₹${card.toFixed(2)}\n` +
-        `📱 UPI: ₹${upi.toFixed(2)}\n` +
-        `📦 Online Orders: ${onlineOrdersCount} | POS Orders: ${posOrdersCount}\n\n` +
-        `*📋 Inventory Summary:*\n` +
-        `🥘 Kitchen Ingredients: ${ingredients.length}\n` +
-        `🍾 Drinks & Beverages: ${drinks.length}\n` +
-        `📦 Total Tracked Items: ${inventoryData.length}\n\n` +
-        `Please find your detailed report attached below.`;
-
-      await TelegramService.sendMessage(currentRes.notificationSettings.telegramChatId, message, pdfPath);
-      
-      if (fs.existsSync(pdfPath)) {
-        fs.unlinkSync(pdfPath);
+      if (requestedShift === 'SHIFT_2') {
+        const range = calculateShiftRange(
+          localDateStr,
+          currentRes.notificationSettings.shift2StartTime || '23:31',
+          currentRes.notificationSettings.shift2EndTime || '09:59',
+          true,
+          tz
+        );
+        startTime = range.startTime;
+        endTime = range.endTime;
+        shiftLabel = 'Shift 2 (11:31 PM - 09:59 AM)';
+      } else {
+        const range = calculateShiftRange(
+          localDateStr,
+          currentRes.notificationSettings.shift1StartTime || '10:00',
+          currentRes.notificationSettings.shift1EndTime || '23:30',
+          false,
+          tz
+        );
+        startTime = range.startTime;
+        endTime = range.endTime;
+        shiftLabel = 'Shift 1 (10:00 AM - 11:30 PM)';
       }
 
-      res.status(200).json({ success: true, message: 'Test report sent successfully' });
+      await sendRestaurantShiftReport({
+        restaurant: currentRes,
+        shiftLabel,
+        startTime,
+        endTime,
+        isTest: true,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: `${shiftLabel} test report sent successfully to Telegram!`
+      });
     } catch (error: any) {
       console.error('Test Report Error:', error);
       if (error.message && error.message.includes('chat not found')) {
         return res.status(400).json({
           success: false,
-          message: 'Telegram Chat Not Found. Please open Telegram on your phone or PC, search for @rest_blu_bot, and tap START (or send /start). Then try sending the test report again.'
+          message: 'Telegram Chat Not Found. Please open Telegram on your phone or PC, search for our bot @rest_blu_bot, and tap START (or send /start). Then try sending the test report again.'
         });
       }
-      res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
+      return res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
     }
   }
 }
