@@ -10,6 +10,17 @@ import { AppError } from '../../shared/errors/AppError';
 import { Restaurant } from '../restaurants/restaurant.model';
 import { applyDynamicPricingToDishes, calculateDynamicPrice } from '../../shared/utils/pricing';
 
+const recentSalesMemoryCache = new Map<string, { timestamp: number; data: any }>();
+
+function cleanSalesMemoryCache() {
+  const now = Date.now();
+  for (const [k, v] of recentSalesMemoryCache.entries()) {
+    if (now - v.timestamp > 120000) {
+      recentSalesMemoryCache.delete(k);
+    }
+  }
+}
+
 export class BillingService {
   /**
    * Completes a sale: Creates Order, Deducts Inventory, Creates Bill atomically.
@@ -20,8 +31,59 @@ export class BillingService {
     items: { dishId: string; quantity: number }[],
     paymentMethod: PaymentMethod,
     customerId?: string | Types.ObjectId,
-    expectedTotal?: number
+    expectedTotal?: number,
+    idempotencyKey?: string
   ) {
+    cleanSalesMemoryCache();
+
+    const restIdStr = restaurantId.toString();
+    const cartFingerprint = (items || []).map(i => `${i.dishId}:${i.quantity}`).sort().join(',');
+    const saleFingerprint = `${restIdStr}:${cartFingerprint}:${paymentMethod}:${expectedTotal ?? ''}`;
+
+    if (idempotencyKey) {
+      const cached = recentSalesMemoryCache.get(`${restIdStr}:${idempotencyKey}`);
+      if (cached && (Date.now() - cached.timestamp < 60000)) {
+        return cached.data;
+      }
+
+      const existingOrder = await Order.findOne({ restaurantId, idempotencyKey });
+      if (existingOrder) {
+        const existingBill = await Bill.findOne({ restaurantId, orderId: existingOrder._id });
+        const existingData = { order: existingOrder, bill: existingBill };
+        recentSalesMemoryCache.set(`${restIdStr}:${idempotencyKey}`, { timestamp: Date.now(), data: existingData });
+        return existingData;
+      }
+    }
+
+    // Fingerprint duplicate check (within 10s to prevent rapid double-clicks)
+    const cachedByFingerprint = recentSalesMemoryCache.get(saleFingerprint);
+    if (cachedByFingerprint && (Date.now() - cachedByFingerprint.timestamp < 10000)) {
+      console.warn(`[BillingService] Duplicate sale detected via fingerprint for restaurant ${restIdStr}. Returning existing bill.`);
+      return cachedByFingerprint.data;
+    }
+
+    // Check DB for identical order created in the last 15 seconds
+    const fifteenSecAgo = new Date(Date.now() - 15000);
+    const recentIdenticalOrder = await Order.findOne({
+      restaurantId,
+      paymentMethod,
+      orderStatus: OrderStatus.COMPLETED,
+      createdAt: { $gte: fifteenSecAgo }
+    }).sort({ createdAt: -1 });
+
+    if (recentIdenticalOrder && recentIdenticalOrder.items.length === items.length) {
+      const allMatched = items.every(it => {
+        const found = recentIdenticalOrder.items.find(oi => oi.dishId.toString() === it.dishId && oi.quantity === it.quantity);
+        return !!found;
+      });
+      if (allMatched) {
+        const recentBill = await Bill.findOne({ restaurantId, orderId: recentIdenticalOrder._id });
+        const matchedData = { order: recentIdenticalOrder, bill: recentBill };
+        recentSalesMemoryCache.set(saleFingerprint, { timestamp: Date.now(), data: matchedData });
+        return matchedData;
+      }
+    }
+
     return runWithTransaction(async (session) => {
       try {
         // 1. Validate dishes and calculate totals server-side
@@ -92,7 +154,8 @@ export class BillingService {
           paymentStatus: PaymentStatus.PAID,
           orderStatus: OrderStatus.COMPLETED,
           inventoryConsumed: true,
-          createdBy: userId
+          createdBy: userId,
+          idempotencyKey
         });
 
         await order.save(session ? { session } : {});
@@ -134,12 +197,18 @@ export class BillingService {
           paymentMethod,
           paymentStatus: PaymentStatus.PAID,
           status: BillStatus.ACTIVE,
-          issuedBy: userId
+          issuedBy: userId,
+          idempotencyKey
         });
 
         await bill.save(session ? { session } : {});
 
-        return { order, bill };
+        const result = { order, bill };
+        recentSalesMemoryCache.set(saleFingerprint, { timestamp: Date.now(), data: result });
+        if (idempotencyKey) {
+          recentSalesMemoryCache.set(`${restIdStr}:${idempotencyKey}`, { timestamp: Date.now(), data: result });
+        }
+        return result;
       } catch (error) {
         if (error instanceof AppError) {
           throw error;

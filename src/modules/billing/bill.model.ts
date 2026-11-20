@@ -23,6 +23,7 @@ export interface IBill extends Document {
   status: BillStatus;
   issuedAt: Date;
   issuedBy: Types.ObjectId;
+  idempotencyKey?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,6 +54,7 @@ const BillSchema = new Schema<IBill>(
     status: { type: String, enum: Object.values(BillStatus), default: BillStatus.ACTIVE },
     issuedAt: { type: Date, default: Date.now },
     issuedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    idempotencyKey: { type: String, index: true, sparse: true },
   },
   { timestamps: true }
 );

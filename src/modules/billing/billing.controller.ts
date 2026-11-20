@@ -6,7 +6,7 @@ import { DataRequest } from '../admin/data-request.model';
 export class BillingController {
   static async processSale(req: Request, res: Response, next: NextFunction) {
     try {
-      const { items, paymentMethod, customerId, expectedTotal } = req.body;
+      const { items, paymentMethod, customerId, expectedTotal, idempotencyKey } = req.body;
       
       const result = await BillingService.processSale(
         req.tenantId!,
@@ -14,7 +14,8 @@ export class BillingController {
         items,
         paymentMethod,
         customerId,
-        expectedTotal
+        expectedTotal,
+        idempotencyKey
       );
 
       res.status(201).json({ success: true, data: result });

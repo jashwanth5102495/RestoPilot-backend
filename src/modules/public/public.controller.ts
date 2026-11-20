@@ -518,8 +518,8 @@ export class PublicController {
 
       // Payment mode is no longer selected at this stage
 
-      if (order.billRequestStatus === 'REQUESTED') {
-        return res.status(409).json({ success: false, message: 'Bill request already sent to the owner' });
+      if (order.billRequestStatus === 'REQUESTED' || order.billRequestStatus === 'APPROVED') {
+        return res.status(200).json({ success: true, data: order, message: 'Bill request already sent to billing desk' });
       }
 
       order.billRequestStatus = 'REQUESTED';
@@ -571,7 +571,7 @@ export class PublicController {
   static async processBillingSale(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const { items, paymentMethod, customerId, expectedTotal } = req.body;
+      const { items, paymentMethod, customerId, expectedTotal, idempotencyKey } = req.body;
 
       const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
@@ -589,7 +589,8 @@ export class PublicController {
         items,
         paymentMethod,
         customerId,
-        expectedTotal
+        expectedTotal,
+        idempotencyKey
       );
 
       res.status(201).json({ success: true, data: result });
@@ -668,6 +669,10 @@ export class PublicController {
         return res.status(404).json({ success: false, message: 'No active order found for this table' });
       }
 
+      if (order.billRequestStatus === 'APPROVED') {
+        return res.status(200).json({ success: true, data: order, message: 'Bill already generated for this table' });
+      }
+
       if (order.billRequestStatus !== 'REQUESTED') {
         return res.status(400).json({ success: false, message: 'Bill has not been requested by the waiter' });
       }
@@ -706,6 +711,17 @@ export class PublicController {
       });
 
       if (!order) {
+        const sixtySecAgo = new Date(Date.now() - 60000);
+        const recentlyCompleted = await Order.findOne({
+          restaurantId: restaurant._id,
+          tableId: tableId as string,
+          orderStatus: OrderStatus.COMPLETED,
+          updatedAt: { $gte: sixtySecAgo }
+        }).sort({ updatedAt: -1 });
+
+        if (recentlyCompleted) {
+          return res.status(200).json({ success: true, data: recentlyCompleted, message: 'Table order was already settled' });
+        }
         return res.status(404).json({ success: false, message: 'No active order found for this table' });
       }
 
@@ -757,6 +773,17 @@ export class PublicController {
       });
 
       if (!order) {
+        const sixtySecAgo = new Date(Date.now() - 60000);
+        const recentlyCompleted = await Order.findOne({
+          restaurantId: restaurant._id,
+          tableId: tableId as string,
+          orderStatus: OrderStatus.COMPLETED,
+          updatedAt: { $gte: sixtySecAgo }
+        }).sort({ updatedAt: -1 });
+
+        if (recentlyCompleted) {
+          return res.status(200).json({ success: true, data: recentlyCompleted, message: 'Table order was already settled' });
+        }
         return res.status(404).json({ success: false, message: 'No active order found for this table' });
       }
 
@@ -1606,7 +1633,7 @@ export class PublicController {
   static async processDrinksSale(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const { items, subtotal, discount, tax, cgst, sgst, total, paymentMethod, customerInfo, notes } = req.body;
+      const { items, subtotal, discount, tax, cgst, sgst, total, paymentMethod, customerInfo, notes, idempotencyKey } = req.body;
 
       if (!items || !items.length) {
         return res.status(400).json({ success: false, message: 'No items provided for the bill' });
@@ -1615,6 +1642,33 @@ export class PublicController {
       const restaurant = await Restaurant.findOne(PublicController.getRestaurantSlugFilter(slug, 'billingSlug'));
       if (!restaurant) {
         return res.status(404).json({ success: false, message: 'Billing portal not found or disabled' });
+      }
+
+      const { Bill, BillStatus } = await import('../billing/bill.model');
+
+      if (idempotencyKey) {
+        const existingOrder = await Order.findOne({ restaurantId: restaurant._id, idempotencyKey });
+        if (existingOrder) {
+          const existingBill = await Bill.findOne({ restaurantId: restaurant._id, orderId: existingOrder._id });
+          return res.status(200).json({ success: true, data: { order: existingOrder, bill: existingBill } });
+        }
+      }
+
+      // Rapid duplicate check (15s window)
+      const parsedTotal = Number(Number(total || 0).toFixed(2));
+      const fifteenSecAgo = new Date(Date.now() - 15000);
+      const recentDrinksOrder = await Order.findOne({
+        restaurantId: restaurant._id,
+        orderStatus: OrderStatus.COMPLETED,
+        total: parsedTotal,
+        createdAt: { $gte: fifteenSecAgo },
+        'orderActivity.action': 'DRINKS_BILL_GENERATED'
+      }).sort({ createdAt: -1 });
+
+      if (recentDrinksOrder && recentDrinksOrder.items.length === (items || []).length) {
+        const recentBill = await Bill.findOne({ restaurantId: restaurant._id, orderId: recentDrinksOrder._id });
+        console.warn('[DrinksSale] Rapid duplicate drinks sale detected within 15s. Returning existing bill.');
+        return res.status(200).json({ success: true, data: { order: recentDrinksOrder, bill: recentBill } });
       }
 
       const { DrinkItem, DrinkStockLog } = await import('../drinks/drink.model');
@@ -1698,6 +1752,7 @@ export class PublicController {
         inventoryConsumed: true,
         customerInfo: customerInfo || {},
         createdBy: restaurant.ownerId || restaurant._id,
+        idempotencyKey,
         orderActivity: [{
           action: 'DRINKS_BILL_GENERATED',
           userId: restaurant.ownerId || restaurant._id,
@@ -1708,7 +1763,7 @@ export class PublicController {
       await order.save();
 
       // 5. Create and save Bill
-      const { Bill, BillStatus } = await import('../billing/bill.model');
+      // 5. Create and save Bill
       const bill = new Bill({
         restaurantId: restaurant._id,
         billNumber,
@@ -1723,7 +1778,8 @@ export class PublicController {
         paymentMethod: paymentMethod || PaymentMethod.CASH,
         paymentStatus: PaymentStatus.PAID,
         status: BillStatus.ACTIVE,
-        issuedBy: restaurant.ownerId || restaurant._id
+        issuedBy: restaurant.ownerId || restaurant._id,
+        idempotencyKey
       });
       await bill.save();
 

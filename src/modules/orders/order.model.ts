@@ -77,6 +77,7 @@ export interface IOrder extends Document {
   inventoryConsumed: boolean;
   startedBy?: Types.ObjectId; // The user who opened the order initially
   createdBy?: Types.ObjectId;
+  idempotencyKey?: string;
   orderActivity: {
     action: string;
     userId: Types.ObjectId;
@@ -142,6 +143,7 @@ const OrderSchema = new Schema<IOrder>(
     inventoryConsumed: { type: Boolean, default: false },
     startedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    idempotencyKey: { type: String, index: true, sparse: true },
     orderActivity: [OrderActivitySchema],
   },
   { timestamps: true }
