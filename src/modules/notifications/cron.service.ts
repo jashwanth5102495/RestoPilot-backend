@@ -3,7 +3,7 @@ import { Restaurant } from '../restaurants/restaurant.model';
 import { Order, PaymentStatus, OrderStatus } from '../orders/order.model';
 import { Ingredient } from '../ingredients/ingredient.model';
 import { TelegramService } from './telegram.service';
-import { PdfService, ReportData } from './pdf.service';
+import { PdfService, ReportData, DrinkReportItem } from './pdf.service';
 import os from 'os';
 import path from 'path';
 import fs from 'fs';
@@ -21,14 +21,12 @@ export function calculateShiftRange(
   const [sH, sM] = (startHHmm || '10:00').split(':').map(Number);
   const [eH, eM] = (endHHmm || '23:30').split(':').map(Number);
 
-  // Parse using ISO offset (+05:30 for India or generic UTC offset)
   const offset = timeZone === 'Asia/Kolkata' ? '+05:30' : '+00:00';
-  
+
   let sDate = new Date(`${dateStr}T00:00:00${offset}`);
   let eDate = new Date(`${dateStr}T00:00:00${offset}`);
 
   if (isOvernight) {
-    // Started yesterday night
     sDate.setDate(sDate.getDate() - 1);
   }
 
@@ -39,7 +37,7 @@ export function calculateShiftRange(
 }
 
 /**
- * Core function to aggregate shift sales, inventory, generate PDF, and deliver to Telegram.
+ * Core function to aggregate shift sales, complete drinks stock + movement, ingredients, generate PDF, and deliver to Telegram.
  */
 export async function sendRestaurantShiftReport(params: {
   restaurant: any;
@@ -103,31 +101,87 @@ export async function sendRestaurantShiftReport(params: {
     else posOrdersCount++;
   });
 
-  // 3. Current Inventory: Ingredients and Drinks
-  const { DrinkItem } = await import('../drinks/drink.model');
-
-  const ingredients = await Ingredient.find({
-    restaurantId: restaurant._id,
-    isDeleted: { $ne: true },
-  }).sort({ name: 1 });
+  // 3. Load Drinks & Drinks Shift Movement (from Drinks Tab / Billing)
+  const { DrinkItem, DrinkStockLog } = await import('../drinks/drink.model');
 
   const drinks = await DrinkItem.find({
     restaurantId: restaurant._id,
     isDeleted: { $ne: true },
   }).sort({ category: 1, name: 1 });
 
-  const inventoryData = [
-    ...ingredients.map((ing) => ({
-      name: ing.name,
-      quantity: Number(ing.currentStock || 0),
-      unit: ing.unit || 'unit',
-    })),
-    ...drinks.map((d) => ({
-      name: `${d.name} (${d.category || 'Drink'})`,
-      quantity: Number(d.currentStock || 0),
+  // Query shift stock activity (RESTOCK, SALE, ADJUSTMENT)
+  const shiftLogs = await DrinkStockLog.find({
+    restaurantId: restaurant._id,
+    createdAt: { $gte: startTime, $lte: endTime },
+  });
+
+  const drinkMovement = new Map<string, { sold: number; restocked: number }>();
+  let totalSoldThisShift = 0;
+  let totalRestockedThisShift = 0;
+
+  for (const log of shiftLogs) {
+    const key = log.drinkId?.toString();
+    if (!key) continue;
+    if (!drinkMovement.has(key)) {
+      drinkMovement.set(key, { sold: 0, restocked: 0 });
+    }
+    const m = drinkMovement.get(key)!;
+    if (log.type === 'SALE') {
+      const q = Math.abs(log.quantityChange);
+      m.sold += q;
+      totalSoldThisShift += q;
+    } else if (log.type === 'RESTOCK') {
+      const q = Math.abs(log.quantityChange);
+      m.restocked += q;
+      totalRestockedThisShift += q;
+    }
+  }
+
+  // Build itemized drinks list
+  const drinksReportList: DrinkReportItem[] = [];
+  let totalDrinkUnitsInStock = 0;
+
+  // Group drinks by category for Telegram message
+  const drinksByCat = new Map<string, Array<{ name: string; stock: number; unit: string; sold: number; restocked: number }>>();
+
+  for (const d of drinks) {
+    const movement = drinkMovement.get(d._id.toString()) || { sold: 0, restocked: 0 };
+    const stock = Number(d.currentStock || 0);
+    totalDrinkUnitsInStock += stock;
+    const cat = d.category || 'Drinks';
+
+    drinksReportList.push({
+      name: d.name,
+      category: cat,
+      currentStock: stock,
       unit: d.unit || 'bottle',
-    })),
-  ];
+      sold: movement.sold,
+      restocked: movement.restocked,
+    });
+
+    if (!drinksByCat.has(cat)) {
+      drinksByCat.set(cat, []);
+    }
+    drinksByCat.get(cat)!.push({
+      name: d.name,
+      stock,
+      unit: d.unit || 'bottle',
+      sold: movement.sold,
+      restocked: movement.restocked,
+    });
+  }
+
+  // 4. Kitchen Ingredients
+  const ingredients = await Ingredient.find({
+    restaurantId: restaurant._id,
+    isDeleted: { $ne: true },
+  }).sort({ name: 1 });
+
+  const ingredientsReportList = ingredients.map((ing) => ({
+    name: ing.name,
+    quantity: Number(ing.currentStock || 0),
+    unit: ing.unit || 'unit',
+  }));
 
   // Format readable dates
   const formatTimeOpts: Intl.DateTimeFormatOptions = {
@@ -141,9 +195,10 @@ export async function sendRestaurantShiftReport(params: {
   const startStr = startTime.toLocaleString('en-IN', formatTimeOpts);
   const endStr = endTime.toLocaleString('en-IN', formatTimeOpts);
 
+  // 5. Generate PDF Report safely
   const reportData: ReportData = {
     restaurantName: restaurant.name,
-    shiftTitle: `${shiftLabel} Sales & Inventory Report`,
+    shiftTitle: `${shiftLabel} Sales & Stock Report`,
     date: `${startStr} to ${endStr}`,
     sales: {
       total: totalSales,
@@ -153,10 +208,10 @@ export async function sendRestaurantShiftReport(params: {
       onlineOrders: onlineOrdersCount,
       posOrders: posOrdersCount,
     },
-    inventory: inventoryData,
+    drinksInventory: drinksReportList,
+    inventory: ingredientsReportList,
   };
 
-  // 4. Generate PDF Report safely
   const tempDir = os.tmpdir();
   const pdfPath = path.join(tempDir, `shift-report-${restaurant._id}-${Date.now()}.pdf`);
   let pdfGenerated = false;
@@ -165,12 +220,30 @@ export async function sendRestaurantShiftReport(params: {
     await PdfService.generateDailyReport(reportData, pdfPath);
     pdfGenerated = true;
   } catch (pdfErr) {
-    console.error('Failed to generate PDF, will send text-only Telegram update:', pdfErr);
+    console.error('Failed to generate PDF, will deliver Telegram text message:', pdfErr);
   }
 
-  // 5. Telegram Message text
+  // 6. Build Rich Telegram Message with Full Drinks Stock
   const totalOrders = onlineOrdersCount + posOrdersCount;
-  const message =
+
+  // Build detailed drinks text
+  let drinksStockDetails = '';
+  drinksByCat.forEach((items, catName) => {
+    drinksStockDetails += `\n*🏷️ ${catName} (${items.length}):*\n`;
+    for (const it of items) {
+      let activityBadge = '';
+      if (it.sold > 0) activityBadge += ` (Out: -${it.sold})`;
+      if (it.restocked > 0) activityBadge += ` (In: +${it.restocked})`;
+
+      let statusBadge = '';
+      if (it.stock <= 0) statusBadge = ' ⚠️ *(OUT OF STOCK)*';
+      else if (it.stock <= 4) statusBadge = ' ⚠️ *(LOW)*';
+
+      drinksStockDetails += `• ${it.name}: *${it.stock} ${it.unit}*${activityBadge}${statusBadge}\n`;
+    }
+  });
+
+  const mainMessage =
     `*${isTest ? '🧪 [TEST] ' : ''}📋 ${shiftLabel} Report*\n` +
     `🏠 Restaurant: *${restaurant.name}*\n` +
     `🕒 Shift Period: *${startStr} — ${endStr}*\n\n` +
@@ -180,21 +253,51 @@ export async function sendRestaurantShiftReport(params: {
     `📱 UPI: ₹${upi.toFixed(2)}\n` +
     `💳 Card: ₹${card.toFixed(2)}\n` +
     `📦 Orders: *${totalOrders}* (POS: ${posOrdersCount} | Online: ${onlineOrdersCount})\n\n` +
-    `*📋 Current Stock Summary:*\n` +
-    `🥘 Ingredients Tracked: ${ingredients.length}\n` +
-    `🍾 Drinks & Beverages: ${drinks.length}\n` +
-    `📦 Total Tracked Items: ${inventoryData.length}\n\n` +
+    `*🍾 DRINKS STOCK & MOVEMENT (Drinks Tab):*\n` +
+    `📦 Total Drinks in Stock: *${totalDrinkUnitsInStock} units*\n` +
+    `📤 Sold this shift: *${totalSoldThisShift} units*\n` +
+    `📥 Restocked this shift: *${totalRestockedThisShift} units*\n` +
+    `🥂 Tracked Drinks Items: *${drinks.length} items*\n` +
+    `🥘 Kitchen Ingredients Tracked: *${ingredients.length} items*\n\n` +
+    `*📋 Drinks Stock Status:*${drinksStockDetails}\n` +
     (pdfGenerated
       ? `📎 Detailed shift PDF report is attached below.`
       : `⚠️ Note: PDF attachment unavailable; text report generated.`);
 
-  // 6. Deliver to Telegram
+  // 7. Deliver to Telegram (handles chunking if over 3,800 chars)
+  const chatId = restaurant.notificationSettings.telegramChatId;
+
   try {
-    await TelegramService.sendMessage(
-      restaurant.notificationSettings.telegramChatId,
-      message,
-      pdfGenerated ? pdfPath : undefined
-    );
+    if (mainMessage.length <= 3800) {
+      await TelegramService.sendMessage(chatId, mainMessage, pdfGenerated ? pdfPath : undefined);
+    } else {
+      // Split into 2 messages: summary + PDF first, then full stock list
+      const summaryMessage =
+        `*${isTest ? '🧪 [TEST] ' : ''}📋 ${shiftLabel} Report*\n` +
+        `🏠 Restaurant: *${restaurant.name}*\n` +
+        `🕒 Shift Period: *${startStr} — ${endStr}*\n\n` +
+        `*📊 Shift Sales Summary:*\n` +
+        `💰 Total Sales: *₹${totalSales.toFixed(2)}*\n` +
+        `💵 Cash: ₹${cash.toFixed(2)}\n` +
+        `📱 UPI: ₹${upi.toFixed(2)}\n` +
+        `💳 Card: ₹${card.toFixed(2)}\n` +
+        `📦 Orders: *${totalOrders}* (POS: ${posOrdersCount} | Online: ${onlineOrdersCount})\n\n` +
+        `*🍾 DRINKS MOVEMENT SUMMARY:*\n` +
+        `📦 Total Drinks in Stock: *${totalDrinkUnitsInStock} units*\n` +
+        `📤 Sold this shift: *${totalSoldThisShift} units*\n` +
+        `📥 Restocked this shift: *${totalRestockedThisShift} units*\n\n` +
+        `📎 Full PDF report attached. Itemized stock list follows below...`;
+
+      await TelegramService.sendMessage(chatId, summaryMessage, pdfGenerated ? pdfPath : undefined);
+
+      const drinksOnlyMessage =
+        `*🍾 FULL DRINKS STOCK UPDATE (Drinks Tab)*\n` +
+        `🏠 Restaurant: *${restaurant.name}*\n` +
+        `📅 Date: ${endStr}\n` +
+        drinksStockDetails;
+
+      await TelegramService.sendMessage(chatId, drinksOnlyMessage);
+    }
   } finally {
     if (pdfGenerated && fs.existsSync(pdfPath)) {
       try {
@@ -203,7 +306,7 @@ export async function sendRestaurantShiftReport(params: {
     }
   }
 
-  return { success: true, message: `${shiftLabel} report sent successfully` };
+  return { success: true, message: `${shiftLabel} report with full drinks stock sent successfully` };
 }
 
 class CronService {
@@ -237,7 +340,7 @@ class CronService {
               minute: '2-digit',
               hour12: false,
             });
-            currentLocalTime = timeFormatter.format(now); // e.g. "23:30", "10:00"
+            currentLocalTime = timeFormatter.format(now);
 
             const dateFormatter = new Intl.DateTimeFormat('en-CA', {
               timeZone: tz,
@@ -245,7 +348,7 @@ class CronService {
               month: '2-digit',
               day: '2-digit',
             });
-            localDateStr = dateFormatter.format(now); // YYYY-MM-DD
+            localDateStr = dateFormatter.format(now);
           } catch {
             currentLocalTime = now.toLocaleTimeString('en-GB', {
               timeZone: 'Asia/Kolkata',
@@ -301,7 +404,7 @@ class CronService {
                 localDateStr,
                 settings.shift2StartTime || '23:31',
                 settings.shift2EndTime || '09:59',
-                true, // starts yesterday night
+                true,
                 tz
               );
 
@@ -325,7 +428,7 @@ class CronService {
       }
     });
 
-    console.log('Cron jobs scheduled: Shift 1 (10:00 AM - 11:30 PM) & Shift 2 (11:31 PM - 09:59 AM).');
+    console.log('Cron jobs scheduled: Shift 1 (10:00 AM - 11:30 PM) & Shift 2 (11:31 PM - 09:59 AM) with full Drinks Stock.');
   }
 }
 
