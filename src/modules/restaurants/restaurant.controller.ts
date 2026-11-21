@@ -180,4 +180,107 @@ export class RestaurantController {
       return res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
     }
   }
+
+  static async getWhatsAppStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const { WhatsAppService } = await import('../notifications/whatsapp.service');
+      const status = await WhatsAppService.getStatus(id);
+      res.status(200).json({ success: true, data: status });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async requestWhatsAppQr(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const { WhatsAppService } = await import('../notifications/whatsapp.service');
+      const status = await WhatsAppService.requestQrCode(id);
+      res.status(200).json({ success: true, data: status });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async disconnectWhatsApp(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = String(req.params.id);
+      const { WhatsAppService } = await import('../notifications/whatsapp.service');
+      await WhatsAppService.disconnect(id);
+      res.status(200).json({ success: true, message: 'WhatsApp session unlinked successfully.' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async testWhatsAppReport(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { Restaurant } = await import('./restaurant.model');
+      const { sendRestaurantShiftReport, calculateShiftRange } = await import('../notifications/cron.service');
+      const id = String(req.params.id);
+
+      const currentRes = await Restaurant.findById(id);
+      if (!currentRes) return res.status(404).json({ success: false, message: 'Restaurant not found' });
+
+      const targetPhone = req.body?.phone || currentRes.notificationSettings?.whatsappPhoneNumber;
+      if (!targetPhone) {
+        return res.status(400).json({
+          success: false,
+          message: 'WhatsApp phone number is required. Please enter the owner WhatsApp number and save preferences.'
+        });
+      }
+
+      const requestedShift = (req.body?.shift || req.query?.shift || 'SHIFT_1').toString().toUpperCase();
+      const tz = currentRes.timezone || 'Asia/Kolkata';
+      const now = new Date();
+      const localDateStr = now.toLocaleDateString('en-CA', { timeZone: tz });
+
+      let startTime: Date;
+      let endTime: Date;
+      let shiftLabel: string;
+
+      if (requestedShift === 'SHIFT_2') {
+        const range = calculateShiftRange(
+          localDateStr,
+          currentRes.notificationSettings?.shift2StartTime || '23:31',
+          currentRes.notificationSettings?.shift2EndTime || '09:59',
+          true,
+          tz
+        );
+        startTime = range.startTime;
+        endTime = range.endTime;
+        shiftLabel = 'Shift 2 (11:31 PM - 09:59 AM)';
+      } else {
+        const range = calculateShiftRange(
+          localDateStr,
+          currentRes.notificationSettings?.shift1StartTime || '10:00',
+          currentRes.notificationSettings?.shift1EndTime || '23:30',
+          false,
+          tz
+        );
+        startTime = range.startTime;
+        endTime = range.endTime;
+        shiftLabel = 'Shift 1 (10:00 AM - 11:30 PM)';
+      }
+
+      await sendRestaurantShiftReport({
+        restaurant: currentRes,
+        shiftLabel,
+        startTime,
+        endTime,
+        isTest: true,
+        forceChannel: 'WHATSAPP',
+        overrideWhatsAppPhone: targetPhone,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: `${shiftLabel} report sent successfully to WhatsApp (${targetPhone})!`
+      });
+    } catch (error: any) {
+      console.error('Test WhatsApp Report Error:', error);
+      return res.status(500).json({ success: false, message: error.message || 'Internal Server Error' });
+    }
+  }
 }

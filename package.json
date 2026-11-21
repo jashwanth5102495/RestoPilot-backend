@@ -20,6 +20,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@hapi/boom": "^10.0.1",
     "@sentry/node": "^10.70.0",
     "@sentry/profiling-node": "^10.70.0",
     "@types/bcryptjs": "^2.4.6",
@@ -28,6 +29,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.2.0",
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
     "bcryptjs": "^3.0.3",
     "cashfree-pg": "^6.0.6",
     "cors": "^2.8.6",
@@ -67,5 +69,3 @@
     "ts-node": "^10.9.2"
   }
 }
-
-

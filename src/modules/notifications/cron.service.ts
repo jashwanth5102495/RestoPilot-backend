@@ -45,11 +45,18 @@ export async function sendRestaurantShiftReport(params: {
   startTime: Date;
   endTime: Date;
   isTest?: boolean;
+  forceChannel?: 'WHATSAPP' | 'TELEGRAM';
+  overrideWhatsAppPhone?: string;
 }): Promise<{ success: boolean; message: string }> {
   const { restaurant, shiftLabel, startTime, endTime, isTest = false } = params;
 
-  if (!restaurant.notificationSettings?.telegramChatId) {
-    throw new Error('Telegram Chat ID is not configured for this restaurant.');
+  const settings = restaurant.notificationSettings || {};
+  const channel = params.forceChannel || settings.notificationChannel || 'WHATSAPP';
+  const shouldSendWhatsApp = (channel === 'WHATSAPP' || channel === 'BOTH') && Boolean(params.overrideWhatsAppPhone || settings.whatsappPhoneNumber);
+  const shouldSendTelegram = (channel === 'TELEGRAM' || channel === 'BOTH') && Boolean(settings.telegramChatId);
+
+  if (!shouldSendWhatsApp && !shouldSendTelegram) {
+    throw new Error('Neither WhatsApp phone number nor Telegram Chat ID is configured for this restaurant.');
   }
 
   const tz = restaurant.timezone || 'Asia/Kolkata';
@@ -264,49 +271,81 @@ export async function sendRestaurantShiftReport(params: {
       ? `📎 Detailed shift PDF report is attached below.`
       : `⚠️ Note: PDF attachment unavailable; text report generated.`);
 
-  // 7. Deliver to Telegram (handles chunking if over 3,800 chars)
-  const chatId = restaurant.notificationSettings.telegramChatId;
+  // 7. Deliver to WhatsApp and/or Telegram
+  const summaryMessage =
+    `*${isTest ? '🧪 [TEST] ' : ''}📋 ${shiftLabel} Report*\n` +
+    `🏠 Restaurant: *${restaurant.name}*\n` +
+    `🕒 Shift Period: *${startStr} — ${endStr}*\n\n` +
+    `*📊 Shift Sales Summary:*\n` +
+    `💰 Total Sales: *₹${totalSales.toFixed(2)}*\n` +
+    `💵 Cash: ₹${cash.toFixed(2)}\n` +
+    `📱 UPI: ₹${upi.toFixed(2)}\n` +
+    `💳 Card: ₹${card.toFixed(2)}\n` +
+    `📦 Orders: *${totalOrders}* (POS: ${posOrdersCount} | Online: ${onlineOrdersCount})\n\n` +
+    `*🍾 DRINKS MOVEMENT SUMMARY:*\n` +
+    `📦 Total Drinks in Stock: *${totalDrinkUnitsInStock} units*\n` +
+    `📤 Sold this shift: *${totalSoldThisShift} units*\n` +
+    `📥 Restocked this shift: *${totalRestockedThisShift} units*\n\n` +
+    `📎 Full PDF report attached. Itemized stock list follows below...`;
 
-  try {
-    if (mainMessage.length <= 3800) {
-      await TelegramService.sendMessage(chatId, mainMessage, pdfGenerated ? pdfPath : undefined);
-    } else {
-      // Split into 2 messages: summary + PDF first, then full stock list
-      const summaryMessage =
-        `*${isTest ? '🧪 [TEST] ' : ''}📋 ${shiftLabel} Report*\n` +
-        `🏠 Restaurant: *${restaurant.name}*\n` +
-        `🕒 Shift Period: *${startStr} — ${endStr}*\n\n` +
-        `*📊 Shift Sales Summary:*\n` +
-        `💰 Total Sales: *₹${totalSales.toFixed(2)}*\n` +
-        `💵 Cash: ₹${cash.toFixed(2)}\n` +
-        `📱 UPI: ₹${upi.toFixed(2)}\n` +
-        `💳 Card: ₹${card.toFixed(2)}\n` +
-        `📦 Orders: *${totalOrders}* (POS: ${posOrdersCount} | Online: ${onlineOrdersCount})\n\n` +
-        `*🍾 DRINKS MOVEMENT SUMMARY:*\n` +
-        `📦 Total Drinks in Stock: *${totalDrinkUnitsInStock} units*\n` +
-        `📤 Sold this shift: *${totalSoldThisShift} units*\n` +
-        `📥 Restocked this shift: *${totalRestockedThisShift} units*\n\n` +
-        `📎 Full PDF report attached. Itemized stock list follows below...`;
+  const drinksOnlyMessage =
+    `*🍾 FULL DRINKS STOCK UPDATE (Drinks Tab)*\n` +
+    `🏠 Restaurant: *${restaurant.name}*\n` +
+    `📅 Date: ${endStr}\n` +
+    drinksStockDetails;
 
-      await TelegramService.sendMessage(chatId, summaryMessage, pdfGenerated ? pdfPath : undefined);
+  const deliveredChannels: string[] = [];
 
-      const drinksOnlyMessage =
-        `*🍾 FULL DRINKS STOCK UPDATE (Drinks Tab)*\n` +
-        `🏠 Restaurant: *${restaurant.name}*\n` +
-        `📅 Date: ${endStr}\n` +
-        drinksStockDetails;
-
-      await TelegramService.sendMessage(chatId, drinksOnlyMessage);
-    }
-  } finally {
-    if (pdfGenerated && fs.existsSync(pdfPath)) {
-      try {
-        fs.unlinkSync(pdfPath);
-      } catch {}
+  // A. Deliver to WhatsApp
+  if (shouldSendWhatsApp) {
+    try {
+      const { WhatsAppService } = await import('./whatsapp.service');
+      const targetPhone = params.overrideWhatsAppPhone || settings.whatsappPhoneNumber;
+      if (mainMessage.length <= 3800) {
+        await WhatsAppService.sendMessage(restaurant._id.toString(), targetPhone, mainMessage, pdfGenerated ? pdfPath : undefined);
+      } else {
+        await WhatsAppService.sendMessage(restaurant._id.toString(), targetPhone, summaryMessage, pdfGenerated ? pdfPath : undefined);
+        await WhatsAppService.sendMessage(restaurant._id.toString(), targetPhone, drinksOnlyMessage);
+      }
+      deliveredChannels.push('WhatsApp');
+    } catch (waErr: any) {
+      console.error(`[WhatsApp Deliver Error] Restaurant ${restaurant._id}:`, waErr?.message || waErr);
+      if (params.forceChannel === 'WHATSAPP') throw waErr;
     }
   }
 
-  return { success: true, message: `${shiftLabel} report with full drinks stock sent successfully` };
+  // B. Deliver to Telegram
+  if (shouldSendTelegram) {
+    try {
+      const chatId = settings.telegramChatId;
+      if (mainMessage.length <= 3800) {
+        await TelegramService.sendMessage(chatId, mainMessage, pdfGenerated ? pdfPath : undefined);
+      } else {
+        await TelegramService.sendMessage(chatId, summaryMessage, pdfGenerated ? pdfPath : undefined);
+        await TelegramService.sendMessage(chatId, drinksOnlyMessage);
+      }
+      deliveredChannels.push('Telegram');
+    } catch (tgErr: any) {
+      console.error(`[Telegram Deliver Error] Restaurant ${restaurant._id}:`, tgErr?.message || tgErr);
+      if (params.forceChannel === 'TELEGRAM') throw tgErr;
+    }
+  }
+
+  // Clean up temp PDF
+  if (pdfGenerated && fs.existsSync(pdfPath)) {
+    try {
+      fs.unlinkSync(pdfPath);
+    } catch {}
+  }
+
+  if (deliveredChannels.length === 0) {
+    throw new Error('Failed to deliver report to configured notification channels.');
+  }
+
+  return {
+    success: true,
+    message: `${shiftLabel} report with full drinks stock sent successfully via ${deliveredChannels.join(' & ')}`,
+  };
 }
 
 class CronService {
@@ -326,7 +365,7 @@ class CronService {
 
         for (const restaurant of restaurants) {
           const settings = restaurant.notificationSettings;
-          if (!settings?.telegramChatId) continue;
+          if (!settings?.telegramChatId && !settings?.whatsappPhoneNumber) continue;
 
           const tz = restaurant.timezone || 'Asia/Kolkata';
 

@@ -63,6 +63,9 @@ export interface IRestaurant extends Document {
     shift2StartTime?: string;
     shift2EndTime?: string;
     shift2SendTime?: string;
+    whatsappEnabled?: boolean;
+    whatsappPhoneNumber?: string;
+    notificationChannel?: 'WHATSAPP' | 'TELEGRAM' | 'BOTH';
   };
   tableCount: number;
   dynamicPricing?: {
@@ -127,6 +130,9 @@ const RestaurantSchema = new Schema<IRestaurant>(
       shift2StartTime: { type: String, default: '23:31' },
       shift2EndTime: { type: String, default: '09:59' },
       shift2SendTime: { type: String, default: '10:00' },
+      whatsappEnabled: { type: Boolean, default: true },
+      whatsappPhoneNumber: { type: String },
+      notificationChannel: { type: String, enum: ['WHATSAPP', 'TELEGRAM', 'BOTH'], default: 'WHATSAPP' },
     },
     tableCount: { type: Number, default: 0, min: 0 },
     dynamicPricing: {
