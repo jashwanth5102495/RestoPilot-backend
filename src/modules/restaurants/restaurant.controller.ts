@@ -186,9 +186,10 @@ export class RestaurantController {
       const id = String(req.params.id);
       const { WhatsAppService } = await import('../notifications/whatsapp.service');
       const status = await WhatsAppService.getStatus(id);
-      res.status(200).json({ success: true, data: status });
-    } catch (error) {
-      next(error);
+      return res.status(200).json({ success: true, data: status });
+    } catch (error: any) {
+      console.error('[RestaurantController.getWhatsAppStatus Error]:', error);
+      return res.status(200).json({ success: true, data: { status: 'DISCONNECTED' } });
     }
   }
 
@@ -197,9 +198,13 @@ export class RestaurantController {
       const id = String(req.params.id);
       const { WhatsAppService } = await import('../notifications/whatsapp.service');
       const status = await WhatsAppService.requestQrCode(id);
-      res.status(200).json({ success: true, data: status });
-    } catch (error) {
-      next(error);
+      return res.status(200).json({ success: true, data: status });
+    } catch (error: any) {
+      console.error('[RestaurantController.requestWhatsAppQr Error]:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to initialize WhatsApp QR generator'
+      });
     }
   }
 
@@ -208,9 +213,13 @@ export class RestaurantController {
       const id = String(req.params.id);
       const { WhatsAppService } = await import('../notifications/whatsapp.service');
       await WhatsAppService.disconnect(id);
-      res.status(200).json({ success: true, message: 'WhatsApp session unlinked successfully.' });
-    } catch (error) {
-      next(error);
+      return res.status(200).json({ success: true, message: 'WhatsApp session unlinked successfully.' });
+    } catch (error: any) {
+      console.error('[RestaurantController.disconnectWhatsApp Error]:', error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to unlink WhatsApp session.'
+      });
     }
   }
 

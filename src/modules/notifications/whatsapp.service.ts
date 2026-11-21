@@ -4,6 +4,7 @@ import qrcode from 'qrcode';
 import pino from 'pino';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 interface WhatsAppSession {
   sock?: WASocket;
@@ -17,22 +18,54 @@ export class WhatsAppService {
   private static sessions = new Map<string, WhatsAppSession>();
 
   private static getSessionsBaseDir(): string {
-    const baseDir = path.join(process.cwd(), 'whatsapp_sessions');
-    if (!fs.existsSync(baseDir)) {
+    // 1. Explicit env override if set
+    if (process.env.WHATSAPP_SESSION_PATH) {
       try {
-        fs.mkdirSync(baseDir, { recursive: true });
-      } catch {}
+        if (!fs.existsSync(process.env.WHATSAPP_SESSION_PATH)) {
+          fs.mkdirSync(process.env.WHATSAPP_SESSION_PATH, { recursive: true });
+        }
+        return process.env.WHATSAPP_SESSION_PATH;
+      } catch (err) {
+        console.warn('[WhatsApp] Could not use WHATSAPP_SESSION_PATH:', err);
+      }
     }
-    return baseDir;
+
+    // 2. Try process.cwd()/whatsapp_sessions and verify write permission
+    try {
+      const localDir = path.join(process.cwd(), 'whatsapp_sessions');
+      if (!fs.existsSync(localDir)) {
+        fs.mkdirSync(localDir, { recursive: true });
+      }
+      const testFile = path.join(localDir, `.write_check_${Date.now()}`);
+      fs.writeFileSync(testFile, 'test');
+      fs.unlinkSync(testFile);
+      return localDir;
+    } catch (localErr) {
+      console.warn('[WhatsApp] Working directory is not writable, falling back to os.tmpdir():', localErr);
+    }
+
+    // 3. Fallback to os.tmpdir() which is always 100% writable on Linux/Railway/Windows
+    const tmpDir = path.join(os.tmpdir(), 'whatsapp_sessions');
+    if (!fs.existsSync(tmpDir)) {
+      try {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      } catch (tmpErr) {
+        console.error('[WhatsApp] Failed to create tmpDir:', tmpErr);
+      }
+    }
+    return tmpDir;
   }
 
   private static getRestaurantSessionDir(restaurantId: string): string {
-    const cleanId = restaurantId.replace(/[^a-zA-Z0-9_-]/g, '');
-    const dir = path.join(this.getSessionsBaseDir(), `rest_${cleanId}`);
+    const cleanId = (restaurantId || 'default').replace(/[^a-zA-Z0-9_-]/g, '');
+    const baseDir = this.getSessionsBaseDir();
+    const dir = path.join(baseDir, `rest_${cleanId}`);
     if (!fs.existsSync(dir)) {
       try {
         fs.mkdirSync(dir, { recursive: true });
-      } catch {}
+      } catch (err) {
+        console.error(`[WhatsApp] Failed to create session directory ${dir}:`, err);
+      }
     }
     return dir;
   }
@@ -47,6 +80,10 @@ export class WhatsAppService {
     }
 
     const sessionDir = this.getRestaurantSessionDir(restaurantId);
+    if (!fs.existsSync(sessionDir)) {
+      fs.mkdirSync(sessionDir, { recursive: true });
+    }
+
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
 
     const sessionData: WhatsAppSession = {
@@ -121,7 +158,7 @@ export class WhatsAppService {
     } catch (err) {
       console.error(`[WhatsApp] Failed to create socket for restaurant ${restaurantId}:`, err);
       sessionData.status = 'DISCONNECTED';
-      return sessionData;
+      throw err;
     }
   }
 
@@ -163,7 +200,26 @@ export class WhatsAppService {
     qrCode?: string;
     connectedNumber?: string;
   }> {
+    // If an existing session is not connected, clean it up to generate a fresh QR
+    const existing = this.sessions.get(restaurantId);
+    if (existing && existing.sock && existing.status !== 'CONNECTED') {
+      try {
+        existing.sock.end(undefined);
+      } catch {}
+      this.sessions.delete(restaurantId);
+    }
+
     const session = await this.initClient(restaurantId);
+
+    // Wait up to 6 seconds for Baileys to emit the QR code
+    if (!session.qrCode && (session.status as string) !== 'CONNECTED') {
+      let waited = 0;
+      while (waited < 6000 && !session.qrCode && (session.status as string) !== 'CONNECTED') {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        waited += 300;
+      }
+    }
+
     return {
       status: session.status,
       qrCode: session.qrCode,
