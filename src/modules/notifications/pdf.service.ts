@@ -20,9 +20,19 @@ export interface ReportData {
     cash: number;
     card: number;
     upi: number;
+    online?: number;
+    other?: number;
+    discounts?: number;
+    taxes?: number;
     onlineOrders: number;
     posOrders: number;
+    avgOrderValue?: number;
   };
+  topDishes?: Array<{
+    name: string;
+    qty: number;
+    total: number;
+  }>;
   drinksInventory?: DrinkReportItem[];
   inventory?: Array<{
     name: string;
@@ -65,13 +75,55 @@ export class PdfService {
         doc.moveDown(0.4);
         drawRow('Cash Payments:', `Rs. ${data.sales.cash.toFixed(2)}`);
         drawRow('UPI Payments:', `Rs. ${data.sales.upi.toFixed(2)}`);
+        if (data.sales.online && data.sales.online > 0) {
+          drawRow('Online / Gateway:', `Rs. ${data.sales.online.toFixed(2)}`);
+        }
         drawRow('Card Payments:', `Rs. ${data.sales.card.toFixed(2)}`);
+        if (data.sales.other && data.sales.other > 0) {
+          drawRow('Other Payments:', `Rs. ${data.sales.other.toFixed(2)}`);
+        }
+        if (data.sales.discounts && data.sales.discounts > 0) {
+          drawRow('Discounts Given:', `Rs. ${data.sales.discounts.toFixed(2)}`);
+        }
+        if (data.sales.taxes && data.sales.taxes > 0) {
+          drawRow('Taxes Collected (GST):', `Rs. ${data.sales.taxes.toFixed(2)}`);
+        }
         doc.moveDown(0.4);
-        drawRow('Online Orders:', `${data.sales.onlineOrders}`);
         drawRow('POS Orders:', `${data.sales.posOrders}`);
+        drawRow('Online / QR Orders:', `${data.sales.onlineOrders}`);
         drawRow('Total Orders:', `${data.sales.onlineOrders + data.sales.posOrders}`, true);
+        if (data.sales.avgOrderValue) {
+          drawRow('Avg Order Value (AOV):', `Rs. ${data.sales.avgOrderValue.toFixed(2)}`);
+        }
 
         doc.moveDown(1.5);
+
+        // Top Selling Dishes Section
+        if (data.topDishes && data.topDishes.length > 0) {
+          doc.fillColor('black').fontSize(16).font('Helvetica-Bold').text('Top Selling Dishes (This Shift)');
+          doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+          doc.moveDown(0.8);
+
+          let y = doc.y;
+          doc.fontSize(11).font('Helvetica-Bold');
+          doc.text('Dish Name', 50, y);
+          doc.text('Quantity Sold', 300, y);
+          doc.text('Revenue', 450, y, { align: 'right' });
+          doc.moveTo(50, doc.y + 2).lineTo(550, doc.y + 2).stroke();
+          doc.moveDown(0.4);
+
+          doc.font('Helvetica');
+          for (const dish of data.topDishes) {
+            y = doc.y;
+            doc.fontSize(10);
+            doc.text(dish.name, 50, y, { width: 240 });
+            doc.text(`${dish.qty} orders`, 300, y);
+            doc.text(`Rs. ${dish.total.toFixed(2)}`, 450, y, { align: 'right' });
+            doc.moveDown(0.2);
+          }
+
+          doc.moveDown(1.5);
+        }
 
         // Drinks Inventory Section (From Drinks Tab)
         if (data.drinksInventory && data.drinksInventory.length > 0) {
